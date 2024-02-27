@@ -1,0 +1,109 @@
+repos:
+  # Quick content checks based on grepping for python specific patterns:
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: rst-backticks # Find single rather than double backticks
+      - id: rst-directive-colons # Missing double-colons after directives
+      - id: rst-inline-touching-normal # Inline code should never touch normal text
+      - id: python-use-type-annotations # Use annotations not old-style type comments
+
+  # Other file formatting, plus common Git mistakes & text file standardization:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files # Don't accidentally commit giant files.
+      - id: check-merge-conflict # Watch for lingering merge markers.
+      - id: check-yaml # Validate all YAML files.
+      - id: check-case-conflict # Avoid case sensitivity in file names.
+      - id: debug-statements # Watch for lingering debugger calls.
+      - id: mixed-line-ending # Only newlines, no line-feeds.
+        args: ["--fix=lf"]
+      - id: name-tests-test # Follow PyTest naming convention.
+
+  ########################################################################################
+  # Formatters: hooks that re-write Python and RST files
+  ########################################################################################
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.2.2
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+  # Deterministic python formatting:
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+      - id: black
+        language_version: python3.11
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml]
+
+  ########################################################################################
+  # Linters: hooks that check but don't alter Python & RST files
+  ########################################################################################
+  # Use type annotations to check types
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pytest
+          - types-setuptools
+          - sphinx
+          - numpy
+          - nbconvert
+
+  # Check for errors in restructuredtext (.rst) files under the doc hierarchy
+  - repo: https://github.com/PyCQA/doc8
+    rev: v1.1.1
+    hooks:
+      - id: doc8
+        args: ["--config", "pyproject.toml"]
+
+  # Lint Dockerfiles for errors and to ensure best practices
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.12.0.3
+    hooks:
+      - id: hadolint
+
+  ########################################################################################
+  # Custom local hooks
+  ########################################################################################
+  - repo: local
+    hooks:
+      # clear outputs from Jupyter notebooks
+      - id: nb-output-clear
+        name: nb-output-clear
+        stages: [commit]
+        language: system
+        verbose: false
+        pass_filenames: false
+        always_run: true
+        entry: find notebooks \( -name \*.ipynb -not -name \*checkpoint.ipynb \) -type f -exec jupyter nbconvert --clear-output {} \;
+      # Run the unit tests
+      - id: unit-tests
+        name: unit-tests
+        stages: [commit]
+        language: system
+        verbose: false
+        pass_filenames: false
+        always_run: true
+        entry: pytest --doctest-modules src/cheshire tests/unit
+
+# Configuration for pre-commit.ci
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    For more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: main
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+  autoupdate_schedule: weekly
+  skip: [unit-tests, nb-output-clear]
+  submodules: false
