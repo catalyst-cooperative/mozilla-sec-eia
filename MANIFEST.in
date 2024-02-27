@@ -1,4 +1,4 @@
-# graft src/cheshire/non/python/file/directory
+# graft src/mozilla_sec_eia/non/python/file/directory
 
 prune .github
 prune docs

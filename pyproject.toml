@@ -8,7 +8,7 @@ requires = [
 
 [project]
 # This should be the *installed* package name e.g. catalystcoop.pudl not pudl
-name = "catalystcoop.cheshire"
+name = "catalystcoop.mozilla-sec-eia"
 description = "Replace this text with a one line description of the package."
 readme = {file = "README.rst", content-type = "text/x-rst"}
 authors = [
@@ -45,13 +45,13 @@ keywords = [
 
 [project.scripts]
 # "script_name = dotted.module.path.to:main_script_function",
-winston = "cheshire.cli:main"
+winston = "mozilla_sec_eia.cli:main"
 
 [project.urls]
 # "Homepage" = ""
-"Source" = "https://github.com/catalyst-cooperative/cheshire"
-"Documentation" = "https://catalystcoop-cheshire.readthedocs.io"
-"Issue Tracker" = "https://github.com/catalyst-cooperative/cheshire/issues"
+"Source" = "https://github.com/catalyst-cooperative/mozilla-sec-eia"
+"Documentation" = "https://catalystcoop-mozilla-sec-eia.readthedocs.io"
+"Issue Tracker" = "https://github.com/catalyst-cooperative/mozilla-sec-eia/issues"
 
 [project.optional-dependencies]
 dev = [

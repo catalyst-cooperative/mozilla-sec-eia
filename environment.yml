@@ -1,4 +1,4 @@
-name: cheshire
+name: mozilla-sec-eia
 channels:
   - conda-forge
   - defaults

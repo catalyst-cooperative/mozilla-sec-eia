@@ -13,7 +13,7 @@ jobs:
         id: docker_metadata
         uses: docker/metadata-action@v5.5.1
         with:
-          images: catalystcoop/cheshire-docker-build-push
+          images: catalystcoop/mozilla-sec-eia-docker-build-push
           flavor: |
             latest=auto
           tags: |

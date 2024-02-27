@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/catalystcoop.cheshire
+      url: https://pypi.org/p/catalystcoop.mozilla-sec-eia
     permissions:
       id-token: write
     steps:
