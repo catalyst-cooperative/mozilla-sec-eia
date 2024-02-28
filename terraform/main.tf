@@ -13,7 +13,7 @@ terraform {
 
 variable "project_id" {
   type    = string
-  default = "catalyst-cooperative-pudl"
+  default = "catalyst-cooperative-mozilla"
 }
 
 variable "catalyst_people" {
