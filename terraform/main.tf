@@ -22,7 +22,8 @@ variable "catalyst_people" {
     "trenton.bush@catalyst.coop",
     "katherine.lamb@catalyst.coop",
     "zach.schira@catalyst.coop",
-    "dazhong.xia@catalyst.coop"
+    "dazhong.xia@catalyst.coop",
+    "bennett.norman@catalyst.coop"
   ]
 }
 
