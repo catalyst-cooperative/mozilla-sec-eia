@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "f3441e415e6e5e7d-bucket-tfstate"
+    bucket = "2de2b9f52c99a240-tfstate"
     prefix = "terraform/state"
   }
   required_providers {
