@@ -7,10 +7,6 @@ mozilla-sec-eia: Developing a linkage between SEC and EIA
    :target: https://github.com/catalyst-cooperative/mozilla-sec-eia/actions?query=workflow%3Atox-pytest
    :alt: Tox-PyTest Status
 
-.. image:: https://github.com/catalyst-cooperative/mozilla-sec-eia/workflows/docker-build-push/badge.svg
-   :target: https://github.com/catalyst-cooperative/mozilla-sec-eia/actions?query=workflow%3Adocker-build-push
-   :alt: Docker build status
-
 .. image:: https://img.shields.io/codecov/c/github/catalyst-cooperative/mozilla-sec-eia?style=flat&logo=codecov
    :target: https://codecov.io/gh/catalyst-cooperative/mozilla-sec-eia
    :alt: Codecov Test Coverage

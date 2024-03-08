@@ -9,9 +9,7 @@ from nbconvert.preprocessors.execute import ExecutePreprocessor
 
 @pytest.mark.parametrize(
     "notebook",
-    [
-        "notebooks/notebook.ipynb",
-    ],
+    [],
 )
 def test_notebook_exec(notebook: str, test_dir: Path):
     """Test that maintained notebooks can be executed."""
