@@ -20,7 +20,11 @@ license = {file = "LICENSE.txt"}
 dependencies = [
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
     "pydantic[email]>=2,<3",
+    "pydantic-settings>=2",
     "sqlalchemy>=2,<3",
+    "google-cloud-storage>=2,<3",
+    "pg8000",
+    "cloud-sql-python-connector[pg8000]",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
