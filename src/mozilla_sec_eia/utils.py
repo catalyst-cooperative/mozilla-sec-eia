@@ -15,7 +15,19 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 class GCSArchive(BaseSettings):
-    """Settings for connecting to GCS resources."""
+    """Settings for connecting to GCS resources.
+
+    This class looks for several environment variables to configure
+    access to GCS resources. These can be set directly, or be in a
+    .env file at the top level.
+
+    The following variables need to be set:
+        GCS_BUCKET_NAME: Name of bucket where 10k filings are stored.
+        GCS_METADATA_DB_INSTANCE_CONNECTION: instance connection string
+            in the form 'project:region:instance'.
+        GCS_IAM_USER: Email of user of service account trying to connect.
+        GCS_METADATA_DB_NAME: Name of DB in instance to connect to.
+    """
 
     model_config = SettingsConfigDict(env_file=".env")
 
