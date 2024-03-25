@@ -7,7 +7,7 @@ import pkg_resources
 # In order for the package modules to be available when you import the package,
 # they need to be imported here somehow. Not sure if this is best practice though.
 import mozilla_sec_eia.cli
-import mozilla_sec_eia.dummy  # noqa: F401
+import mozilla_sec_eia.utils  # noqa: F401
 
 __author__ = "Catalyst Cooperative"
 __contact__ = "pudl@catalyst.coop"
@@ -16,7 +16,7 @@ __license__ = "MIT License"
 __maintainer_email__ = "pudl@catalyst.coop"
 __version__ = pkg_resources.get_distribution("catalystcoop.mozilla-sec-eia").version
 __docformat__ = "restructuredtext en"
-__description__ = "A template for Python package repositories."
+__description__ = "Development repository for SEC-EIA linkage."
 __long_description__ = """
 This should be a paragraph long description of what the package does.
 """

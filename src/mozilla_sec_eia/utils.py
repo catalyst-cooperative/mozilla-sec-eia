@@ -98,6 +98,7 @@ class GCSArchive(BaseSettings):
         metadata_filenames = set(self.get_metadata()["Filename"])
 
         if not (valid := archive_filenames == metadata_filenames):
+            logger.warning("Archive validation failed.")
             if len(missing_in_archive := metadata_filenames - archive_filenames) > 0:
                 logger.debug(
                     "The following files are listed in metadata, but don't exist"
@@ -108,4 +109,6 @@ class GCSArchive(BaseSettings):
                     "The following files are listed in archive, but don't exist"
                     f"in metadata: {missing_in_metadata}"
                 )
+        else:
+            logger.info("Archive is valid!")
         return valid
