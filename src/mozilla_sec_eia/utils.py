@@ -4,9 +4,9 @@ import base64
 import io
 import logging
 import re
-import typing
 from hashlib import md5
 from pathlib import Path
+from typing import BinaryIO
 
 import fitz
 import pandas as pd
@@ -14,7 +14,7 @@ import pg8000
 from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from PIL import Image
-from pydantic import Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Engine, create_engine
 from xhtml2pdf import pisa
@@ -30,6 +30,97 @@ def _compute_md5(file_path: Path) -> str:
             hash_md5.update(chunk)
 
     return base64.b64encode(hash_md5.digest()).decode()
+
+
+class Exhibit21(BaseModel):
+    """This is a class to wrap Exhibit 21's, which are included in many SEC 10ks."""
+
+    ex_21_text: str
+    ex_21_version: str
+    filename: str
+
+    def save_as_pdf(self, file: BinaryIO):
+        """Save Exhibit 21 as a PDF in `file`, which can be in memory or on disk."""
+        res = pisa.CreatePDF(self.ex_21_text, file)
+        if res.err:
+            logger.warning(
+                f"Failed to create PDF from filing {self.filename} exhibit 21."
+            )
+
+    def as_image(self) -> Image:
+        """Return a PIL Image of rendered exhibit 21."""
+
+        def _v_stack_images(*images):
+            """Generate composite of all supplied images."""
+            # Get the widest width.
+            width = max(image.width for image in images)
+            # Add up all the heights.
+            height = sum(image.height for image in images)
+            composite = Image.new("RGB", (width, height))
+            # Paste each image below the one before it.
+            y = 0
+            for image in images:
+                composite.paste(image, (0, y))
+                y += image.height
+            return composite
+
+        pdf_bytes = io.BytesIO()
+        self.save_as_pdf(pdf_bytes)
+
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        pages = [
+            Image.open(
+                io.BytesIO(doc.load_page(i).get_pixmap().pil_tobytes(format="PNG"))
+            )
+            for i in range(doc.page_count)
+        ]
+        ex_21_img = _v_stack_images(*pages)
+
+        return ex_21_img
+
+
+class Sec10K(BaseModel):
+    """This is a class to wrap SEC 10K filings."""
+
+    filing_text: str
+    filename: str
+    cik: int
+    year_quarter: str
+    ex_21_version: str | None
+
+    @classmethod
+    def from_path(
+        cls, filing_path: Path, cik: int, year_quarter: str, ex_21_version: str | None
+    ):
+        """Cache filing locally, and return class wrapping filing."""
+        with filing_path.open() as f:
+            return cls(
+                filing_text=f.read(),
+                filename=filing_path.name,
+                cik=cik,
+                year_quarter=year_quarter,
+                ex_21_version=ex_21_version,
+            )
+
+    def get_ex_21(self) -> Exhibit21 | None:
+        """Return EX 21 if filing has one."""
+        if self.ex_21_version is not None:
+            ex_21_pat = re.compile(
+                r"<DOCUMENT>\s?<TYPE>EX-21(\.\d)?([\S\s])*?(</DOCUMENT>)"
+            )
+
+            if ex_21_pat is None:
+                logger.warning(f"Failed to extract exhibit 21 from {self.filename}")
+                return None
+
+            return Exhibit21(
+                ex_21_text=ex_21_pat.search(self.filing_text).group(0),
+                ex_21_version=self.ex_21_version,
+                filename=self.filename,
+            )
+
+        logger.warning(f"{self.filename} does not contain an exhibit 21")
+        return None
 
 
 class GCSArchive(BaseSettings):
@@ -114,26 +205,12 @@ class GCSArchive(BaseSettings):
             f"{filing['Filename'].replace('edgar/data/', '').replace('/', '-')}"
         )
 
-    def _v_stack_images(self, *images):
-        """Generate composite of all supplied images."""
-        # Get the widest width.
-        width = max(image.width for image in images)
-        # Add up all the heights.
-        height = sum(image.height for image in images)
-        composite = Image.new("RGB", (width, height))
-        # Paste each image below the one before it.
-        y = 0
-        for image in images:
-            composite.paste(image, (0, y))
-            y += image.height
-        return composite
-
-    def get_filing(
+    def cache_filing(
         self,
         filing: pd.Series,
         cache_directory: Path = Path("./sec10k_filings"),
     ) -> Path:
-        """Cache a single filing and return path."""
+        """Cache a single filing in cache_directory and return path."""
         # Create cache directory
         cache_directory.mkdir(parents=True, exist_ok=True)
 
@@ -147,7 +224,10 @@ class GCSArchive(BaseSettings):
             refresh = remote_hash != local_hash
 
         if (not exists) or refresh:
+            logger.info(f"Downloading {filing['Filename']}")
             blob.download_to_filename(local_path)
+        else:
+            logger.info(f"{filing['Filename']} is already cached")
 
         return local_path
 
@@ -155,7 +235,7 @@ class GCSArchive(BaseSettings):
         self,
         filing_selection: pd.DataFrame,
         cache_directory: Path = Path("./sec10k_filings"),
-    ) -> typing.Generator[Path, None, None]:
+    ) -> list[Sec10K]:
         """Caches filings locally for quick access, and returns generator producing paths.
 
         Args:
@@ -163,59 +243,18 @@ class GCSArchive(BaseSettings):
                 is a filing to return.
             cache_directory: Path to directory where filings should be cached.
         """
+        filings = []
         for _, filing in filing_selection.iterrows():
-            yield self.get_filing(filing, cache_directory)
-
-    def get_ex_21_from_filing(
-        self,
-        filing: Path,
-    ) -> Image:
-        """Extract exhibit 21 from raw filing and return PIL Image of table."""
-        ex_21_pat = re.compile(
-            r"<DOCUMENT>\s?<TYPE>EX-21(\.\d)?([\S\s])*?(</DOCUMENT>)"
-        )
-        with filing.open() as f:
-            ex_21_text = ex_21_pat.search(f.read()).group(0)
-
-        pdf_bytes = io.BytesIO()
-        res = pisa.CreatePDF(ex_21_text, pdf_bytes)
-        if res.err:
-            raise RuntimeError(
-                f"Failed to create PDF from filing {str(filing)} exhibit 21."
+            filing_path = self.cache_filing(filing, cache_directory)
+            filings.append(
+                Sec10K.from_path(
+                    filing_path,
+                    filing["CIK"],
+                    filing["year_quarter"],
+                    filing["exhibit_21_version"],
+                )
             )
-
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        pages = [
-            Image.open(
-                io.BytesIO(doc.load_page(i).get_pixmap().pil_tobytes(format="PNG"))
-            )
-            for i in range(doc.page_count)
-        ]
-        ex_21_img = self._v_stack_images(*pages)
-
-        # Crop white border
-        nonwhite_positions = [
-            (x, y)
-            for x in range(ex_21_img.size[0])
-            for y in range(ex_21_img.size[1])
-            if ex_21_img.getdata()[x + y * ex_21_img.size[0]] != (255, 255, 255)
-        ]
-        rect = (
-            min([x for x, y in nonwhite_positions]),
-            min([y for x, y in nonwhite_positions]),
-            max([x for x, y in nonwhite_positions]),
-            max([y for x, y in nonwhite_positions]),
-        )
-        return ex_21_img.crop(rect)
-
-    def get_ex_21_images(
-        self,
-        filing_selection: pd.DataFrame,
-        cache_directory: Path = Path("./sec10k_filings"),
-    ) -> typing.Generator[Image, None, None]:
-        """Generator that returns image of exhibit 21 from filings."""
-        for filing_path in self.get_filings(filing_selection, cache_directory):
-            yield self.get_ex_21_from_filing(filing_path)
+        return filings
 
     def validate_archive(self) -> bool:
         """Validate that all filings described in metadata table exist in GCS bucket."""
