@@ -202,7 +202,9 @@ class GCSArchive(BaseSettings):
         """Return path to a filing in local cache based on metadata."""
         return cache_directory / Path(
             f"{filing['CIK']}-{filing['year_quarter']}-"
-            f"{filing['Filename'].replace('edgar/data/', '').replace('/', '-')}"
+            f"{filing['Filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
+                ".txt", ".html"
+            )
         )
 
     def cache_filing(
