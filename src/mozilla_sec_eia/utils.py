@@ -39,6 +39,23 @@ class Exhibit21(BaseModel):
     ex_21_version: str
     filename: str
 
+    @classmethod
+    def from_10k(cls, filename: str, sec10k_text: str, ex_21_version: str):
+        """Extract exhibit 21 from SEC 10K."""
+        ex_21_pat = re.compile(
+            r"<DOCUMENT>\s?<TYPE>EX-21(\.\d)?([\S\s])*?(</DOCUMENT>)"
+        )
+
+        if ex_21_pat is None:
+            logger.warning(f"Failed to extract exhibit 21 from {filename}")
+            return None
+
+        return cls(
+            ex_21_text=ex_21_pat.search(sec10k_text).group(0),
+            ex_21_version=ex_21_version,
+            filename=filename,
+        )
+
     def save_as_pdf(self, file: BinaryIO):
         """Save Exhibit 21 as a PDF in `file`, which can be in memory or on disk."""
         res = pisa.CreatePDF(self.ex_21_text, file)
@@ -86,7 +103,7 @@ class Sec10K(BaseModel):
     filename: str
     cik: int
     year_quarter: str
-    ex_21_version: str | None
+    ex_21: Exhibit21 | None
 
     @classmethod
     def from_path(
@@ -94,33 +111,19 @@ class Sec10K(BaseModel):
     ):
         """Cache filing locally, and return class wrapping filing."""
         with filing_path.open() as f:
+            filing_text = f.read()
+            filename = filing_path.name
             return cls(
-                filing_text=f.read(),
-                filename=filing_path.name,
+                filing_text=filing_text,
+                filename=filename,
                 cik=cik,
                 year_quarter=year_quarter,
-                ex_21_version=ex_21_version,
+                ex_21=(
+                    Exhibit21.from_10k(filename, filing_text, ex_21_version)
+                    if ex_21_version
+                    else None
+                ),
             )
-
-    def get_ex_21(self) -> Exhibit21 | None:
-        """Return EX 21 if filing has one."""
-        if self.ex_21_version is not None:
-            ex_21_pat = re.compile(
-                r"<DOCUMENT>\s?<TYPE>EX-21(\.\d)?([\S\s])*?(</DOCUMENT>)"
-            )
-
-            if ex_21_pat is None:
-                logger.warning(f"Failed to extract exhibit 21 from {self.filename}")
-                return None
-
-            return Exhibit21(
-                ex_21_text=ex_21_pat.search(self.filing_text).group(0),
-                ex_21_version=self.ex_21_version,
-                filename=self.filename,
-            )
-
-        logger.warning(f"{self.filename} does not contain an exhibit 21")
-        return None
 
 
 class GCSArchive(BaseSettings):
