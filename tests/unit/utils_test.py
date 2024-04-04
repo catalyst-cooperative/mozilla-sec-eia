@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import pytest
-from mozilla_sec_eia.utils import GCSArchive
+from mozilla_sec_eia.utils import Exhibit21, GCSArchive, Sec10K
 
 
 @pytest.fixture
@@ -84,3 +84,103 @@ def test_validate_archive(test_archive, archive_files, metadata_files, valid, mo
     mocker.patch("mozilla_sec_eia.utils.GCSArchive.get_metadata", new=metadata_mock)
 
     assert test_archive.validate_archive() == valid
+
+
+@pytest.mark.parametrize(
+    "filing_text,ex_21_version,actually_has_ex_21",
+    [
+        (
+            """
+<DOCUMENT>
+<TYPE>10-K
+<SEQUENCE>1
+<DESCRIPTION>10-K
+<TEXT>
+<html>
+<body>Some text here</body>
+</html>
+</TEXT>
+<DOCUMENT>
+<TYPE>EX-21.1
+<SEQUENCE>4
+<html>
+<body>Exhibit 21 text</body>
+</html>
+</DOCUMENT>
+<TEXT>
+<html>
+<body>Some other text here</body>
+</html>
+</DOCUMENT>
+
+            """,
+            "21.1",
+            True,
+        ),
+        (
+            """
+<DOCUMENT>
+<TYPE>10-K
+<SEQUENCE>1
+<DESCRIPTION>10-K
+<TEXT>
+<html>
+<body>Some text here</body>
+</html>
+</TEXT>
+<TEXT>
+<html>
+<body>Some other text here</body>
+</html>
+</DOCUMENT>
+
+            """,
+            "21.1",
+            False,
+        ),
+        (
+            """
+<DOCUMENT>
+<TYPE>10-K
+<SEQUENCE>1
+<DESCRIPTION>10-K
+<TEXT>
+<html>
+<body>Some text here</body>
+</html>
+</TEXT>
+<TEXT>
+<html>
+<body>Some other text here</body>
+</html>
+</DOCUMENT>
+
+            """,
+            None,
+            False,
+        ),
+    ],
+)
+def test_10k(filing_text, ex_21_version, actually_has_ex_21, tmp_path):
+    """Test that SEC10k's are properly parsed."""
+    filing_path = tmp_path / "sec10k.html"
+    with filing_path.open("w") as f:
+        f.write(filing_text)
+
+    with unittest.mock.patch("mozilla_sec_eia.utils.logger") as mock_logger:
+        filing = Sec10K.from_path(
+            filing_path=filing_path,
+            cik=0,
+            year_quarter="2024q1",
+            ex_21_version=ex_21_version,
+        )
+
+        match (ex_21_version, actually_has_ex_21):
+            case (str(ex_21_version), False):
+                mock_logger.warning.assert_called_once_with(
+                    "Failed to extract exhibit 21 from sec10k.html"
+                )
+            case (str(ex_21_version), True):
+                assert isinstance(filing.ex_21, Exhibit21)
+            case (None, _):
+                assert filing.ex_21 is None

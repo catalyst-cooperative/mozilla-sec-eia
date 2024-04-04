@@ -25,6 +25,9 @@ dependencies = [
     "google-cloud-storage>=2,<3",
     "pg8000",
     "cloud-sql-python-connector[pg8000]",
+    "xhtml2pdf",  # Convert html to PDF files
+    "pymupdf",  # Convert PDF to image
+    "pillow",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -63,9 +66,6 @@ dev = [
     "black>=22,<25",  # A deterministic code formatter
     "tox>=4,<5",  # Python test environment manager
     "twine>=4,<6",  # Used to make releases to PyPI
-    "xhtml2pdf",  # Convert html to PDF files
-    "pymupdf",  # Convert PDF to image
-    "pillow",
 ]
 docs = [
     "doc8>=1,<2",  # Ensures clean documentation formatting

@@ -46,12 +46,12 @@ class Exhibit21(BaseModel):
             r"<DOCUMENT>\s?<TYPE>EX-21(\.\d)?([\S\s])*?(</DOCUMENT>)"
         )
 
-        if ex_21_pat is None:
+        if (match := ex_21_pat.search(sec10k_text)) is None:
             logger.warning(f"Failed to extract exhibit 21 from {filename}")
             return None
 
         return cls(
-            ex_21_text=ex_21_pat.search(sec10k_text).group(0),
+            ex_21_text=match.group(0),
             ex_21_version=ex_21_version,
             filename=filename,
         )
