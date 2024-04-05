@@ -23,10 +23,17 @@ dependencies = [
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
     "pillow>=10.2,<11",
     "pydantic[email]>=2,<3",
+    "pydantic-settings>=2",
     "sqlalchemy>=2,<3",
     "timm>0.9,<1",
     "transformers>=4.3,<5",
     "torch>=2.2,<3"
+    "google-cloud-storage>=2,<3",
+    "pg8000",
+    "cloud-sql-python-connector[pg8000]",
+    "xhtml2pdf",  # Convert html to PDF files
+    "pymupdf",  # Convert PDF to image
+    "pillow",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -51,7 +58,7 @@ keywords = [
 
 [project.scripts]
 # "script_name = dotted.module.path.to:main_script_function",
-winston = "mozilla_sec_eia.cli:main"
+mozilla_dev = "mozilla_sec_eia.cli:main"
 
 [project.urls]
 # "Homepage" = ""
@@ -78,14 +85,15 @@ tests = [
     "coverage>=7,<8",  # Lets us track what code is being tested
     "exceptiongroup>=1,<2",
     "jupyter",  # For integration testing Jupyter notebooks
-    "mypy>=1.0,<1.9",  # Static type checking
+    "mypy>=1.0,<1.10",  # Static type checking
     "nbconvert>=7,<8",
     "nbformat>=5,<6",
     "pre-commit>=3,<4",  # Allow us to run pre-commit hooks in testing
     "pydocstyle>=6,<7",  # Style guidelines for Python documentation
     "pytest-console-scripts>=1.1,<2",  # Allow automatic testing of scripts
-    "pytest-cov>=4,<5",  # Pytest plugin for working with coverage
+    "pytest-cov>=4,<6",  # Pytest plugin for working with coverage
     "pytest>=7,<9",  # Our testing framework
+    "pytest-mock>=3.0,<3.13",  # Pytest plugin for mocking function calls and objects
     "ruff>=0.0.290",  # A very fast python linter & autofixer
     "tox>=4,<5",  # Python test environment manager
 ]

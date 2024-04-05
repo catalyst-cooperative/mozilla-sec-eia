@@ -20,19 +20,3 @@ def test_pudl_scripts(script_runner, ep: str) -> None:
     """
     ret = script_runner.run(ep, "--help", print_result=False)
     assert ret.success  # nosec: B101
-
-
-@pytest.mark.parametrize(
-    "alpha,beta",
-    [
-        ("2", "2"),
-        pytest.param("a", "2", marks=pytest.mark.xfail),
-        pytest.param("2", "b", marks=pytest.mark.xfail),
-        pytest.param("a", "b", marks=pytest.mark.xfail),
-    ],
-)
-@pytest.mark.script_launch_mode("inprocess")
-def test_winston_args(script_runner, alpha: str, beta: str) -> None:
-    """Try running the script with bad inputs."""
-    ret = script_runner.run("winston", "--alpha", alpha, "--beta", beta)
-    assert ret.success  # nosec: B101
