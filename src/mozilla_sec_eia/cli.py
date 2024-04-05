@@ -1,16 +1,15 @@
-"""A skeleton of a command line interface to be deployed as an entry point script.
+"""Implements CLI for SEC to EIA linkage development.
 
-It takes two numbers and does something to them, printing out the result.
-
+CLI is structured with nested sub-commands to make it easy
+to add new scripts which can be accessed through one top-level
+interface.
 """
-
-from __future__ import annotations
 
 import argparse
 import logging
 import sys
 
-from mozilla_sec_eia.dummy import do_something
+from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
 logger = logging.getLogger(__name__)
@@ -33,21 +32,11 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Use the module-level docstring as the script's description in the help message.
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=formatter)
+    subparsers = parser.add_subparsers(required=True)
 
-    parser.add_argument(
-        "-a",
-        "--alpha",
-        type=int,
-        help="An integer to do something to. Defaults to two (2).",
-        default=2,
-    )
-    parser.add_argument(
-        "-b",
-        "--beta",
-        type=int,
-        help="Another integer to do something to. Defaults to two (2).",
-        default=2,
-    )
+    # Add command to validate filing archive contents
+    validate_parser = subparsers.add_parser("validate")
+    validate_parser.set_defaults(func=lambda: GCSArchive().validate_archive())
 
     arguments = parser.parse_args(argv[1:])
     return arguments
@@ -61,12 +50,7 @@ def main() -> int:
     )
 
     args = parse_command_line(sys.argv)
-    caligula = do_something(a=args.alpha, b=args.beta)
-    print(
-        "If you are a man Winston, you are the last man: "
-        f"{args.alpha} + {args.beta} = {caligula}"
-    )
-    return 0
+    return args.func(**{key: val for key, val in vars(args).items() if key != "func"})
 
 
 if __name__ == "__main__":

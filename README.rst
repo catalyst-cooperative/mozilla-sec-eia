@@ -29,6 +29,40 @@ mozilla-sec-eia: Developing a linkage between SEC and EIA
 
 This repo contains exploratory development for an SEC-EIA linkage.
 
+Usage
+-----
+Utility functions for accessing and working with 10k filings as well as their exhibit
+21 attachments can be found in 'src/mozilla_sec_eia/utils.py'. The base class is the
+``GCSArchive`` which provides an interface to archived filings on GCS. To instantiate
+this class, the following environment variables need to be set, or defined in a ``.env``
+file:
+
+``GCS_BUCKET_NAME``
+``GCS_METADATA_DB_INSTANCE_CONNECTION``
+``GCS_IAM_USER``
+``GCS_METADATA_DB_NAME``
+
+This code sample shows how to use the class to fetch filings from the archive:
+
+.. code-block:: python
+
+   from mozilla_sec_eia.utils import GCSArchive
+   archive = GCSArchive()
+
+   # Get metadata from postgres instance
+   metadata_df = archive.get_metadata()
+
+   # Do some filtering to get filings of interest
+   filings = metadata_df.loc[...  # Get rows from original df
+
+   # This will download and cache filings locally for later use
+   # Successive calls to get_filings will not re-download filings which are already cahced
+   downloaded_filings = archive.get_filings(filings)
+
+   # Get exhibit 21's and extract subsidiary data
+   for filing in downloaded_filings:
+           cool_extraction_model(filing.get_ex_21().as_image())
+
 About Catalyst Cooperative
 =======================================================================================
 `Catalyst Cooperative <https://catalyst.coop>`__ is a small group of data
