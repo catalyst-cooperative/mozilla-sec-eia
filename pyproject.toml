@@ -27,7 +27,7 @@ dependencies = [
     "sqlalchemy>=2,<3",
     "timm>0.9,<1",
     "transformers>=4.3,<5",
-    "torch>=2.2,<3"
+    "torch>=2.2,<3",
     "google-cloud-storage>=2,<3",
     "pg8000",
     "cloud-sql-python-connector[pg8000]",
