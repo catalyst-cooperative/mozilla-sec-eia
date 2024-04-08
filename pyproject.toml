@@ -87,7 +87,7 @@ tests = [
     "pytest-console-scripts>=1.1,<2",  # Allow automatic testing of scripts
     "pytest-cov>=4,<6",  # Pytest plugin for working with coverage
     "pytest>=7,<9",  # Our testing framework
-    "pytest-mock>=3.0,<3.13",  # Pytest plugin for mocking function calls and objects
+    "pytest-mock>=3.0,<3.15",  # Pytest plugin for mocking function calls and objects
     "ruff>=0.0.290",  # A very fast python linter & autofixer
     "tox>=4,<5",  # Python test environment manager
 ]
