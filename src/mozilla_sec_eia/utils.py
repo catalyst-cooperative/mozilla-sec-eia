@@ -64,8 +64,12 @@ class Exhibit21(BaseModel):
                 f"Failed to create PDF from filing {self.filename} exhibit 21."
             )
 
-    def as_image(self) -> Image:
-        """Return a PIL Image of rendered exhibit 21."""
+    def as_image(self, scale_factor: float = 2.0) -> Image:
+        """Return a PIL Image of rendered exhibit 21.
+
+        Args:
+            scale_factor: Scale resolutin of output image (higher numbers increase resolution).
+        """
 
         def _v_stack_images(*images):
             """Generate composite of all supplied images."""
@@ -87,7 +91,11 @@ class Exhibit21(BaseModel):
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         pages = [
             Image.open(
-                io.BytesIO(doc.load_page(i).get_pixmap().pil_tobytes(format="PNG"))
+                io.BytesIO(
+                    doc.load_page(i)
+                    .get_pixmap(matrix=fitz.Matrix(scale_factor, scale_factor))
+                    .pil_tobytes(format="PNG")
+                )
             )
             for i in range(doc.page_count)
         ]
