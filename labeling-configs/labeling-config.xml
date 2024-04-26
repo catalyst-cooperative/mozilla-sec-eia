@@ -1,0 +1,13 @@
+<View>
+  <Image name="image" value="$ocr"/>
+  <Labels name="label" toName="image">
+    <Label value="B-Subsidiary" background="blue"/>
+    <Label value="I-Subsidiary" background="lightblue"/>
+    <Label value="B-Loc" background="red"/>
+    <Label value="I-Loc" background="pink"/>
+    <Label value="B-Own_Per" background="goldenrod"/>
+    <Label value="I-Own_Per" background="yellow"/>
+  </Labels>
+  <Rectangle name="bbox" toName="image" strokeWidth="3"/>
+  <TextArea name="transcription" toName="image" editable="true" perRegion="true" required="true" maxSubmissions="1" rows="5" placeholder="Recognized Text" displayMode="region-list"/>
+</View>
