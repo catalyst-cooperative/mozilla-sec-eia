@@ -71,19 +71,19 @@ for labeling data is as follows:
 
 * For each filing that you want to label, follow notebook 7 to create the
   inputs for Label Studio.
-   * First, create a PDF of the filing. Then, extract the bounding boxes
-   around each word and create a "task" JSON and image for each Ex. 21 table
-   that will be used in Label Studio
+  * First, create a PDF of the filing. Then, extract the bounding boxes
+    around each word and create a "task" JSON and image for each Ex. 21 table
+    that will be used in Label Studio
 * Upload these JSONs and images to the same bucket in GCS (the "unlabeled"
   bucket by default).
-* `Install Label Studio <https://labelstud.io/guide/install>`
+* `Install Label Studio <https://labelstud.io/guide/install>`_
 * Start Label Studio locally and create a project.
 * Under Settings, set the template/config for the project with the config
   found in ``labeling-configs/labeling-config.xml``. This should create the
   correct entity labels and UI setup.
 * Connect GCS to Label Studio:
   * Follow `these directions 
-    <https://labelstud.io/guide/storage#Google-Cloud-Storage>`
+    <https://labelstud.io/guide/storage#Google-Cloud-Storage>`_
     to connect the bucket to Label Studio.
   * Specific settings: Filter files for only JSONs (these are your tasks).
     Leave "Treat every bucket object as a source file" disabled.
