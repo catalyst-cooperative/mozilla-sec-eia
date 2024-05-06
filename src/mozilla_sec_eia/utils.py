@@ -105,13 +105,26 @@ class Sec10K(BaseModel):
     year_quarter: str
     ex_21: Exhibit21 | None
 
-    def __init__(self, filing_text: str, filename: str, cik: int, year_quarter: str, ex_21_version: str | None):
+    def __init__(
+        self,
+        filing_text: str,
+        filename: str,
+        cik: int,
+        year_quarter: str,
+        ex_21_version: str | None,
+    ):
         """Construct Sec10K class."""
         ex_21 = None
         if ex_21_version:
             ex_21 = Exhibit21.from_10k(filename, filing_text, ex_21_version)
 
-        super().__init__(filing_text=filing_text, filename=filename, cik=cik, year_quarter=year_quarter, ex_21=ex_21)
+        super().__init__(
+            filing_text=filing_text,
+            filename=filename,
+            cik=cik,
+            year_quarter=year_quarter,
+            ex_21=ex_21,
+        )
 
     def extract_company_data(self) -> dict:
         """Extract basic company data from filing."""
@@ -123,18 +136,27 @@ class Sec10K(BaseModel):
             match line.replace("\t", "").lower().split(":"):
                 case ["filer", ""]:
                     header = False
-                case [("company data" | "filing values" | "business address" | "business address" | "mail address" | "former company") as block, ""] if not header:
+                case [
+                    (
+                        "company data"
+                        | "filing values"
+                        | "business address"
+                        | "business address"
+                        | "mail address"
+                        | "former company"
+                    ) as block,
+                    "",
+                ] if not header:
                     current_block = block
                 case [key, ""] if current_block is not None:
                     key = f"{block}_{key}".replace(" ", "_")
-                    logger.warning(f"No value found for {key} for filing {self.filename}")
+                    logger.warning(
+                        f"No value found for {key} for filing {self.filename}"
+                    )
                 case [key, value] if current_block is not None:
                     key = f"{block}_{key}".replace(" ", "_")
                     values.append(
-                        {
-                            "filename": self.filename,
-                            key: value
-                        }
+                        {"filename": self.filename, "key": key, "value": value}
                     )
                 case ["</sec-header>"]:
                     break
@@ -142,7 +164,6 @@ class Sec10K(BaseModel):
                     continue
 
         return values
-
 
 
 class GCSArchive(BaseSettings):
@@ -300,7 +321,9 @@ class GCSArchive(BaseSettings):
         """
         for _, filing in filing_selection.iterrows():
             yield Sec10K(
-                filing_text=self.get_blob(filing["year_quarter"], filing["Filename"]).download_as_text(),
+                filing_text=self.get_blob(
+                    filing["year_quarter"], filing["Filename"]
+                ).download_as_text(),
                 filename=filing["Filename"],
                 cik=filing["CIK"],
                 year_quarter=filing["year_quarter"],
