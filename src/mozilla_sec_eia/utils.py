@@ -105,25 +105,44 @@ class Sec10K(BaseModel):
     year_quarter: str
     ex_21: Exhibit21 | None
 
-    @classmethod
-    def from_path(
-        cls, filing_path: Path, cik: int, year_quarter: str, ex_21_version: str | None
-    ):
-        """Cache filing locally, and return class wrapping filing."""
-        with filing_path.open() as f:
-            filing_text = f.read()
-            filename = filing_path.name
-            return cls(
-                filing_text=filing_text,
-                filename=filename,
-                cik=cik,
-                year_quarter=year_quarter,
-                ex_21=(
-                    Exhibit21.from_10k(filename, filing_text, ex_21_version)
-                    if ex_21_version
-                    else None
-                ),
-            )
+    def __init__(self, filing_text: str, filename: str, cik: int, year_quarter: str, ex_21_version: str | None):
+        """Construct Sec10K class."""
+        ex_21 = None
+        if ex_21_version:
+            ex_21 = Exhibit21.from_10k(filename, filing_text, ex_21_version)
+
+        super().__init__(filing_text=filing_text, filename=filename, cik=cik, year_quarter=year_quarter, ex_21=ex_21)
+
+    def extract_company_data(self) -> dict:
+        """Extract basic company data from filing."""
+        logger.info(f"Extracting 10K company data from filing: {self.filename}")
+        header = True
+        current_block = None
+        values = []
+        for line in self.filing_text.splitlines():
+            match line.replace("\t", "").lower().split(":"):
+                case ["filer", ""]:
+                    header = False
+                case [("company data" | "filing values" | "business address" | "business address" | "mail address" | "former company") as block, ""] if not header:
+                    current_block = block
+                case [key, ""] if current_block is not None:
+                    key = f"{block}_{key}".replace(" ", "_")
+                    logger.warning(f"No value found for {key} for filing {self.filename}")
+                case [key, value] if current_block is not None:
+                    key = f"{block}_{key}".replace(" ", "_")
+                    values.append(
+                        {
+                            "filename": self.filename,
+                            key: value
+                        }
+                    )
+                case ["</sec-header>"]:
+                    break
+                case _ if header:
+                    continue
+
+        return values
+
 
 
 class GCSArchive(BaseSettings):
@@ -241,7 +260,7 @@ class GCSArchive(BaseSettings):
         filing_selection: pd.DataFrame,
         cache_directory: Path = Path("./sec10k_filings"),
     ) -> list[Sec10K]:
-        """Caches filings locally for quick access, and returns generator producing paths.
+        """Caches filings locally for quick access, and list of Sec10K objects.
 
         Args:
             filing_selection: Pandas dataframe with same schema as metadata df where each row
@@ -250,16 +269,43 @@ class GCSArchive(BaseSettings):
         """
         filings = []
         for _, filing in filing_selection.iterrows():
-            filing_path = self.cache_filing(filing, cache_directory)
-            filings.append(
-                Sec10K.from_path(
-                    filing_path,
-                    filing["CIK"],
-                    filing["year_quarter"],
-                    filing["exhibit_21_version"],
+            with self.cache_filing(filing, cache_directory).open() as f:
+                filings.append(
+                    Sec10K(
+                        filing_text=f.read(),
+                        filename=filing["Filename"],
+                        cik=filing["CIK"],
+                        year_quarter=filing["year_quarter"],
+                        ex_21_version=filing["exhibit_21_version"],
+                    )
                 )
-            )
         return filings
+
+    def iterate_filings(
+        self,
+        filing_selection: pd.DataFrame,
+        cache_directory: Path = Path("./sec10k_filings"),
+    ):
+        """Iterate through filings without caching locally.
+
+        This method will only download a filing when ``next()`` is called on the
+        returned iterator, and it will not save filings to disk. This is useful
+        when working with a large selection of filings to avoid using excessive
+        amounts of disk space to save all filings.
+
+        Args:
+            filing_selection: Pandas dataframe with same schema as metadata df where each row
+                is a filing to return.
+            cache_directory: Path to directory where filings should be cached.
+        """
+        for _, filing in filing_selection.iterrows():
+            yield Sec10K(
+                filing_text=self.get_blob(filing["year_quarter"], filing["Filename"]).download_as_text(),
+                filename=filing["Filename"],
+                cik=filing["CIK"],
+                year_quarter=filing["year_quarter"],
+                ex_21_version=filing["exhibit_21_version"],
+            )
 
     def validate_archive(self) -> bool:
         """Validate that all filings described in metadata table exist in GCS bucket."""
