@@ -23,7 +23,7 @@ def extract():
     extracted = []
     with ProcessPoolExecutor() as executor:
         for i, ext in enumerate(
-            executor.map(_extract_10k, archive.iterate_filings(metadata.sample(100)))
+            executor.map(_extract_10k, archive.iterate_filings(metadata))
         ):
             extracted += ext
             if (i % 10) == 0:
@@ -36,4 +36,5 @@ def extract():
         method="multi",
         if_exists="replace",
         index=False,
+        chunksize=4000,
     )

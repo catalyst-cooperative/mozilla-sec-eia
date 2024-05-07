@@ -242,6 +242,10 @@ class GCSArchive(BaseSettings):
             )
         return self._metadata_df
 
+    def get_basic_10k(self) -> pd:
+        """Return dataframe of basic 10k data."""
+        return pd.read_sql("SELECT * FROM basic_10k", self._engine)
+
     def get_blob(self, year_quarter: str, path: str) -> storage.Blob:
         """Return Blob pointing to file in GCS bucket."""
         return self._bucket.blob(f"sec10k/sec10k-{year_quarter}/{path}")
