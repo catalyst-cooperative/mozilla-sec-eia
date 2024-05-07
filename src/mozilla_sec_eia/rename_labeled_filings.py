@@ -1,3 +1,14 @@
+"""Rename labeled filings in GCS after importing from Label Studio.
+
+After importing labeled documents from Label Studio into GCS the
+labeled items in the bucket do not share the same filename of the
+unlabeled version of that document, instead the items are just
+named with the task number from Label Studio. This script looks
+inside the labeled JSON and gets the filename of the unlabeled
+document. It then labels the labeled item in GCS with that
+filename.
+"""
+
 from mozilla_sec_eia.utils import GCSArchive
 import json
 
