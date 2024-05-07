@@ -132,15 +132,23 @@ class Sec10K(BaseModel):
         header = True
         current_block = None
         values = []
+        filer_count = 0
+        block_counts = {
+            "company data": 0,
+            "filing values": 0,
+            "business address": 0,
+            "mail address": 0,
+            "former company": 0,
+        }
         for line in self.filing_text.splitlines():
             match line.replace("\t", "").lower().split(":"):
                 case ["filer", ""]:
+                    filer_count += 1
                     header = False
                 case [
                     (
                         "company data"
                         | "filing values"
-                        | "business address"
                         | "business address"
                         | "mail address"
                         | "former company"
@@ -148,6 +156,7 @@ class Sec10K(BaseModel):
                     "",
                 ] if not header:
                     current_block = block
+                    block_counts[current_block] += 1
                 case [key, ""] if current_block is not None:
                     key = f"{block}_{key}".replace(" ", "_")
                     logger.warning(
@@ -158,7 +167,9 @@ class Sec10K(BaseModel):
                     values.append(
                         {
                             "filename": self.filename,
+                            "filer_count": filer_count,
                             "block": current_block.replace(" ", "_"),
+                            "block_count": block_counts[current_block],
                             "key": key.replace(" ", "_"),
                             "value": value,
                         }
