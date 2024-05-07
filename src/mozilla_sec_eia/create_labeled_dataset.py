@@ -5,7 +5,6 @@ import logging
 import os
 from pathlib import Path
 
-from datasets import Dataset
 import fitz
 import pandas as pd
 
@@ -161,7 +160,7 @@ def format_label_studio_output(
     tracking_df = pd.read_csv("../../labeled_data_tracking.csv")
     for json_filename in os.listdir(labeled_json_dir):
         json_file_path = labeled_json_dir / json_filename
-        with open(json_file_path, "r") as j:
+        with open(json_file_path) as j:
             doc_dict = json.loads(j.read())
             filename = doc_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
             if not _is_cik_in_training_data(filename, tracking_df=tracking_df):

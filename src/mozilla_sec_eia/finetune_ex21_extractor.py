@@ -5,19 +5,11 @@ a LayoutLM model to extract unstructured Exhibit 21 tables
 from SEC 10K filings.
 """
 
-from datasets import (
-    Dataset,
-    ClassLabel,
-    Features,
-    Sequence,
-    Value,
-    Array2D,
-    Array3D,
-    load_metric,
-)
-import torch
 import numpy as np
-from transformers import AutoProcessor
+from datasets import (
+    ClassLabel,
+    Dataset,
+)
 
 
 class LayoutLMFineTuner:
