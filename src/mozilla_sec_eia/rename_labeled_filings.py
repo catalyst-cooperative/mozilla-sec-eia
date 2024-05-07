@@ -9,7 +9,6 @@ document. It then labels the labeled item in GCS with that
 filename.
 """
 
-from mozilla_sec_eia.utils import GCSArchive
 import json
 
 from mozilla_sec_eia.utils import GCSArchive
