@@ -12,6 +12,8 @@ filename.
 from mozilla_sec_eia.utils import GCSArchive
 import json
 
+from mozilla_sec_eia.utils import GCSArchive
+
 archive = GCSArchive(GCS_BUCKET_NAME="labeled-ex21-filings")
 
 labeled_bucket_name = "labeled"
