@@ -4,15 +4,14 @@ Used to prepare inputs for Ex. 21 extraction modeling.
 Functions include drawing bounding boxes around words.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import cv2
 import fitz
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from PIL import Image
-
 
 PDF_POINTS_PER_INCH = 72  # believe this is standard for all PDFs
 
@@ -156,7 +155,7 @@ def _parse_word_block(word_block: tuple) -> pd.DataFrame:
     return out
 
 
-def _frac_normal_ascii(text: Union[str, bytes]) -> float:
+def _frac_normal_ascii(text: str | bytes) -> float:
     """Fraction of characters that are normal ASCII characters."""
     # normal characters, from space to tilde, plus whitespace
     # see https://www.asciitable.com/
@@ -249,7 +248,7 @@ def pdf_coords_to_pixel_coords(coords: np.ndarray, dpi: int) -> np.ndarray:
 
 def get_label_studio_bbox_dicts(
     bbox: pd.Series, ind, x_norm, y_norm, original_width, original_height
-) -> List[Dict]:
+) -> list[dict]:
     """Create a dictionary to label a bbox in Label Studio.
 
     A Label Studio task dictionary is made up of these dictionaries
@@ -303,9 +302,7 @@ def get_label_studio_bbox_dicts(
     return [box_dict, word_dict]
 
 
-def render_page(
-    pg: fitz.Page, dpi=150, clip: Optional[fitz.Rect] = None
-) -> Image.Image:
+def render_page(pg: fitz.Page, dpi=150, clip: fitz.Rect | None = None) -> Image.Image:
     """Render a page of a PDF as a PIL.Image object.
 
     Args:
