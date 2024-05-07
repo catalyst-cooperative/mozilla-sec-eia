@@ -154,9 +154,14 @@ class Sec10K(BaseModel):
                         f"No value found for {key} for filing {self.filename}"
                     )
                 case [key, value] if current_block is not None:
-                    key = f"{block}_{key}".replace(" ", "_")
+                    key = key.replace(" ", "_")
                     values.append(
-                        {"filename": self.filename, "key": key, "value": value}
+                        {
+                            "filename": self.filename,
+                            "block": current_block.replace(" ", "_"),
+                            "key": key.replace(" ", "_"),
+                            "value": value,
+                        }
                     )
                 case ["</sec-header>"]:
                     break

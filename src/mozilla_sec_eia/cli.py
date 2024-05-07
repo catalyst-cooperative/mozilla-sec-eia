@@ -9,6 +9,7 @@ import argparse
 import logging
 import sys
 
+from mozilla_sec_eia.basic_10k import extract
 from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
@@ -37,6 +38,10 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     # Add command to validate filing archive contents
     validate_parser = subparsers.add_parser("validate")
     validate_parser.set_defaults(func=lambda: GCSArchive().validate_archive())
+
+    # Add command to extract basic 10k data
+    validate_parser = subparsers.add_parser("extract")
+    validate_parser.set_defaults(func=extract)
 
     arguments = parser.parse_args(argv[1:])
     return arguments
