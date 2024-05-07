@@ -5,7 +5,6 @@ import logging
 import os
 from pathlib import Path
 
-from datasets import Dataset
 import fitz
 import pandas as pd
 
@@ -154,6 +153,7 @@ def _is_cik_in_training_data(labeled_json_filename, tracking_df):
 def format_label_studio_output(
     labeled_json_dir, pdfs_dir: Path = Path("./sec10k_filings/pdfs")
 ) -> pd.DataFrame:
+    """Format Label Studio output JSONs into dataframe."""
     labeled_df = pd.DataFrame()
     image_dict = {}  # TODO: do we need this image dict?
     # TODO: make this path reference package root dir?
@@ -161,7 +161,7 @@ def format_label_studio_output(
     tracking_df = pd.read_csv("../../labeled_data_tracking.csv")
     for json_filename in os.listdir(labeled_json_dir):
         json_file_path = labeled_json_dir / json_filename
-        with open(json_file_path, "r") as j:
+        with Path.open(json_file_path) as j:
             doc_dict = json.loads(j.read())
             filename = doc_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
             if not _is_cik_in_training_data(filename, tracking_df=tracking_df):
@@ -226,7 +226,7 @@ def _get_image_dict(labeled_df):
     return image_dict
 
 
-def format_as_ner_annotations(labeled_df):
+def format_as_ner_annotations(labeled_df) -> list[dict]:
     """Format a dataframe of labeled Ex. 21 as NER annotations.
 
     Expects the output of format_label_studio_output as input dataframe.
@@ -247,9 +247,9 @@ def format_as_ner_annotations(labeled_df):
             "id": filename,
             "tokens": labeled_df.groupby("id")["text"].apply(list).loc[filename],
             "ner_tags": labeled_df.groupby("id")["ner_tag"].apply(list).loc[filename],
-            "bboxes": labeled_df.loc[labeled_df["id"] == filename, :][
-                BBOX_COLS
-            ].values.tolist(),
+            "bboxes": labeled_df.loc[labeled_df["id"] == filename, :][BBOX_COLS]
+            .to_numpy()
+            .tolist(),
             "image": image_dict[filename],
         }
         ner_annotations.append(annotation)
