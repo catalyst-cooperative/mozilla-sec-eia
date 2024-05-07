@@ -10,12 +10,12 @@ from mozilla_sec_eia.utils import GCSArchive
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
+def _extract_10k(filing):
+    return filing.extract_company_data()
+
+
 def extract():
     """Extract basic 10K data and write to postgres table."""
-
-    def extract_10k(filing):
-        return filing.extract_company_data()
-
     logger.info("Starting basic 10K extraction.")
     archive = GCSArchive()
     metadata = archive.get_metadata()
@@ -23,7 +23,7 @@ def extract():
     extracted = []
     with ProcessPoolExecutor() as executor:
         for i, ext in enumerate(
-            executor.map(extract_10k, archive.iterate_filings(metadata))
+            executor.map(_extract_10k, archive.iterate_filings(metadata.sample(100)))
         ):
             extracted += ext
             if (i % 10) == 0:

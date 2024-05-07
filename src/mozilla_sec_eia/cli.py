@@ -9,6 +9,8 @@ import argparse
 import logging
 import sys
 
+import coloredlogs
+
 from mozilla_sec_eia.basic_10k import extract
 from mozilla_sec_eia.utils import GCSArchive
 
@@ -49,10 +51,9 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
 def main() -> int:
     """Demonstrate a really basic command line interface (CLI) that takes arguments."""
-    logging.basicConfig(
-        format="%(asctime)s [%(levelname)8s] %(name)s:%(lineno)s %(message)s",
-        level=logging.INFO,
-    )
+    logger = logging.getLogger("catalystcoop")
+    log_format = "%(asctime)s [%(levelname)8s] %(name)s:%(lineno)s %(message)s"
+    coloredlogs.install(fmt=log_format, logger=logger)
 
     args = parse_command_line(sys.argv)
     return args.func(**{key: val for key, val in vars(args).items() if key != "func"})

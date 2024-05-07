@@ -163,7 +163,7 @@ class Sec10K(BaseModel):
                             "value": value,
                         }
                     )
-                case ["</sec-header>"]:
+                case ["</sec-header>" | "</ims-header>"]:
                     break
                 case _ if header:
                     continue
