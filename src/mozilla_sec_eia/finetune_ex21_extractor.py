@@ -30,46 +30,58 @@ LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
 class LayoutLMFineTuner:
     """A class to fine-tune LayooutLM for Ex. 21 extraction."""
 
-    dataset: Dataset
-    label_list: list
-    id2label: dict
-    label2id: dict
-    class_label: ClassLabel
-    column_names: list
     # Use the Auto API to load LayoutLMv3Processor based on the
     # checkpoint from the hub. Don't apply OCR because we
     # already got bboxes from the text PDF.
     processor = AutoProcessor.from_pretrained(
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
-    model: LayoutLMv3ForTokenClassification
 
-    def __init__(self):
+    def __init__(self, dataset, labels=LABELS):
         """Initialize LayoutLMFineTuner."""
-        self.set_train_test_dataset()
+        self.dataset = dataset
+        self.label_list = labels
+        self.id2label = dict(enumerate(self.label_list))
+        self.label2id = {v: k for k, v in enumerate(self.label_list)}
+        self.class_label = ClassLabel(names=self.label_list)
+        self.column_names = self.dataset["train"].column_names
+        self.model = LayoutLMv3ForTokenClassification.from_pretrained(
+            "microsoft/layoutlmv3-base", id2label=self.id2label, label2id=self.label2id
+        )
         self.metric = load_metric("seqeval")
+        features = Features(
+            {
+                "pixel_values": Array3D(dtype="float32", shape=(3, 224, 224)),
+                "input_ids": Sequence(feature=Value(dtype="int64")),
+                "attention_mask": Sequence(Value(dtype="int64")),
+                "bbox": Array2D(dtype="int64", shape=(512, 4)),
+                "labels": Sequence(feature=Value(dtype="int64")),
+            }
+        )
+
+        # Prepare our train & eval dataset
+        self.train_dataset = self.dataset["train"].map(
+            self.prepare_dataset,
+            batched=True,
+            remove_columns=self.column_names,
+            features=features,
+        )
+        # self.train_dataset.set_format("torch")
+        self.eval_dataset = self.dataset["test"].map(
+            self.prepare_dataset,
+            batched=True,
+            remove_columns=self.column_names,
+            features=features,
+        )
+        # self.eval_dataset.set_format("torch")
 
     @classmethod
     def from_ner_annotations(cls, ner_annotations: list[dict], test_size=0.2):
         """Create LayoutLMFineTuner from labeled NER annotations."""
         dataset = Dataset.from_list(ner_annotations)
         dataset = dataset.train_test_split(test_size=test_size)
-        label_list = LABELS
-        id2label = dict(enumerate(label_list))
-        label2id = {v: k for k, v in enumerate(label_list)}
-        class_label = ClassLabel(names=label_list)
-        column_names = dataset.column_names
-        model = LayoutLMv3ForTokenClassification.from_pretrained(
-            "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
-        )
         return cls(
             dataset=dataset,
-            label_list=label_list,
-            id2label=id2label,
-            label2id=label2id,
-            class_label=class_label,
-            column_names=column_names,
-            model=model,
         )
 
     def _convert_ner_tags_to_id(self, ner_tags):
@@ -97,34 +109,6 @@ class LayoutLMFineTuner:
 
         return encoding
 
-    def set_train_test_dataset(self):
-        """Define a train and test set."""
-        features = Features(
-            {
-                "pixel_values": Array3D(dtype="float32", shape=(3, 224, 224)),
-                "input_ids": Sequence(feature=Value(dtype="int64")),
-                "attention_mask": Sequence(Value(dtype="int64")),
-                "bbox": Array2D(dtype="int64", shape=(512, 4)),
-                "labels": Sequence(feature=Value(dtype="int64")),
-            }
-        )
-
-        # Prepare our train & eval dataset
-        self.train_dataset = self.dataset["train"].map(
-            self.prepare_dataset,
-            batched=True,
-            remove_columns=self.column_names,
-            features=features,
-        )
-        self.train_dataset.set_format("torch")
-        self.test_dataset = self.dataset["test"].map(
-            self.prepare_dataset,
-            batched=True,
-            remove_columns=self.column_names,
-            features=features,
-        )
-        self.test_dataset.set_format("torch")
-
     def train_model(self, model_output_dir):
         """Train LayoutLM model with labeled data.
 
@@ -148,7 +132,7 @@ class LayoutLMFineTuner:
             model=self.model,
             args=training_args,
             train_dataset=self.train_dataset,
-            eval_dataset=self.test_dataset,
+            eval_dataset=self.eval_dataset,
             tokenizer=self.processor,
             data_collator=default_data_collator,
             compute_metrics=self.compute_metrics,
