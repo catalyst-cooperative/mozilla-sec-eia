@@ -36,12 +36,18 @@ class LayoutLMFineTuner:
     label2id: dict
     class_label: ClassLabel
     column_names: list
-    processor: AutoProcessor
+    # Use the Auto API to load LayoutLMv3Processor based on the
+    # checkpoint from the hub. Don't apply OCR because we
+    # already got bboxes from the text PDF.
+    processor = AutoProcessor.from_pretrained(
+        "microsoft/layoutlmv3-base", apply_ocr=False
+    )
     model: LayoutLMv3ForTokenClassification
 
-    train_dataset: Dataset
-    test_dataset: Dataset
-    metric = load_metric("seqeval")
+    def __init__(self):
+        """Initialize LayoutLMFineTuner."""
+        self.set_train_test_dataset()
+        self.metric = load_metric("seqeval")
 
     @classmethod
     def from_ner_annotations(cls, ner_annotations: list[dict], test_size=0.2):
@@ -53,13 +59,6 @@ class LayoutLMFineTuner:
         label2id = {v: k for k, v in enumerate(label_list)}
         class_label = ClassLabel(names=label_list)
         column_names = dataset.column_names
-        # Use the Auto API to load LayoutLMv3Processor
-        # based on the checkpoint from the hub.
-        # don't apply OCR because we already got bboxes
-        # from the text PDF
-        processor = AutoProcessor.from_pretrained(
-            "microsoft/layoutlmv3-base", apply_ocr=False
-        )
         model = LayoutLMv3ForTokenClassification.from_pretrained(
             "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
         )
@@ -70,7 +69,6 @@ class LayoutLMFineTuner:
             label2id=label2id,
             class_label=class_label,
             column_names=column_names,
-            processor=processor,
             model=model,
         )
 
@@ -159,7 +157,7 @@ class LayoutLMFineTuner:
         # TODO: move into separate evaluation function?
         trainer.evaluate()
 
-    def compute_metrics(self, p, metric, return_entity_level_metrics=False):
+    def compute_metrics(self, p, return_entity_level_metrics=False):
         """Compute metrics to train and evaluate the model on."""
         predictions, labels = p
         predictions = np.argmax(predictions, axis=2)
@@ -182,7 +180,9 @@ class LayoutLMFineTuner:
             for prediction, label in zip(predictions, labels)
         ]
 
-        results = metric.compute(predictions=true_predictions, references=true_labels)
+        results = self.metric.compute(
+            predictions=true_predictions, references=true_labels
+        )
         if return_entity_level_metrics:
             # Unpack nested dictionaries
             final_results = {}

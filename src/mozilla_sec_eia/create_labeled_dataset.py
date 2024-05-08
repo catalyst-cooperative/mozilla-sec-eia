@@ -8,6 +8,7 @@ from pathlib import Path
 import fitz
 import pandas as pd
 
+from mozilla_sec_eia import ROOT_DIR
 from mozilla_sec_eia.pdf_text_extraction_utils import (
     extract_pdf_data_from_page,
     pil_to_cv2,
@@ -96,7 +97,6 @@ def _get_pdf_data(pdf_path):
     doc = fitz.Document(str(pdf_path))
     assert doc.is_pdf
     pg = doc[0]
-    pg = _get_pdf_data(pdf_path)
     extracted = extract_pdf_data_from_page(pg)
     return extracted, pg
 
@@ -150,15 +150,15 @@ def _is_cik_in_training_data(labeled_json_filename, tracking_df):
 
 
 # TODO: make this work with GCS input directory not local
+# TODO: have default paths?
 def format_label_studio_output(
-    labeled_json_dir, pdfs_dir: Path = Path("./sec10k_filings/pdfs")
+    labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
+    pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
 ) -> pd.DataFrame:
     """Format Label Studio output JSONs into dataframe."""
     labeled_df = pd.DataFrame()
-    image_dict = {}  # TODO: do we need this image dict?
-    # TODO: make this path reference package root dir?
-    # TODO: use Path to make path less janky
-    tracking_df = pd.read_csv("../../labeled_data_tracking.csv")
+    # TODO: make this path stuff less janky?
+    tracking_df = pd.read_csv(ROOT_DIR / "labeled_data_tracking.csv")
     for json_filename in os.listdir(labeled_json_dir):
         json_file_path = labeled_json_dir / json_filename
         with Path.open(json_file_path) as j:
@@ -171,7 +171,6 @@ def format_label_studio_output(
             extracted, pg = _get_pdf_data(src_path)
             txt = extracted["pdf_text"]
             pg_meta = extracted["page"]
-            full_pg_img = render_page(pg)
 
             # normalize bboxes between 0 and 1000 for Hugging Face
             txt["top_left_x_pdf"] = (
@@ -203,7 +202,6 @@ def format_label_studio_output(
             txt.loc[:, "id"] = filename
             output_df = pd.concat([txt, doc_df[["labels"]]], axis=1)
             labeled_df = pd.concat([labeled_df, output_df])
-            image_dict[filename] = full_pg_img
 
     # fill in unlabeled words and clean up labeled dataframe
     labeled_df["labels"] = labeled_df["labels"].fillna("O")
@@ -217,16 +215,23 @@ def format_label_studio_output(
     return labeled_df
 
 
-# TODO: figure out whether image dict should be created here or not
-def _get_image_dict(labeled_df):
+def _get_image_dict(pdfs_dir):
     image_dict = {}
-    for filename in labeled_df["id"].unique():
-        continue
-        # read in image from cached images as PIL and save with key as id
+    for pdf_filename in os.listdir(pdfs_dir):
+        if pdf_filename.split(".")[-1] != "pdf":
+            continue
+        pdf_file_path = pdfs_dir / pdf_filename
+        _, pg = _get_pdf_data(pdf_file_path)
+        full_pg_img = render_page(pg)
+        filename = pdf_filename.split(".")[0]
+        image_dict[filename] = full_pg_img
     return image_dict
 
 
-def format_as_ner_annotations(labeled_df) -> list[dict]:
+def format_as_ner_annotations(
+    labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
+    pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
+) -> list[dict]:
     """Format a dataframe of labeled Ex. 21 as NER annotations.
 
     Expects the output of format_label_studio_output as input dataframe.
@@ -236,11 +241,14 @@ def format_as_ner_annotations(labeled_df) -> list[dict]:
     Returns:
         ner_annotations: a list of dicts, with one dict for each doc.
     """
+    labeled_df = format_label_studio_output(
+        labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
+    )
     # convert dataframe/dictionary into NER format
     # document_annotation_to_ner https://github.com/butlerlabs/docai/blob/main/docai/annotations/ner_utils.py
     # complete dataset is a list of dicts, with one dict for each doc
     doc_filenames = labeled_df["id"].unique()
-    image_dict = _get_image_dict(labeled_df=labeled_df)
+    image_dict = _get_image_dict(pdfs_dir=pdfs_dir)
     ner_annotations = []
     for filename in doc_filenames:
         annotation = {
