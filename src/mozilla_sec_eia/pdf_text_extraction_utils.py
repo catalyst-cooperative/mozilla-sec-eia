@@ -56,7 +56,7 @@ def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
             "image_area_frac": np.float32,
         }
     )
-    meta = dict(page=meta_df)
+    meta = {"page": meta_df}
     for df in contents.values():  # add ID fields
         if not df.empty:
             df["page_num"] = np.int16(page.number)
@@ -76,7 +76,7 @@ def _parse_page_contents(page: fitz.Page) -> dict[str, pd.DataFrame]:
         if block["type"] == 0:
             # skip over text, we'll parse it by word blocks
             continue
-        elif block["type"] == 1:
+        if block["type"] == 1:
             images.append(_parse_image_block(block))
         else:
             raise ValueError(f"Unknown block type: {block['type']}")
@@ -84,10 +84,7 @@ def _parse_page_contents(page: fitz.Page) -> dict[str, pd.DataFrame]:
         parsed = _parse_word_block(word_block)
         if not parsed.empty:
             text.append(parsed)
-    if text:
-        text = pd.concat(text, axis=0, ignore_index=True)
-    else:
-        text = pd.DataFrame()
+    text = pd.concat(text, axis=0, ignore_index=True) if text else pd.DataFrame()
     if images:
         images = pd.concat(
             (pd.DataFrame(image) for image in images), axis=0, ignore_index=True
@@ -95,7 +92,7 @@ def _parse_page_contents(page: fitz.Page) -> dict[str, pd.DataFrame]:
     else:
         images = pd.DataFrame()
 
-    return dict(pdf_text=text, image=images)
+    return {"pdf_text": text, "image": images}
 
 
 def _parse_image_block(img_block: dict[str, Any]) -> pd.DataFrame:
@@ -214,8 +211,8 @@ def cv2_to_pil(img: np.ndarray) -> Image.Image:
     """Create PIL Image from numpy pixel array."""
     if len(img.shape) == 2:  # single channel, AKA grayscale
         return Image.fromarray(img)
-    else:  # only handle BGR for now
-        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    # only handle BGR for now
+    return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
 
 def display_img_array(img: np.ndarray, figsize=(5, 5), **kwargs):
@@ -223,8 +220,7 @@ def display_img_array(img: np.ndarray, figsize=(5, 5), **kwargs):
     plt.figure(figsize=figsize)
     if len(img.shape) == 2:  # grayscale
         return plt.imshow(img, cmap="gray", vmin=0, vmax=255, **kwargs)
-    else:
-        return plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), **kwargs)
+    return plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), **kwargs)
 
 
 def overlay_bboxes(
@@ -316,7 +312,7 @@ def render_page(pg: fitz.Page, dpi=150, clip: fitz.Rect | None = None) -> Image.
         Image.Image: PDF page rendered as a PIL.Image object
     """
     # 300 dpi is what tesseract recommends. PaddleOCR seems to do fine with half that.
-    render: fitz.Pixmap = pg.get_pixmap(dpi=dpi, clip=clip)  # type: ignore
+    render: fitz.Pixmap = pg.get_pixmap(dpi=dpi, clip=clip)
     img = _pil_img_from_pixmap(render)
     return img
 
