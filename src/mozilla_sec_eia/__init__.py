@@ -1,12 +1,14 @@
 """A template repository for a Python package created by Catalyst Cooperative."""
 
 import logging
+from pathlib import Path
 
 import pkg_resources
 
 # In order for the package modules to be available when you import the package,
 # they need to be imported here somehow. Not sure if this is best practice though.
 import mozilla_sec_eia.cli
+import mozilla_sec_eia.finetune_ex21_extractor
 import mozilla_sec_eia.utils  # noqa: F401
 
 __author__ = "Catalyst Cooperative"
@@ -26,3 +28,5 @@ __downloadurl__ = "https://github.com/catalyst-cooperative/mozilla-sec-eia"
 # Create a root logger for use anywhere within the package.
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
+ROOT_DIR = Path(__file__).parent.parent.parent.resolve()

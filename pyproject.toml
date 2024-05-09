@@ -20,8 +20,11 @@ license = {file = "LICENSE.txt"}
 dependencies = [
     "accelerate>=0.21.0,<1.0", # Hugging Face dependency for PyTorch models
     "cloud-sql-python-connector[pg8000]",
+    "datasets>=2.1,<3", # Access Hugging Face datasets
+    "seqeval>=1.2,<2", # Sequence labeling evaluation
     "google-cloud-storage>=2,<3",
     "matplotlib>=3.8,<4",
+    "opencv-python",
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
     "pg8000",
     "pillow>=10.2,<11",
@@ -69,9 +72,9 @@ mozilla_dev = "mozilla_sec_eia.cli:main"
 dev = [
     "build>=1,<2",  # The setuptools package builder
     "black>=22,<25",  # A deterministic code formatter
+    # "label-studio>=1.12,<2.0", # Tool for labeling training data, exclude until pydantic upgrade
     "tox>=4,<5",  # Python test environment manager
     "twine>=4,<6",  # Used to make releases to PyPI
-    "datasets>=2.1,<3" # Access Hugging Face datasets
 ]
 docs = [
     "doc8>=1,<2",  # Ensures clean documentation formatting

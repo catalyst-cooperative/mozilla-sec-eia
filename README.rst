@@ -63,6 +63,38 @@ This code sample shows how to use the class to fetch filings from the archive:
    for filing in downloaded_filings:
            cool_extraction_model(filing.get_ex_21().as_image())
 
+Labeling
+--------
+We are using `Label Studio <https://labelstud.io/>`_ to create training data
+for fine-tuning the Ex. 21 extraction model. The very preliminary workflow
+for labeling data is as follows:
+
+* For each filing that you want to label, follow notebook 7 to create the
+  inputs for Label Studio. This notebook first creates a PDF of the filing.
+  Then, it extracts the bounding boxes around each word and create a "task"
+  JSON and image for each Ex. 21 table that will be used in Label Studio.
+* Upload these JSONs and images to the same bucket in GCS (the "unlabeled"
+  bucket by default).
+* `Install Label Studio <https://labelstud.io/guide/install>`_
+* Start Label Studio locally and create a project.
+* Under Settings, set the template/config for the project with the config
+  found in ``labeling-configs/labeling-config.xml``. This should create the
+  correct entity labels and UI setup.
+* Connect GCS to Label Studio by following `these directions
+  <https://labelstud.io/guide/storage#Google-Cloud-Storage>`_
+* Specific Label Studio settings: Filter files for only JSONs
+  (these are your tasks). Leave "Treat every bucket object as a source file"
+  disabled. Add the service account authentication JSON for your bucket.
+* Additionally add a Target Storage bucket (the "labeled" bucket by
+  default).
+* Import data and label Ex. 21 tables.
+* Sync with target storage.
+* Update the ``labeled_data_tracking.csv`` with the new filings you've
+  labeled.
+* Run the ``rename_labeled_filings.py`` script to update labeled file
+  names in the GCS bucket with their SEC filename.
+
+
 About Catalyst Cooperative
 =======================================================================================
 `Catalyst Cooperative <https://catalyst.coop>`__ is a small group of data
