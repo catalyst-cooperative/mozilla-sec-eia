@@ -27,8 +27,8 @@ from transformers.data.data_collator import default_data_collator
 LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
 
 
-class LayoutLMFineTuner:
-    """A class to fine-tune LayooutLM for Ex. 21 extraction."""
+class LayoutLMExtractor:
+    """A class to fine-tune LayoutLM for Ex. 21 extraction."""
 
     # Use the Auto API to load LayoutLMv3Processor based on the
     # checkpoint from the hub. Don't apply OCR because we
@@ -37,8 +37,8 @@ class LayoutLMFineTuner:
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
 
-    def __init__(self, dataset, labels=LABELS):
-        """Initialize LayoutLMFineTuner."""
+    def __init__(self, dataset, labels=LABELS, model_path="microsoft/layoutlmv3-base"):
+        """Initialize LayoutLMExtractor."""
         self.dataset = dataset
         self.label_list = labels
         self.id2label = dict(enumerate(self.label_list))
@@ -46,7 +46,7 @@ class LayoutLMFineTuner:
         self.class_label = ClassLabel(names=self.label_list)
         self.column_names = self.dataset["train"].column_names
         self.model = LayoutLMv3ForTokenClassification.from_pretrained(
-            "microsoft/layoutlmv3-base", id2label=self.id2label, label2id=self.label2id
+            model_path, id2label=self.id2label, label2id=self.label2id
         )
         self.metric = load_metric("seqeval")
         features = Features(
@@ -76,13 +76,17 @@ class LayoutLMFineTuner:
         # self.eval_dataset.set_format("torch")
 
     @classmethod
-    def from_ner_annotations(cls, ner_annotations: list[dict], test_size=0.2):
-        """Create LayoutLMFineTuner from labeled NER annotations."""
+    def from_ner_annotations(
+        cls,
+        ner_annotations: list[dict],
+        test_size=0.2,
+        labels=LABELS,
+        model_path="microsoft/layoutlmv3-base",
+    ):
+        """Create LayoutLMExtractor from labeled NER annotations."""
         dataset = Dataset.from_list(ner_annotations)
         dataset = dataset.train_test_split(test_size=test_size)
-        return cls(
-            dataset=dataset,
-        )
+        return cls(dataset=dataset, labels=labels, model_path=model_path)
 
     def _convert_ner_tags_to_id(self, ner_tags):
         return [int(self.label2id[ner_tag]) for ner_tag in ner_tags]

@@ -11,7 +11,7 @@ import fitz
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 PDF_POINTS_PER_INCH = 72  # believe this is standard for all PDFs
 
@@ -347,3 +347,45 @@ def _pil_img_from_pixmap(pix: fitz.Pixmap) -> Image.Image:
 
     img = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
     return img
+
+
+def unnormalize_box(bbox, width, height):
+    """Unnormalize a bounding box from Transformer normalization."""
+    return [
+        width * (bbox[0] / 1000),
+        height * (bbox[1] / 1000),
+        width * (bbox[2] / 1000),
+        height * (bbox[3] / 1000),
+    ]
+
+
+def iob_to_label(label):
+    """Convert IOB format label to simplified label."""
+    label = label[2:]
+    if not label:
+        return "other"
+    return label
+
+
+def draw_boxes_on_img(preds_or_labels, boxes, image, unnormalize=False):
+    """Visualize bboxes on an image.
+
+    TODO: add more detail on what arguments mean here
+    """
+    label_color_lookup = {
+        "subsidiary": "green",
+        "loc": "red",
+        "own_per": "orange",
+    }
+    font = ImageFont.load_default()
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+    for pred_or_label, box in zip(preds_or_labels, boxes):
+        label = iob_to_label(pred_or_label).lower()
+        if label == "other":
+            continue
+        if unnormalize:
+            box = unnormalize_box(box, width, height)
+        color = label_color_lookup[label]
+        draw.rectangle(box, outline=color)
+        draw.text((box[0] + 10, box[1] - 10), text=label, fill=color, font=font)
