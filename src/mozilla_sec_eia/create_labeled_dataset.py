@@ -27,8 +27,8 @@ BBOX_COLS = [
 
 
 def create_inputs_for_label_studio(
-    pdfs_dir: Path = Path("./sec10k_filings/pdfs"),
-    cache_dir: Path = Path("./sec10k_filings"),
+    pdfs_dir: Path = ROOT_DIR / "sec10k_filings/pdfs",
+    cache_dir: Path = ROOT_DIR / "sec10k_filings",
 ):
     """Create JSONs and images of Ex. 21 for each doc.
 
