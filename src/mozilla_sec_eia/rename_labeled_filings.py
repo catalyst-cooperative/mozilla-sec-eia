@@ -17,7 +17,7 @@ archive = GCSArchive(GCS_BUCKET_NAME="labeled-ex21-filings")
 
 labeled_bucket_name = "labeled"
 
-for blob in archive._bucket.list_blobs(prefix=labeled_bucket_name):
+for blob in archive._filings_bucket.list_blobs(prefix=labeled_bucket_name):
     if blob.name != labeled_bucket_name + "/":
         print(blob.name)
         file_dict = json.loads(blob.download_as_text())

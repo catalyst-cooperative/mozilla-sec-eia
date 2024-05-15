@@ -7,15 +7,15 @@ from pathlib import Path
 
 import fitz
 import pandas as pd
-
-from mozilla_sec_eia import ROOT_DIR
-from mozilla_sec_eia.pdf_text_extraction_utils import (
+from mozilla_sec_eia.utils.cloud import GCSArchive
+from mozilla_sec_eia.utils.pdf import (
     extract_pdf_data_from_page,
     pil_to_cv2,
     render_page,
 )
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
+ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 
 
 BBOX_COLS = [
@@ -241,6 +241,8 @@ def format_as_ner_annotations(
     Returns:
         ner_annotations: a list of dicts, with one dict for each doc.
     """
+    GCSArchive().cache_training_data(labeled_json_dir, pdfs_dir)
+
     labeled_df = format_label_studio_output(
         labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
     )

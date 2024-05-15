@@ -5,15 +5,15 @@ from dataclasses import dataclass
 
 import pandas as pd
 import pytest
-from mozilla_sec_eia.utils import Exhibit21, GCSArchive, Sec10K
+from mozilla_sec_eia.utils.cloud import Exhibit21, GCSArchive, Sec10K
 
 
 @pytest.fixture
 def test_archive():
     """Return test GCSArchive class."""
     with (
-        unittest.mock.patch("mozilla_sec_eia.utils.GCSArchive._get_engine"),
-        unittest.mock.patch("mozilla_sec_eia.utils.GCSArchive._get_bucket"),
+        unittest.mock.patch("mozilla_sec_eia.utils.cloud.GCSArchive._get_engine"),
+        unittest.mock.patch("mozilla_sec_eia.utils.cloud.GCSArchive._get_bucket"),
     ):
         return GCSArchive(
             GCS_BUCKET_NAME="bucket_name",
@@ -76,12 +76,14 @@ class _FakeBlob:
 )
 def test_validate_archive(test_archive, archive_files, metadata_files, valid, mocker):
     """Test archive validation functionality."""
-    test_archive._bucket.list_blobs.return_value = archive_files
+    test_archive._filings_bucket.list_blobs.return_value = archive_files
 
     metadata_mock = mocker.MagicMock(
         return_value=pd.DataFrame({"Filename": metadata_files})
     )
-    mocker.patch("mozilla_sec_eia.utils.GCSArchive.get_metadata", new=metadata_mock)
+    mocker.patch(
+        "mozilla_sec_eia.utils.cloud.GCSArchive.get_metadata", new=metadata_mock
+    )
 
     assert test_archive.validate_archive() == valid
 
@@ -167,7 +169,7 @@ def test_10k(filing_text, ex_21_version, actually_has_ex_21, tmp_path):
     with filing_path.open("w") as f:
         f.write(filing_text)
 
-    with unittest.mock.patch("mozilla_sec_eia.utils.logger") as mock_logger:
+    with unittest.mock.patch("mozilla_sec_eia.utils.cloud.logger") as mock_logger:
         filing = Sec10K.from_path(
             filing_path=filing_path,
             cik=0,
