@@ -16,8 +16,6 @@ from datasets import (
     Value,
     load_metric,
 )
-from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
-from mozilla_sec_eia.utils.cloud import initialize_mlflow
 from transformers import (
     AutoProcessor,
     LayoutLMv3ForTokenClassification,
@@ -25,6 +23,9 @@ from transformers import (
     TrainingArguments,
 )
 from transformers.data.data_collator import default_data_collator
+
+from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
+from mozilla_sec_eia.utils.cloud import initialize_mlflow
 
 LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
 
