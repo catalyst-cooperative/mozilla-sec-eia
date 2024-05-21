@@ -31,6 +31,7 @@ This repo contains exploratory development for an SEC-EIA linkage.
 
 Usage
 -----
+
 CLI
 ^^^
 The CLI uses a sub-command structure, so new commands and workflows can easily be
@@ -123,7 +124,7 @@ for labeling data is as follows:
 
 
 About Catalyst Cooperative
-=======================================================================================
+---------------------------------------------------------------------------------------
 `Catalyst Cooperative <https://catalyst.coop>`__ is a small group of data
 wranglers and policy wonks organized as a worker-owned cooperative consultancy.
 Our goal is a more just, livable, and sustainable world. We integrate public
@@ -132,7 +133,7 @@ data and perform custom analyses to inform public policy (`Hire us!
 climate change and improving electric utility regulation in the United States.
 
 Contact Us
-----------
+^^^^^^^^^^
 * For general support, questions, or other conversations around the project
   that might be of interest to others, check out the
   `GitHub Discussions <https://github.com/catalyst-cooperative/pudl/discussions>`__
