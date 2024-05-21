@@ -26,6 +26,8 @@ from transformers import (
 )
 from transformers.data.data_collator import default_data_collator
 
+LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
+
 
 def compute_metrics(p, metric, label_list, return_entity_level_metrics=False):
     """Compute metrics to train and evaluate the model on."""
@@ -88,35 +90,36 @@ def prepare_dataset(annotations, processor, label2id):
     return encoding
 
 
-def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
-    """Train LayoutLM model with labeled data.
+def log_model(finetuned_model: Trainer):
+    """Log fine-tuned model to mlflow artifacts."""
+    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
+    mlflow.transformers.log_model(model, artifact_path="layoutlm_extractor")
 
-    Arguments:
-        model_output_dir: Path to directory where model
-            checkpoints are saved.
-    """
+
+def load_model():
+    """Load fine-tuned model from mlflow artifacts."""
     initialize_mlflow()
-    mlflow.set_experiment("/finetune-layoutlm")
+    return mlflow.transformers.load_model(
+        "models:/layoutlm_extractor/1", return_type="components"
+    )
 
+
+def _get_id_label_conversions():
+    """Return dicts mapping ids to labels and labels to ids."""
+    id2label = dict(enumerate(LABELS))
+    label2id = {v: k for k, v in enumerate(LABELS)}
+    return id2label, label2id
+
+
+def load_test_train_set(processor: AutoProcessor, test_size: float):
+    """Load training/test set and prepare for training or evaluation."""
+    id2label, label2id = _get_id_label_conversions()
     # Cache/prepare training data
     ner_annotations = format_as_ner_annotations()
     dataset = Dataset.from_list(ner_annotations)
-    dataset = dataset.train_test_split(test_size=test_size)
-
-    # Prepare model
-    labels = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
-    id2label = dict(enumerate(labels))
-    label2id = {v: k for k, v in enumerate(labels)}
-    model = LayoutLMv3ForTokenClassification.from_pretrained(
-        "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
-    )
-
-    processor = AutoProcessor.from_pretrained(
-        "microsoft/layoutlmv3-base", apply_ocr=False
-    )
 
     # Prepare our train & eval dataset
-    column_names = dataset["train"].column_names
+    column_names = dataset.column_names
     features = Features(
         {
             "pixel_values": Array3D(dtype="float32", shape=(3, 224, 224)),
@@ -126,20 +129,37 @@ def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
             "labels": Sequence(feature=Value(dtype="int64")),
         }
     )
-    train_dataset = dataset["train"].map(
+    dataset = dataset.map(
         lambda annotations: prepare_dataset(annotations, processor, label2id),
         batched=True,
         remove_columns=column_names,
         features=features,
     )
-    train_dataset.set_format("torch")
-    eval_dataset = dataset["test"].map(
-        lambda annotations: prepare_dataset(annotations, processor, label2id),
-        batched=True,
-        remove_columns=column_names,
-        features=features,
+    dataset.set_format("torch")
+    split_dataset = dataset.train_test_split(test_size=test_size)
+    return split_dataset["train"], split_dataset["test"]
+
+
+def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
+    """Train LayoutLM model with labeled data.
+
+    Arguments:
+        model_output_dir: Path to directory where model
+            checkpoints are saved.
+    """
+    initialize_mlflow()
+    mlflow.set_experiment("/finetune-layoutlmv3")
+
+    # Prepare model
+    id2label, label2id = _get_id_label_conversions()
+    model = LayoutLMv3ForTokenClassification.from_pretrained(
+        "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
     )
-    eval_dataset.set_format("torch")
+    processor = AutoProcessor.from_pretrained(
+        "microsoft/layoutlmv3-base", apply_ocr=False
+    )
+
+    train_dataset, eval_dataset = load_test_train_set(processor, test_size)
 
     metric = load_metric("seqeval")
     training_args = TrainingArguments(
@@ -161,11 +181,8 @@ def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
         eval_dataset=eval_dataset,
         tokenizer=processor,
         data_collator=default_data_collator,
-        compute_metrics=lambda p: compute_metrics(p, metric=metric, label_list=labels),
+        compute_metrics=lambda p: compute_metrics(p, metric=metric, label_list=LABELS),
     )
-
     with mlflow.start_run():
         trainer.train()
-
-    # TODO: move into separate evaluation function?
-    trainer.evaluate()
+        log_model(trainer)

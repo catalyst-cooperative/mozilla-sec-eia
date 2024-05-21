@@ -232,17 +232,14 @@ class GCSArchive(BaseModel):
             )
         )
 
-    def cache_filing(
+    def cache_blob(
         self,
-        filing: pd.Series,
-        cache_directory: Path = Path("./sec10k_filings"),
+        blob: storage.Blob,
+        local_path: Path,
     ) -> Path:
         """Cache a single filing in cache_directory and return path."""
         # Create cache directory
-        cache_directory.mkdir(parents=True, exist_ok=True)
-
-        blob = self.get_filing_blob(filing["year_quarter"], filing["Filename"])
-        local_path = self._get_local_path(cache_directory, filing)
+        local_path.parent.mkdir(parents=True, exist_ok=True)
 
         if exists := local_path.exists():
             blob.update()
@@ -251,10 +248,10 @@ class GCSArchive(BaseModel):
             refresh = remote_hash != local_hash
 
         if (not exists) or refresh:
-            logger.info(f"Downloading {filing['Filename']}")
+            logger.info(f"Downloading to {local_path}")
             blob.download_to_filename(local_path)
         else:
-            logger.info(f"{filing['Filename']} is already cached")
+            logger.info(f"{local_path} is already cached")
 
         return local_path
 
@@ -272,7 +269,9 @@ class GCSArchive(BaseModel):
         """
         filings = []
         for _, filing in filing_selection.iterrows():
-            filing_path = self.cache_filing(filing, cache_directory)
+            blob = self.get_filing_blob(filing["year_quarter"], filing["Filename"])
+            local_path = self._get_local_path(cache_directory, filing)
+            filing_path = self.cache_blob(blob, local_path)
             filings.append(
                 Sec10K.from_path(
                     filing_path,
@@ -283,7 +282,9 @@ class GCSArchive(BaseModel):
             )
         return filings
 
-    def cache_training_data(self, json_cache_path: Path, pdf_cache_path: Path):
+    def cache_training_data(
+        self, json_cache_path: Path, pdf_cache_path: Path, overwrite_pdfs: bool = False
+    ):
         """Cache labeled training data stored on GCS for local use."""
         json_cache_path.mkdir(parents=True, exist_ok=True)
         pdf_cache_path.mkdir(parents=True, exist_ok=True)
@@ -294,20 +295,19 @@ class GCSArchive(BaseModel):
                 continue
 
             # Cache labels
-            blob.download_to_filename(
-                json_cache_path / blob.name.replace("labeled/", "")
-            )
+            self.cache_blob(blob, json_cache_path / blob.name.replace("labeled/", ""))
 
             # Cache filing
             match = label_name_pattern.search(blob.name)
             filename = f"edgar/data/{match.group(1)}/{match.group(2)}.txt"
-            filing = metadata_df[metadata_df["Filename"] == filename]
-            sec10k = self.get_filings(filing)[0]
+            filing_metadata = metadata_df[metadata_df["Filename"] == filename]
+            filing = self.get_filings(filing_metadata)[0]
             pdf_path = self._get_local_path(
-                pdf_cache_path, filing.iloc[0], extension=".pdf"
+                pdf_cache_path, filing_metadata.iloc[0], extension=".pdf"
             )
-            with pdf_path.open("wb") as f:
-                sec10k.ex_21.save_as_pdf(f)
+            if not pdf_path.exists() or overwrite_pdfs:
+                with pdf_path.open("wb") as f:
+                    filing.ex_21.save_as_pdf(f)
 
     def validate_archive(self) -> bool:
         """Validate that all filings described in metadata table exist in GCS bucket."""
@@ -361,3 +361,6 @@ def initialize_mlflow():
         "mlflow_admin_password", settings.project
     )
     os.environ["MLFLOW_TRACKING_URI"] = settings.tracking_uri
+    os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
+    os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
+    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"

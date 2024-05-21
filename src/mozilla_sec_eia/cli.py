@@ -9,7 +9,7 @@ import argparse
 import logging
 import sys
 
-from mozilla_sec_eia.ex_21.finetune_extractor import train_model
+from mozilla_sec_eia.ex_21.extractor import train_model
 from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
