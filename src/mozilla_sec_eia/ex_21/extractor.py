@@ -63,12 +63,12 @@ def compute_metrics(p, metric, label_list, return_entity_level_metrics=False):
     }
 
 
-def _convert_ner_tags_to_id(ner_tags, label2id):
-    return [int(label2id[ner_tag]) for ner_tag in ner_tags]
-
-
-def prepare_dataset(annotations, processor, label2id):
+def _prepare_dataset(annotations, processor, label2id):
     """Put the dataset in its final format for training LayoutLM."""
+
+    def _convert_ner_tags_to_id(ner_tags, label2id):
+        return [int(label2id[ner_tag]) for ner_tag in ner_tags]
+
     images = annotations["image"]
     words = annotations["tokens"]
     boxes = annotations["bboxes"]
@@ -88,20 +88,6 @@ def prepare_dataset(annotations, processor, label2id):
     )
 
     return encoding
-
-
-def log_model(finetuned_model: Trainer):
-    """Log fine-tuned model to mlflow artifacts."""
-    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
-    mlflow.transformers.log_model(model, artifact_path="layoutlm_extractor")
-
-
-def load_model():
-    """Load fine-tuned model from mlflow artifacts."""
-    initialize_mlflow()
-    return mlflow.transformers.load_model(
-        "models:/layoutlm_extractor/1", return_type="components"
-    )
 
 
 def _get_id_label_conversions():
@@ -130,7 +116,7 @@ def load_test_train_set(processor: AutoProcessor, test_size: float):
         }
     )
     dataset = dataset.map(
-        lambda annotations: prepare_dataset(annotations, processor, label2id),
+        lambda annotations: _prepare_dataset(annotations, processor, label2id),
         batched=True,
         remove_columns=column_names,
         features=features,
@@ -140,13 +126,29 @@ def load_test_train_set(processor: AutoProcessor, test_size: float):
     return split_dataset["train"], split_dataset["test"]
 
 
+def log_model(finetuned_model: Trainer):
+    """Log fine-tuned model to mlflow artifacts."""
+    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
+    mlflow.transformers.log_model(model, artifact_path="layoutlm_extractor")
+
+
+def load_model():
+    """Load fine-tuned model from mlflow artifacts."""
+    initialize_mlflow()
+    return mlflow.transformers.load_model(
+        "models:/layoutlm_extractor/1", return_type="components"
+    )
+
+
 def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
     """Train LayoutLM model with labeled data.
 
     Arguments:
         model_output_dir: Path to directory where model
             checkpoints are saved.
+        test_size: Proportion of labeled dataset to use for test set.
     """
+    # Prepare mlflow for tracking/logging model
     initialize_mlflow()
     mlflow.set_experiment("/finetune-layoutlmv3")
 
@@ -159,8 +161,10 @@ def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
 
+    # Get training/test data using pre-trained processor to prepare data
     train_dataset, eval_dataset = load_test_train_set(processor, test_size)
 
+    # Initialize our Trainer
     metric = load_metric("seqeval")
     training_args = TrainingArguments(
         output_dir=model_output_dir,
@@ -173,7 +177,6 @@ def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
         load_best_model_at_end=True,
         metric_for_best_model="f1",
     )
-    # Initialize our Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -183,6 +186,8 @@ def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
         data_collator=default_data_collator,
         compute_metrics=lambda p: compute_metrics(p, metric=metric, label_list=LABELS),
     )
+
+    # Train inside mlflow run. Mlflow will automatically handle logging training metrcis
     with mlflow.start_run():
         trainer.train()
         log_model(trainer)

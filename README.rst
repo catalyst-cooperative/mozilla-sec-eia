@@ -31,22 +31,37 @@ This repo contains exploratory development for an SEC-EIA linkage.
 
 Usage
 -----
+CLI
+^^^
+The CLI uses a sub-command structure, so new commands and workflows can easily be
+added during development. It's usage is as following:
+
+``mozilla_dev {COMMAND} {OPTIONS}``
+
+The available commands are ``validate_archive``, which validates that all filings on
+the GCS archive align with those described in the metadata DB, and ``finetune_ex21``,
+which will finetune the exhibit 21 extractor and log the model using mlflow.
+
+Helper Tools
+^^^^^^^^^^^^
 Utility functions for accessing and working with 10k filings as well as their exhibit
-21 attachments can be found in 'src/mozilla_sec_eia/utils.py'. The base class is the
-``GCSArchive`` which provides an interface to archived filings on GCS. To instantiate
-this class, the following environment variables need to be set, or defined in a ``.env``
-file:
+21 attachments can be found in 'src/mozilla_sec_eia/utils/cloud.py'. The base class is
+the ``GCSArchive`` which provides an interface to archived filings on GCS. To
+instantiate this class, the following environment variables need to be set, or defined
+in a ``.env`` file:
 
 ``GCS_BUCKET_NAME``
 ``GCS_METADATA_DB_INSTANCE_CONNECTION``
 ``GCS_IAM_USER``
 ``GCS_METADATA_DB_NAME``
+``GCS_PROJECT``
+``MLFLOW_TRACKING_URI``
 
 This code sample shows how to use the class to fetch filings from the archive:
 
 .. code-block:: python
 
-   from mozilla_sec_eia.utils import GCSArchive
+   from mozilla_sec_eia.utils.cloud import GCSArchive
    archive = GCSArchive()
 
    # Get metadata from postgres instance

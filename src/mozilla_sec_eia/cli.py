@@ -36,11 +36,13 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     subparsers = parser.add_subparsers(required=True)
 
     # Add command to validate filing archive contents
-    validate_parser = subparsers.add_parser("validate")
+    validate_parser = subparsers.add_parser("validate_archive")
     validate_parser.set_defaults(func=lambda: GCSArchive().validate_archive())
 
     # Add command to fine-tune ex21 extractor
     validate_parser = subparsers.add_parser("finetune_ex21")
+    validate_parser.add_argument("--model-output-dir", default="layoutlm_trainer")
+    validate_parser.add_argument("--test-size", default=0.2)
     validate_parser.set_defaults(func=train_model)
 
     arguments = parser.parse_args(argv[1:])
