@@ -39,8 +39,20 @@ added during development. It's usage is as following:
 ``mozilla_dev {COMMAND} {OPTIONS}``
 
 The available commands are ``validate_archive``, which validates that all filings on
-the GCS archive align with those described in the metadata DB, and ``finetune_ex21``,
-which will finetune the exhibit 21 extractor and log the model using mlflow.
+the GCS archive align with those described in the metadata DB, ``finetune_ex21``,
+which will finetune the exhibit 21 extractor and log the model using mlflow, and
+``rename_filings``, which will rename labeled filings on GCS.
+
+Experiment/Model Tracking
+^^^^^^^^^^^^^^^^^^^^^^^^^
+We've setup a remote tracking server using `mlflow <https://mlflow.org/docs/latest/tracking.html>`_
+to manage tracking, caching, and versioning models developed as a part of this project.
+To interact with the server through the UI, go `here <https://mlflow-ned2up6sra-uc.a.run.app>`_
+and login using the username and password stored in gcloud secret manager.
+There is currently a finetuned layoutlm model for extracting exhibit 21 data stored
+on the server. This model can be accessed using the method
+``src/mozilla_sec_eia/utils/cloud.py:load_model``. This will return a dictionary
+containing ``model`` and ``tokenizer`` fields.
 
 Helper Tools
 ^^^^^^^^^^^^
