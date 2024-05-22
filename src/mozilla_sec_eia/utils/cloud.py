@@ -144,11 +144,14 @@ class GoogleCloudSettings(BaseSettings):
 
     The following variables need to be set:
 
-    GCS_BUCKET_NAME: Name of bucket where 10k filings are stored.
+    GCS_FILINGS_BUCKET_NAME: Name of bucket where 10k filings are stored.
+    GCS_LABELS_BUCKET_NAME: Name of bucket where labelled training data is stored.
     GCS_METADATA_DB_INSTANCE_CONNECTION: instance connection string
     in the form 'project:region:instance'.
     GCS_IAM_USER: Email of user of service account trying to connect.
     GCS_METADATA_DB_NAME: Name of DB in instance to connect to.
+    GCS_PROJECT: Name of google cloud project.
+    MLFLOW_TRACKING_URI: URI of mlflow tracking server.
     """
 
     model_config = SettingsConfigDict(env_file=".env")
