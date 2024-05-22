@@ -167,7 +167,7 @@ class GoogleCloudSettings(BaseSettings):
 class GCSArchive(BaseModel):
     """Provides an interface for archived filings on GCS."""
 
-    settings: GoogleCloudSettings = GoogleCloudSettings()
+    settings: GoogleCloudSettings = Field(default_factory=lambda: GoogleCloudSettings())
 
     _filings_bucket = PrivateAttr()
     _labels_bucket = PrivateAttr()
