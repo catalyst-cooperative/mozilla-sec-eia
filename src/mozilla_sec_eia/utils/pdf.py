@@ -69,7 +69,8 @@ def _parse_page_contents(page: fitz.Page) -> dict[str, pd.DataFrame]:
     # try getting only words
     textpage = page.get_textpage(flags=flags)
     content = textpage.extractDICT()
-    words = textpage.extractWORDS()
+    delim_str = f"{chr(8212)}{chr(151)}"
+    words = textpage.extractWORDS(delimiters=delim_str)
     images = []
     text = []
     for block in content["blocks"]:
