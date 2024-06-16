@@ -3,7 +3,7 @@
 import json
 import logging
 
-from mozilla_sec_eia.utils import GCSArchive
+from mozilla_sec_eia.utils.cloud import GCSArchive
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -19,7 +19,7 @@ def rename_filings():
     document. It then labels the labeled item in GCS with that
     filename.
     """
-    archive = GCSArchive(GCS_BUCKET_NAME="labeled-ex21-filings")
+    archive = GCSArchive()
     bucket = archive._filings_bucket
 
     labeled_bucket_name = "labeled"
