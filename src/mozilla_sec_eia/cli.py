@@ -10,7 +10,7 @@ import logging
 import sys
 
 from mozilla_sec_eia.ex_21.extractor import train_model
-from mozilla_sec_eia.rename_labeled_filings import rename_filings
+from mozilla_sec_eia.ex_21.rename_labeled_filings import rename_filings
 from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
