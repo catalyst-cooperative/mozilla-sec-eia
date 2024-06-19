@@ -9,6 +9,7 @@ import argparse
 import logging
 import sys
 
+from mozilla_sec_eia.ex_21.create_labeled_dataset import create_inputs_for_label_studio
 from mozilla_sec_eia.ex_21.extractor import train_model
 from mozilla_sec_eia.ex_21.rename_labeled_filings import rename_filings
 from mozilla_sec_eia.utils import GCSArchive
@@ -49,6 +50,12 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     # Add command to rename labeled filings on GCS
     validate_parser = subparsers.add_parser("rename_filings")
     validate_parser.set_defaults(func=rename_filings)
+
+    # Add command to create Label Studio inputs from cached Ex. 21 images and PDFs
+    validate_parser = subparsers.add_parser("create_ls_inputs")
+    validate_parser.add_argument("--pdfs-dir", default=None)
+    validate_parser.add_argument("--cache-dir", default=None)
+    validate_parser.set_defaults(func=create_inputs_for_label_studio)
 
     arguments = parser.parse_args(argv[1:])
     return arguments

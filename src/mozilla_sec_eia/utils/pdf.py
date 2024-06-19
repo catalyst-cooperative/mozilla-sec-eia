@@ -10,6 +10,7 @@ import cv2
 import fitz
 import numpy as np
 import pandas as pd
+from fitz import Rect
 from matplotlib import pyplot as plt
 from PIL import Image
 
@@ -61,6 +62,43 @@ def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
         if not df.empty:
             df["page_num"] = np.int16(page.number)
     return contents | meta
+
+
+def combine_doc_pages(doc):
+    """Combine all pages in a PyMuPDF doc into one PyMuPDF page.
+
+    Arguments:
+        doc: The Fitz Document object with the multi page Ex. 21.
+
+    Returns:
+        combined_page: A Fitz page with all pages of the Ex. 21 combined
+            into one page.
+    """
+    combined_width = 0
+    combined_height = 0
+    rects = []
+    for page in doc:
+        pg_width = page.rect.width
+        combined_width = max(combined_width, pg_width)
+        # instead of using page height directly, use the height of the last word + a buffer
+        full_pg_height = page.rect.height
+        extracted = extract_pdf_data_from_page(page)
+        pg_txt_height = extracted["pdf_text"].bottom_right_y_pdf.max() + (
+            full_pg_height / 100
+        )
+        # Translate this page down by the height of the previous page
+        rects.append(
+            Rect(0, combined_height, pg_width, combined_height + pg_txt_height)
+        )
+        page.set_cropbox(Rect(0, 0, pg_width, pg_txt_height))
+        combined_height += pg_txt_height
+
+    output_pdf = fitz.open()
+    combined_page = output_pdf.new_page(width=combined_width, height=combined_height)
+
+    for i in range(len(doc)):
+        combined_page.show_pdf_page(rects[i], doc, i)
+    return combined_page
 
 
 def _parse_page_contents(page: fitz.Page) -> dict[str, pd.DataFrame]:

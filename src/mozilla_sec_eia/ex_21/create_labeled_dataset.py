@@ -10,6 +10,7 @@ import pandas as pd
 
 from mozilla_sec_eia.utils.cloud import GCSArchive
 from mozilla_sec_eia.utils.pdf import (
+    combine_doc_pages,
     extract_pdf_data_from_page,
     pil_to_cv2,
     render_page,
@@ -56,7 +57,6 @@ def create_inputs_for_label_studio(
         pg_meta = extracted["page"]
 
         # render an image of the page and save
-        # TODO: what happens when there are multiple pages?
         full_pg_img = render_page(pg)
         image_filename = pdf_filename.split(".")[0] + ".png"
         full_pg_img.save(image_dir / image_filename)
@@ -97,7 +97,7 @@ def _get_pdf_data(pdf_path):
     assert pdf_path.exists()
     doc = fitz.Document(str(pdf_path))
     assert doc.is_pdf
-    pg = doc[0]
+    pg = combine_doc_pages(doc)
     extracted = extract_pdf_data_from_page(pg)
     return extracted, pg
 
