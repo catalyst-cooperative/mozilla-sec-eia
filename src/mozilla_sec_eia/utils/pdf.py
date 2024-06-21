@@ -4,6 +4,7 @@ Used to prepare inputs for Ex. 21 extraction modeling.
 Functions include drawing bounding boxes around words.
 """
 
+import logging
 from typing import Any
 
 import cv2
@@ -15,6 +16,7 @@ from matplotlib import pyplot as plt
 from PIL import Image
 
 PDF_POINTS_PER_INCH = 72  # believe this is standard for all PDFs
+logger = logging.getLogger(__name__)
 
 
 def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
@@ -77,12 +79,18 @@ def combine_doc_pages(doc):
     combined_width = 0
     combined_height = 0
     rects = []
-    for page in doc:
+    blank_page_nums = []
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        extracted = extract_pdf_data_from_page(page)
+        if extracted["pdf_text"].empty:
+            blank_page_nums.append(page_num)
+            rects.append(Rect())
+            continue
         pg_width = page.rect.width
         combined_width = max(combined_width, pg_width)
-        # instead of using page height directly, use the height of the last word + a buffer
         full_pg_height = page.rect.height
-        extracted = extract_pdf_data_from_page(page)
+        # instead of using page height directly, use the height of the last word + a buffer
         pg_txt_height = extracted["pdf_text"].bottom_right_y_pdf.max() + (
             full_pg_height / 100
         )
@@ -97,6 +105,8 @@ def combine_doc_pages(doc):
     combined_page = output_pdf.new_page(width=combined_width, height=combined_height)
 
     for i in range(len(doc)):
+        if i in blank_page_nums:
+            continue
         combined_page.show_pdf_page(rects[i], doc, i)
     return combined_page
 

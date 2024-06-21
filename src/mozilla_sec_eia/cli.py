@@ -8,6 +8,7 @@ interface.
 import argparse
 import logging
 import sys
+from pathlib import Path
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import (
     create_inputs_for_label_studio,
@@ -19,6 +20,7 @@ from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
 logger = logging.getLogger(__name__)
+ROOT_DIR = Path(__file__).parent.parent.parent.resolve()
 
 
 def parse_command_line(argv: list[str]) -> argparse.Namespace:
@@ -56,8 +58,8 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Add command to create Label Studio inputs from cached Ex. 21 images and PDFs
     validate_parser = subparsers.add_parser("create_ls_inputs")
-    validate_parser.add_argument("--pdfs-dir", default=None)
-    validate_parser.add_argument("--cache-dir", default=None)
+    validate_parser.add_argument("--pdfs-dir", default=ROOT_DIR / "sec10k_filings/pdfs")
+    validate_parser.add_argument("--cache-dir", default=ROOT_DIR / "sec10k_filings")
     validate_parser.set_defaults(func=create_inputs_for_label_studio)
 
     # Add command to format Label Studio output JSONs into a dataframe.
