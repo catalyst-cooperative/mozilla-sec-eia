@@ -47,7 +47,8 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Add command to fine-tune ex21 extractor
     validate_parser = subparsers.add_parser("finetune_ex21")
-    validate_parser.add_argument("--labeled-json-dir")
+    validate_parser.add_argument("--labeled-json-path")
+    validate_parser.add_argument("--gcs-training-data-dir", default="labeled/")
     validate_parser.add_argument("--model-output-dir", default="layoutlm_trainer")
     validate_parser.add_argument("--test-size", default=0.2)
     validate_parser.set_defaults(func=train_model)

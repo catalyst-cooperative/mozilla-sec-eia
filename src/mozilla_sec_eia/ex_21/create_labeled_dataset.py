@@ -232,8 +232,9 @@ def _get_image_dict(pdfs_dir):
 
 
 def format_as_ner_annotations(
-    labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
-    pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
+    labeled_json_path=ROOT_DIR / "sec10k_filings/labeled_jsons",
+    pdfs_path=ROOT_DIR / "sec10k_filings/pdfs",
+    gcs_folder_name: str = "labeled/",
 ) -> list[dict]:
     """Format a Label Studio output JSONs as NER annotations.
 
@@ -243,16 +244,16 @@ def format_as_ner_annotations(
     Returns:
         ner_annotations: a list of dicts, with one dict for each doc.
     """
-    GCSArchive().cache_training_data(labeled_json_dir, pdfs_dir)
+    GCSArchive().cache_training_data(labeled_json_path, pdfs_path, gcs_folder_name)
 
     labeled_df = format_label_studio_output(
-        labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
+        labeled_json_dir=labeled_json_path, pdfs_dir=pdfs_path
     )
     # convert dataframe/dictionary into NER format
     # document_annotation_to_ner https://github.com/butlerlabs/docai/blob/main/docai/annotations/ner_utils.py
     # complete dataset is a list of dicts, with one dict for each doc
     doc_filenames = labeled_df["id"].unique()
-    image_dict = _get_image_dict(pdfs_dir=pdfs_dir)
+    image_dict = _get_image_dict(pdfs_dir=pdfs_path)
     ner_annotations = []
     for filename in doc_filenames:
         annotation = {

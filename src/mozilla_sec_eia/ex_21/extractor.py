@@ -147,7 +147,10 @@ def load_model():
 
 
 def train_model(
-    labeled_json_dir: str, model_output_dir="layoutlm_trainer", test_size=0.2
+    labeled_json_path: str,
+    gcs_training_data_dir: str = "labeled",
+    model_output_dir="layoutlm_trainer",
+    test_size=0.2,
 ):
     """Train LayoutLM model with labeled data.
 
@@ -168,7 +171,10 @@ def train_model(
     processor = AutoProcessor.from_pretrained(
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
-    ner_annotations = format_as_ner_annotations(labeled_json_dir=Path(labeled_json_dir))
+    ner_annotations = format_as_ner_annotations(
+        labeled_json_path=Path(labeled_json_path),
+        gcs_folder_name=gcs_training_data_dir,
+    )
     # Get training/test data using pre-trained processor to prepare data
     train_dataset, eval_dataset = load_test_train_set(
         processor=processor, test_size=test_size, ner_annotations=ner_annotations
