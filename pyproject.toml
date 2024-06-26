@@ -185,6 +185,7 @@ ignore = [
     "PD901",  # df as variable name
     "RET504", # Ignore unnecessary assignment before return
     "S101",   # Use of assert
+    "EXE002",
 ]
 
 # Assume Python 3.11
