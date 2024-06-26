@@ -29,6 +29,7 @@ BBOX_COLS = [
 
 
 def create_inputs_for_label_studio(
+    model_version: str = "v1.0",
     pdfs_dir: Path = ROOT_DIR / "sec10k_filings/pdfs",
     cache_dir: Path = ROOT_DIR / "sec10k_filings",
 ):
@@ -72,7 +73,7 @@ def create_inputs_for_label_studio(
             "id": f"{filename_no_ext}",
             "data": {"ocr": f"gs://labeled-ex21-filings/unlabeled/{image_filename}"},
             "annotations": [],
-            "predictions": [{"model_version": "v1.0", "result": []}],
+            "predictions": [{"model_version": f"{model_version}", "result": []}],
         }
         result = []
         # TODO: make more efficient? change to using an apply?
@@ -97,7 +98,8 @@ def _get_pdf_data(pdf_path):
     assert pdf_path.exists()
     doc = fitz.Document(str(pdf_path))
     assert doc.is_pdf
-    pg = combine_doc_pages(doc)
+    # keep this if statement so that one page docs don't change from v0
+    pg = combine_doc_pages(doc) if len(doc) > 1 else doc[0]
     extracted = extract_pdf_data_from_page(pg)
     return extracted, pg
 
@@ -233,9 +235,8 @@ def format_as_ner_annotations(
     labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
     pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
 ) -> list[dict]:
-    """Format a dataframe of labeled Ex. 21 as NER annotations.
+    """Format a Label Studio output JSONs as NER annotations.
 
-    Expects the output of format_label_studio_output as input dataframe.
     Formats the dataframe as named entity recognition annotations.
     # TODO: say more about this format
 

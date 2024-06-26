@@ -12,7 +12,6 @@ from pathlib import Path
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import (
     create_inputs_for_label_studio,
-    format_label_studio_output,
 )
 from mozilla_sec_eia.ex_21.extractor import train_model
 from mozilla_sec_eia.ex_21.rename_labeled_filings import rename_filings
@@ -48,6 +47,7 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Add command to fine-tune ex21 extractor
     validate_parser = subparsers.add_parser("finetune_ex21")
+    validate_parser.add_argument("--labeled-json-dir")
     validate_parser.add_argument("--model-output-dir", default="layoutlm_trainer")
     validate_parser.add_argument("--test-size", default=0.2)
     validate_parser.set_defaults(func=train_model)
@@ -61,12 +61,6 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     validate_parser.add_argument("--pdfs-dir", default=ROOT_DIR / "sec10k_filings/pdfs")
     validate_parser.add_argument("--cache-dir", default=ROOT_DIR / "sec10k_filings")
     validate_parser.set_defaults(func=create_inputs_for_label_studio)
-
-    # Add command to format Label Studio output JSONs into a dataframe.
-    validate_parser = subparsers.add_parser("format_ls_outputs")
-    validate_parser.add_argument("--pdfs-dir", default=None)
-    validate_parser.add_argument("--labeled-json-dir", default=None)
-    validate_parser.set_defaults(func=format_label_studio_output)
 
     arguments = parser.parse_args(argv[1:])
     return arguments
