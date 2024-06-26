@@ -3,6 +3,7 @@
 import base64
 import io
 import logging
+import os
 import re
 from hashlib import md5
 from pathlib import Path
@@ -11,7 +12,7 @@ from typing import BinaryIO
 import fitz
 import pandas as pd
 import pg8000
-from google.cloud import storage
+from google.cloud import secretmanager, storage
 from google.cloud.sql.connector import Connector
 from PIL import Image
 from pydantic import BaseModel, Field, PrivateAttr
@@ -134,32 +135,45 @@ class Sec10K(BaseModel):
             )
 
 
-class GCSArchive(BaseSettings):
-    """Settings for connecting to GCS resources.
+class GoogleCloudSettings(BaseSettings):
+    """Load environment variables to manage access to cloud resources.
 
     This class looks for several environment variables to configure
-    access to GCS resources. These can be set directly, or be in a
+    access to cloud resources. These can be set directly, or be in a
     .env file at the top level.
 
     The following variables need to be set:
 
-    GCS_BUCKET_NAME: Name of bucket where 10k filings are stored.
+    GCS_FILINGS_BUCKET_NAME: Name of bucket where 10k filings are stored.
+    GCS_LABELS_BUCKET_NAME: Name of top-level bucket where labelled training data is stored.
     GCS_METADATA_DB_INSTANCE_CONNECTION: instance connection string
     in the form 'project:region:instance'.
     GCS_IAM_USER: Email of user of service account trying to connect.
     GCS_METADATA_DB_NAME: Name of DB in instance to connect to.
+    GCS_PROJECT: Name of google cloud project.
+    MLFLOW_TRACKING_URI: URI of mlflow tracking server.
     """
 
     model_config = SettingsConfigDict(env_file=".env")
 
-    bucket_name: str = Field(validation_alias="GCS_BUCKET_NAME")
+    filings_bucket_name: str = Field(validation_alias="GCS_FILINGS_BUCKET_NAME")
+    labels_bucket_name: str = Field(validation_alias="GCS_LABELS_BUCKET_NAME")
     metadata_db_instance_connection: str = Field(
         validation_alias="GCS_METADATA_DB_INSTANCE_CONNECTION"
     )
     user: str = Field(validation_alias="GCS_IAM_USER")
     metadata_db_name: str = Field(validation_alias="GCS_METADATA_DB_NAME")
+    project: str = Field(validation_alias="GCS_PROJECT")
+    tracking_uri: str = Field(validation_alias="MLFLOW_TRACKING_URI")
 
-    _bucket = PrivateAttr()
+
+class GCSArchive(BaseModel):
+    """Provides an interface for archived filings on GCS."""
+
+    settings: GoogleCloudSettings = Field(default_factory=lambda: GoogleCloudSettings())
+
+    _filings_bucket = PrivateAttr()
+    _labels_bucket = PrivateAttr()
     _engine = PrivateAttr()
     _metadata_df = PrivateAttr(default=None)
 
@@ -167,12 +181,13 @@ class GCSArchive(BaseSettings):
         """Initialize interface to filings archive on GCS."""
         super().__init__(**kwargs)
         self._engine = self._get_engine()
-        self._bucket = self._get_bucket()
+        self._filings_bucket = self._get_bucket(self.settings.filings_bucket_name)
+        self._labels_bucket = self._get_bucket(self.settings.labels_bucket_name)
 
-    def _get_bucket(self):
+    def _get_bucket(self, bucket_name):
         """Return cloud storage bucket where SEC10k filings are archived."""
         storage_client = storage.Client()
-        return storage_client.bucket(self.bucket_name)
+        return storage_client.bucket(bucket_name)
 
     def _get_engine(self) -> Engine:
         """Initialize a connection pool for a Cloud SQL instance of Postgres.
@@ -184,10 +199,10 @@ class GCSArchive(BaseSettings):
 
         def getconn() -> pg8000.dbapi.Connection:
             conn: pg8000.dbapi.Connection = connector.connect(
-                self.metadata_db_instance_connection,
+                self.settings.metadata_db_instance_connection,
                 "pg8000",
-                user=self.user,
-                db=self.metadata_db_name,
+                user=self.settings.user,
+                db=self.settings.metadata_db_name,
                 enable_iam_auth=True,
             )
             return conn
@@ -205,30 +220,29 @@ class GCSArchive(BaseSettings):
             )
         return self._metadata_df
 
-    def get_blob(self, year_quarter: str, path: str) -> storage.Blob:
+    def get_filing_blob(self, year_quarter: str, path: str) -> storage.Blob:
         """Return Blob pointing to file in GCS bucket."""
-        return self._bucket.blob(f"sec10k/sec10k-{year_quarter}/{path}")
+        return self._filings_bucket.blob(f"sec10k/sec10k-{year_quarter}/{path}")
 
-    def _get_local_path(self, cache_directory: Path, filing: pd.Series) -> Path:
+    def _get_local_path(
+        self, cache_directory: Path, filing: pd.Series, extension=".html"
+    ) -> Path:
         """Return path to a filing in local cache based on metadata."""
         return cache_directory / Path(
             f"{filing['CIK']}-{filing['year_quarter']}-"
             f"{filing['Filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
-                ".txt", ".html"
+                ".txt", extension
             )
         )
 
-    def cache_filing(
+    def cache_blob(
         self,
-        filing: pd.Series,
-        cache_directory: Path = Path("./sec10k_filings"),
+        blob: storage.Blob,
+        local_path: Path,
     ) -> Path:
         """Cache a single filing in cache_directory and return path."""
         # Create cache directory
-        cache_directory.mkdir(parents=True, exist_ok=True)
-
-        blob = self.get_blob(filing["year_quarter"], filing["Filename"])
-        local_path = self._get_local_path(cache_directory, filing)
+        local_path.parent.mkdir(parents=True, exist_ok=True)
 
         if exists := local_path.exists():
             blob.update()
@@ -237,10 +251,10 @@ class GCSArchive(BaseSettings):
             refresh = remote_hash != local_hash
 
         if (not exists) or refresh:
-            logger.info(f"Downloading {filing['Filename']}")
+            logger.info(f"Downloading to {local_path}")
             blob.download_to_filename(local_path)
         else:
-            logger.info(f"{filing['Filename']} is already cached")
+            logger.info(f"{local_path} is already cached")
 
         return local_path
 
@@ -258,7 +272,9 @@ class GCSArchive(BaseSettings):
         """
         filings = []
         for _, filing in filing_selection.iterrows():
-            filing_path = self.cache_filing(filing, cache_directory)
+            blob = self.get_filing_blob(filing["year_quarter"], filing["Filename"])
+            local_path = self._get_local_path(cache_directory, filing)
+            filing_path = self.cache_blob(blob, local_path)
             filings.append(
                 Sec10K.from_path(
                     filing_path,
@@ -269,13 +285,40 @@ class GCSArchive(BaseSettings):
             )
         return filings
 
+    def cache_training_data(
+        self, json_cache_path: Path, pdf_cache_path: Path, overwrite_pdfs: bool = False
+    ):
+        """Cache labeled training data stored on GCS for local use."""
+        json_cache_path.mkdir(parents=True, exist_ok=True)
+        pdf_cache_path.mkdir(parents=True, exist_ok=True)
+        metadata_df = self.get_metadata()
+        label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
+        for blob in self._labels_bucket.list_blobs(match_glob="labeled/*"):
+            if blob.name == "labeled/":
+                continue
+
+            # Cache labels
+            self.cache_blob(blob, json_cache_path / blob.name.replace("labeled/", ""))
+
+            # Cache filing
+            match = label_name_pattern.search(blob.name)
+            filename = f"edgar/data/{match.group(1)}/{match.group(2)}.txt"
+            filing_metadata = metadata_df[metadata_df["Filename"] == filename]
+            filing = self.get_filings(filing_metadata)[0]
+            pdf_path = self._get_local_path(
+                pdf_cache_path, filing_metadata.iloc[0], extension=".pdf"
+            )
+            if not pdf_path.exists() or overwrite_pdfs:
+                with pdf_path.open("wb") as f:
+                    filing.ex_21.save_as_pdf(f)
+
     def validate_archive(self) -> bool:
         """Validate that all filings described in metadata table exist in GCS bucket."""
         # Get files in archive
         logger.info("Get list of files in archive.")
         archive_filenames = {
             re.sub(r"sec10k/sec10k-\d{4}q\d/", "", blob.name)
-            for blob in self._bucket.list_blobs()
+            for blob in self._filings_bucket.list_blobs()
         }
 
         # Get metadata df
@@ -297,3 +340,30 @@ class GCSArchive(BaseSettings):
         else:
             logger.info("Archive is valid!")
         return valid
+
+
+def _access_secret_version(secret_id: str, project_id: str, version_id="latest"):
+    # Create the Secret Manager client.
+    client = secretmanager.SecretManagerServiceClient()
+
+    # Build the resource name of the secret version.
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+
+    # Access the secret version.
+    response = client.access_secret_version(name=name)
+
+    # Return the decoded payload.
+    return response.payload.data.decode("UTF-8")
+
+
+def initialize_mlflow():
+    """Set appropriate environment variables to prepare connection to tracking server."""
+    settings = GoogleCloudSettings()
+    os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
+    os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
+        "mlflow_admin_password", settings.project
+    )
+    os.environ["MLFLOW_TRACKING_URI"] = settings.tracking_uri
+    os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
+    os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
+    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"

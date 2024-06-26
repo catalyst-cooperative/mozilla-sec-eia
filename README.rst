@@ -31,22 +31,50 @@ This repo contains exploratory development for an SEC-EIA linkage.
 
 Usage
 -----
+
+CLI
+^^^
+The CLI uses a sub-command structure, so new commands and workflows can easily be
+added during development. It's usage is as following:
+
+``mozilla_dev {COMMAND} {OPTIONS}``
+
+The available commands are ``validate_archive``, which validates that all filings on
+the GCS archive align with those described in the metadata DB, ``finetune_ex21``,
+which will finetune the exhibit 21 extractor and log the model using mlflow, and
+``rename_filings``, which will rename labeled filings on GCS.
+
+Experiment/Model Tracking
+^^^^^^^^^^^^^^^^^^^^^^^^^
+We've setup a remote tracking server using `mlflow <https://mlflow.org/docs/latest/tracking.html>`_
+to manage tracking, caching, and versioning models developed as a part of this project.
+To interact with the server through the UI, go `here <https://mlflow-ned2up6sra-uc.a.run.app>`_
+and login using the username and password stored in gcloud secret manager.
+There is currently a finetuned layoutlm model for extracting exhibit 21 data stored
+on the server. This model can be accessed using the method
+``src/mozilla_sec_eia/utils/cloud.py:load_model``. This will return a dictionary
+containing ``model`` and ``tokenizer`` fields.
+
+Helper Tools
+^^^^^^^^^^^^
 Utility functions for accessing and working with 10k filings as well as their exhibit
-21 attachments can be found in 'src/mozilla_sec_eia/utils.py'. The base class is the
-``GCSArchive`` which provides an interface to archived filings on GCS. To instantiate
-this class, the following environment variables need to be set, or defined in a ``.env``
-file:
+21 attachments can be found in 'src/mozilla_sec_eia/utils/cloud.py'. The base class is
+the ``GCSArchive`` which provides an interface to archived filings on GCS. To
+instantiate this class, the following environment variables need to be set, or defined
+in a ``.env`` file:
 
 ``GCS_BUCKET_NAME``
 ``GCS_METADATA_DB_INSTANCE_CONNECTION``
 ``GCS_IAM_USER``
 ``GCS_METADATA_DB_NAME``
+``GCS_PROJECT``
+``MLFLOW_TRACKING_URI``
 
 This code sample shows how to use the class to fetch filings from the archive:
 
 .. code-block:: python
 
-   from mozilla_sec_eia.utils import GCSArchive
+   from mozilla_sec_eia.utils.cloud import GCSArchive
    archive = GCSArchive()
 
    # Get metadata from postgres instance
@@ -96,7 +124,7 @@ for labeling data is as follows:
 
 
 About Catalyst Cooperative
-=======================================================================================
+---------------------------------------------------------------------------------------
 `Catalyst Cooperative <https://catalyst.coop>`__ is a small group of data
 wranglers and policy wonks organized as a worker-owned cooperative consultancy.
 Our goal is a more just, livable, and sustainable world. We integrate public
@@ -105,7 +133,7 @@ data and perform custom analyses to inform public policy (`Hire us!
 climate change and improving electric utility regulation in the United States.
 
 Contact Us
-----------
+^^^^^^^^^^
 * For general support, questions, or other conversations around the project
   that might be of interest to others, check out the
   `GitHub Discussions <https://github.com/catalyst-cooperative/pudl/discussions>`__
