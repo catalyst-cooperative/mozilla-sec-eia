@@ -5,13 +5,12 @@ import logging
 import os
 from pathlib import Path
 
-import fitz
 import pandas as pd
 
 from mozilla_sec_eia.utils.cloud import GCSArchive
 from mozilla_sec_eia.utils.pdf import (
-    combine_doc_pages,
-    extract_pdf_data_from_page,
+    get_pdf_data_from_path,
+    normalize_bboxes,
     pil_to_cv2,
     render_page,
 )
@@ -53,7 +52,7 @@ def create_inputs_for_label_studio(
             continue
         logger.info(f"Creating JSON for {pdf_filename}")
         src_path = pdfs_dir / pdf_filename
-        extracted, pg = _get_pdf_data(src_path)
+        extracted, pg = get_pdf_data_from_path(src_path)
         txt = extracted["pdf_text"]
         pg_meta = extracted["page"]
 
@@ -91,17 +90,6 @@ def create_inputs_for_label_studio(
         json_filename = json_dir / Path(filename_no_ext + ".json")
         with Path.open(json_filename, "w") as fp:
             json.dump(annotation_json, fp)
-
-
-def _get_pdf_data(pdf_path):
-    # TODO: replace asserts within logging messages?
-    assert pdf_path.exists()
-    doc = fitz.Document(str(pdf_path))
-    assert doc.is_pdf
-    # keep this if statement so that one page docs don't change from v0
-    pg = combine_doc_pages(doc) if len(doc) > 1 else doc[0]
-    extracted = extract_pdf_data_from_page(pg)
-    return extracted, pg
 
 
 def get_bbox_dicts(
@@ -171,24 +159,11 @@ def format_label_studio_output(
                 continue
             pdf_filename = filename + ".pdf"
             src_path = pdfs_dir / pdf_filename
-            extracted, pg = _get_pdf_data(src_path)
+            extracted, pg = get_pdf_data_from_path(src_path)
             txt = extracted["pdf_text"]
             pg_meta = extracted["page"]
-
             # normalize bboxes between 0 and 1000 for Hugging Face
-            txt["top_left_x_pdf"] = (
-                txt["top_left_x_pdf"] / pg_meta.width_pdf_coord.iloc[0] * 1000
-            )
-            txt["top_left_y_pdf"] = (
-                txt["top_left_y_pdf"] / pg_meta.height_pdf_coord.iloc[0] * 1000
-            )
-            txt["bottom_right_x_pdf"] = (
-                txt["bottom_right_x_pdf"] / pg_meta.width_pdf_coord.iloc[0] * 1000
-            )
-            txt["bottom_right_y_pdf"] = (
-                txt["bottom_right_y_pdf"] / pg_meta.height_pdf_coord.iloc[0] * 1000
-            )
-
+            txt = normalize_bboxes(txt_df=txt, pg_meta_df=pg_meta)
             # parse the output dictionary of labeled bounding boxes from Label Studio
             doc_df = pd.DataFrame()
             for item in doc_dict["result"]:
@@ -224,7 +199,7 @@ def _get_image_dict(pdfs_dir):
         if pdf_filename.split(".")[-1] != "pdf":
             continue
         pdf_file_path = pdfs_dir / pdf_filename
-        _, pg = _get_pdf_data(pdf_file_path)
+        _, pg = get_pdf_data_from_path(pdf_file_path)
         full_pg_img = render_page(pg)
         filename = pdf_filename.split(".")[0]
         image_dict[filename] = full_pg_img

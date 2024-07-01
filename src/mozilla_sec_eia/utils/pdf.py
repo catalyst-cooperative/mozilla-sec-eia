@@ -19,6 +19,27 @@ PDF_POINTS_PER_INCH = 72  # believe this is standard for all PDFs
 logger = logging.getLogger(__name__)
 
 
+def get_pdf_data_from_path(pdf_path):
+    """Get words, images, and bounding boxes from a PDF.
+
+    Arguments:
+        pdf_path: path to the PDF
+
+    Returns:
+        extracted: a dictionary with keys "pdf_text", "image", and "page"
+            (which contains the page metadata)
+        pg: a PyMuPDF page object which represents all pages in the PDF.
+    """
+    # TODO: replace asserts within logging messages?
+    assert pdf_path.exists()
+    doc = fitz.Document(str(pdf_path))
+    assert doc.is_pdf
+    # keep this if statement so that one page docs don't change from v0
+    pg = combine_doc_pages(doc) if len(doc) > 1 else doc[0]
+    extracted = extract_pdf_data_from_page(pg)
+    return extracted, pg
+
+
 def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
     """Parse PDF page data."""
     contents = _parse_page_contents(page)
@@ -396,3 +417,30 @@ def _pil_img_from_pixmap(pix: fitz.Pixmap) -> Image.Image:
 
     img = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
     return img
+
+
+def normalize_bboxes(txt_df, pg_meta_df):
+    """Normalize bboxes between 0 and 1000."""
+    txt_df["top_left_x_pdf"] = (
+        txt_df["top_left_x_pdf"] / pg_meta_df.width_pdf_coord.iloc[0] * 1000
+    )
+    txt_df["top_left_y_pdf"] = (
+        txt_df["top_left_y_pdf"] / pg_meta_df.height_pdf_coord.iloc[0] * 1000
+    )
+    txt_df["bottom_right_x_pdf"] = (
+        txt_df["bottom_right_x_pdf"] / pg_meta_df.width_pdf_coord.iloc[0] * 1000
+    )
+    txt_df["bottom_right_y_pdf"] = (
+        txt_df["bottom_right_y_pdf"] / pg_meta_df.height_pdf_coord.iloc[0] * 1000
+    )
+    return txt_df
+
+
+def unnormalize_box(bbox, width, height):
+    """Unnormalize bboxes for drawing onto an image."""
+    return [
+        width * (bbox[0] / 1000),
+        height * (bbox[1] / 1000),
+        width * (bbox[2] / 1000),
+        height * (bbox[3] / 1000),
+    ]

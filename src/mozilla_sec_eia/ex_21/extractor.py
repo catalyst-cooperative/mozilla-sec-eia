@@ -18,6 +18,7 @@ from datasets import (
     Value,
     load_metric,
 )
+import torch
 from transformers import (
     AutoProcessor,
     LayoutLMv3ForTokenClassification,
@@ -28,6 +29,11 @@ from transformers.data.data_collator import default_data_collator
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
 from mozilla_sec_eia.utils.cloud import initialize_mlflow
+from mozilla_sec_eia.utils.pdf import (
+    get_pdf_data_from_path,
+    normalize_bboxes,
+    render_page,
+)
 
 LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
 
@@ -140,6 +146,7 @@ def log_model(finetuned_model: Trainer):
 
 def load_model():
     """Load fine-tuned model from mlflow artifacts."""
+    # TODO: want the ability to give load_model a model path?
     initialize_mlflow()
     return mlflow.transformers.load_model(
         "models:/layoutlm_extractor/1", return_type="components"
@@ -207,3 +214,39 @@ def train_model(
     with mlflow.start_run():
         trainer.train()
         log_model(trainer)
+
+
+def predict_entities(pdf_path: Path, model, processor):
+    """Predict entities with a fine-tuned model on an Ex. 21 PDF."""
+    # TODO: make an extractor class with a train and predict method?
+    bbox_cols = [
+        "top_left_x_pdf",
+        "top_left_y_pdf",
+        "bottom_right_x_pdf",
+        "bottom_right_y_pdf",
+    ]
+    extracted, pg = get_pdf_data_from_path(pdf_path)
+    txt = extracted["pdf_text"]
+    pg_meta = extracted["page"]
+    image = render_page(pg)
+    # normalize bboxes between 0 and 1000 for Hugging Face
+    txt = normalize_bboxes(txt_df=txt, pg_meta_df=pg_meta)
+    words = txt["text"].apply(list)
+    bboxes = txt[bbox_cols].to_numpy().tolist()
+    encoding = processor(
+        image, words, boxes=bboxes, truncation=True, padding="max_length"
+    )
+    encoding["input_ids"] = encoding["input_ids"].to(torch.int64)
+    encoding["attention_mask"] = encoding["attention_mask"].to(torch.int64)
+    encoding["bbox"] = encoding["bbox"].to(torch.int64)
+    if torch.cuda.is_available():
+        encoding.to("cuda")
+        model.to("cuda")
+    # since we're doing inference, we don't need gradient computation
+    with torch.no_grad():
+        outputs = model(**encoding)
+
+    logits = outputs.logits
+    predictions = logits.argmax(-1).squeeze().tolist()
+
+    return predictions
