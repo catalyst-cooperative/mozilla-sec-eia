@@ -9,6 +9,7 @@ from pathlib import Path
 
 import mlflow
 import numpy as np
+import torch
 from datasets import (
     Array2D,
     Array3D,
@@ -18,7 +19,6 @@ from datasets import (
     Value,
     load_metric,
 )
-import torch
 from transformers import (
     AutoProcessor,
     LayoutLMv3ForTokenClassification,
@@ -29,11 +29,6 @@ from transformers.data.data_collator import default_data_collator
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
 from mozilla_sec_eia.utils.cloud import initialize_mlflow
-from mozilla_sec_eia.utils.pdf import (
-    get_pdf_data_from_path,
-    normalize_bboxes,
-    render_page,
-)
 
 LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
 
@@ -216,26 +211,14 @@ def train_model(
         log_model(trainer)
 
 
-def predict_entities(pdf_path: Path, model, processor):
-    """Predict entities with a fine-tuned model on an Ex. 21 PDF."""
+def predict_entities(doc, model, processor):
+    """Predict entities with a fine-tuned model on Ex. 21 PDF."""
     # TODO: make an extractor class with a train and predict method?
-    bbox_cols = [
-        "top_left_x_pdf",
-        "top_left_y_pdf",
-        "bottom_right_x_pdf",
-        "bottom_right_y_pdf",
-    ]
-    extracted, pg = get_pdf_data_from_path(pdf_path)
-    txt = extracted["pdf_text"]
-    pg_meta = extracted["page"]
-    image = render_page(pg)
-    # normalize bboxes between 0 and 1000 for Hugging Face
-    txt = normalize_bboxes(txt_df=txt, pg_meta_df=pg_meta)
-    words = txt["text"].apply(list)
-    bboxes = txt[bbox_cols].to_numpy().tolist()
-    encoding = processor(
-        image, words, boxes=bboxes, truncation=True, padding="max_length"
-    )
+    # TODO: how to set up a loop to do inference on a whole dataset?
+    image = doc["image"]
+    words = doc["tokens"]
+    boxes = doc["bboxes"]
+    encoding = processor(image, words, boxes=boxes, return_tensors="pt")
     encoding["input_ids"] = encoding["input_ids"].to(torch.int64)
     encoding["attention_mask"] = encoding["attention_mask"].to(torch.int64)
     encoding["bbox"] = encoding["bbox"].to(torch.int64)
@@ -246,7 +229,4 @@ def predict_entities(pdf_path: Path, model, processor):
     with torch.no_grad():
         outputs = model(**encoding)
 
-    logits = outputs.logits
-    predictions = logits.argmax(-1).squeeze().tolist()
-
-    return predictions
+    return outputs
