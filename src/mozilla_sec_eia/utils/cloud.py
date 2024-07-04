@@ -286,19 +286,27 @@ class GCSArchive(BaseModel):
         return filings
 
     def cache_training_data(
-        self, json_cache_path: Path, pdf_cache_path: Path, overwrite_pdfs: bool = False
+        self,
+        json_cache_path: Path,
+        pdf_cache_path: Path,
+        gcs_folder_name: str = "labeled/",
+        overwrite_pdfs: bool = False,
     ):
         """Cache labeled training data stored on GCS for local use."""
         json_cache_path.mkdir(parents=True, exist_ok=True)
         pdf_cache_path.mkdir(parents=True, exist_ok=True)
         metadata_df = self.get_metadata()
         label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
-        for blob in self._labels_bucket.list_blobs(match_glob="labeled/*"):
-            if blob.name == "labeled/":
+        if gcs_folder_name[-1] != "/":
+            gcs_folder_name += "/"
+        for blob in self._labels_bucket.list_blobs(match_glob=f"{gcs_folder_name}*"):
+            if blob.name == gcs_folder_name:
                 continue
 
             # Cache labels
-            self.cache_blob(blob, json_cache_path / blob.name.replace("labeled/", ""))
+            self.cache_blob(
+                blob, json_cache_path / blob.name.replace(gcs_folder_name, "")
+            )
 
             # Cache filing
             match = label_name_pattern.search(blob.name)
