@@ -22,8 +22,10 @@ from datasets import (
 from transformers import (
     AutoProcessor,
     LayoutLMv3ForTokenClassification,
+    Pipeline,
     Trainer,
     TrainingArguments,
+    pipeline,
 )
 from transformers.data.data_collator import default_data_collator
 
@@ -211,22 +213,71 @@ def train_model(
         log_model(trainer)
 
 
-def predict_entities(doc, model, processor):
+def inference(dataset, model, processor):
     """Predict entities with a fine-tuned model on Ex. 21 PDF."""
-    # TODO: make an extractor class with a train and predict method?
-    # TODO: how to set up a loop to do inference on a whole dataset?
-    image = doc["image"]
-    words = doc["tokens"]
-    boxes = doc["bboxes"]
-    encoding = processor(image, words, boxes=boxes, return_tensors="pt")
-    encoding["input_ids"] = encoding["input_ids"].to(torch.int64)
-    encoding["attention_mask"] = encoding["attention_mask"].to(torch.int64)
-    encoding["bbox"] = encoding["bbox"].to(torch.int64)
-    if torch.cuda.is_available():
-        encoding.to("cuda")
-        model.to("cuda")
-    # since we're doing inference, we don't need gradient computation
-    with torch.no_grad():
-        outputs = model(**encoding)
 
-    return outputs
+    # TODO: make an extractor class with a train and predict method?
+    def data(dataset):
+        yield from dataset
+
+    pipe = pipeline(
+        "token-classification",
+        model=model,
+        tokenizer=processor,
+        pipeline_class=LayoutLMInferencePipeline,
+    )
+
+    logits = []
+    predictions = []
+    for logit, pred in pipe(data(dataset)):
+        logits.append(logit)
+        predictions.append(pred)
+    return logits, predictions
+
+
+class LayoutLMInferencePipeline(Pipeline):
+    """Pipeline for performing inference with fine-tuned LayoutLM."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize LayoutLMInferencePipeline."""
+        super().__init__(*args, **kwargs)
+
+    def _sanitize_parameters(self, **kwargs):
+        preprocess_kwargs = {}
+        if "maybe_arg" in kwargs:
+            preprocess_kwargs["maybe_arg"] = kwargs["maybe_arg"]
+        return preprocess_kwargs, {}, {}
+
+    def preprocess(self, example):
+        """Encode and tokenize model inputs."""
+        image = example["image"]
+        words = example["tokens"]
+        boxes = example["bboxes"]
+        # encoding = self.tokenizer(image, words, boxes=boxes, return_tensors="pt")
+        encoding = self.tokenizer(
+            image,
+            words,
+            boxes=boxes,
+            return_tensors="pt",
+            truncation=True,
+            padding="max_length",
+        )
+        encoding["input_ids"] = encoding["input_ids"].to(torch.int64)
+        encoding["attention_mask"] = encoding["attention_mask"].to(torch.int64)
+        encoding["bbox"] = encoding["bbox"].to(torch.int64)
+        return encoding
+
+    def _forward(self, encoding):
+        if torch.cuda.is_available():
+            encoding.to("cuda")
+            self.model.to("cuda")
+        # since we're doing inference, we don't need gradient computation
+        with torch.no_grad():
+            output = self.model(**encoding)
+            return output
+
+    def postprocess(self, output):
+        """Return logits and model predictions."""
+        logits = output.logits
+        predictions = output.logits.argmax(-1).squeeze().tolist()
+        return logits, predictions

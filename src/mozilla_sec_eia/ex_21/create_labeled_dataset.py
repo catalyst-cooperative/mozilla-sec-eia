@@ -195,7 +195,8 @@ def format_label_studio_output(
     return labeled_df
 
 
-def _get_image_dict(pdfs_dir):
+def get_image_dict(pdfs_dir):
+    """Create a dictionary with filenames and their Ex. 21 images."""
     image_dict = {}
     for pdf_filename in os.listdir(pdfs_dir):
         if pdf_filename.split(".")[-1] != "pdf":
@@ -230,7 +231,7 @@ def format_as_ner_annotations(
     # document_annotation_to_ner https://github.com/butlerlabs/docai/blob/main/docai/annotations/ner_utils.py
     # complete dataset is a list of dicts, with one dict for each doc
     doc_filenames = labeled_df["id"].unique()
-    image_dict = _get_image_dict(pdfs_dir=pdfs_path)
+    image_dict = get_image_dict(pdfs_dir=pdfs_path)
     ner_annotations = []
     for filename in doc_filenames:
         annotation = {
