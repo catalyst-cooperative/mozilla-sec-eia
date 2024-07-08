@@ -1,5 +1,6 @@
 """Unit tests for GCSArchive class."""
 
+import io
 import unittest
 from dataclasses import dataclass
 
@@ -89,7 +90,7 @@ def test_validate_archive(test_archive, archive_files, metadata_files, valid, mo
     test_archive._filings_bucket.list_blobs.return_value = archive_files
 
     metadata_mock = mocker.MagicMock(
-        return_value=pd.DataFrame({"Filename": metadata_files})
+        return_value=pd.DataFrame({"filename": metadata_files})
     )
     mocker.patch(
         "mozilla_sec_eia.utils.cloud.GCSArchive.get_metadata", new=metadata_mock
@@ -173,15 +174,12 @@ def test_validate_archive(test_archive, archive_files, metadata_files, valid, mo
         ),
     ],
 )
-def test_10k(filing_text, ex_21_version, actually_has_ex_21, tmp_path):
+def test_10k(filing_text, ex_21_version, actually_has_ex_21):
     """Test that SEC10k's are properly parsed."""
-    filing_path = tmp_path / "sec10k.html"
-    with filing_path.open("w") as f:
-        f.write(filing_text)
-
     with unittest.mock.patch("mozilla_sec_eia.utils.cloud.logger") as mock_logger:
-        filing = Sec10K.from_path(
-            filing_path=filing_path,
+        filing = Sec10K.from_file(
+            file=io.StringIO(filing_text),
+            filename="sec10k.html",
             cik=0,
             year_quarter="2024q1",
             ex_21_version=ex_21_version,

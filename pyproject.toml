@@ -27,6 +27,7 @@ dependencies = [
     "matplotlib>=3.8,<4",
     "mlflow>=2.12",
     "opencv-python",
+    "coloredlogs>=14.0",
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
     "pg8000",
     "pillow>=10.2,<11",

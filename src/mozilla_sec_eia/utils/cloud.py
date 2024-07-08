@@ -5,9 +5,10 @@ import io
 import logging
 import os
 import re
+from contextlib import contextmanager
 from hashlib import md5
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, TextIO
 
 import fitz
 import pandas as pd
@@ -18,7 +19,10 @@ from PIL import Image
 from pydantic import BaseModel, Field, PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
+
+from mozilla_sec_eia.utils.db_metadata import Base
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -115,24 +119,27 @@ class Sec10K(BaseModel):
     ex_21: Exhibit21 | None
 
     @classmethod
-    def from_path(
-        cls, filing_path: Path, cik: int, year_quarter: str, ex_21_version: str | None
+    def from_file(
+        cls,
+        file: TextIO,
+        filename: str,
+        cik: int,
+        year_quarter: str,
+        ex_21_version: str | None,
     ):
         """Cache filing locally, and return class wrapping filing."""
-        with filing_path.open() as f:
-            filing_text = f.read()
-            filename = filing_path.name
-            return cls(
-                filing_text=filing_text,
-                filename=filename,
-                cik=cik,
-                year_quarter=year_quarter,
-                ex_21=(
-                    Exhibit21.from_10k(filename, filing_text, ex_21_version)
-                    if ex_21_version
-                    else None
-                ),
-            )
+        filing_text = file.read()
+        return cls(
+            filing_text=filing_text,
+            filename=filename,
+            cik=cik,
+            year_quarter=year_quarter,
+            ex_21=(
+                Exhibit21.from_10k(filename, filing_text, ex_21_version)
+                if ex_21_version
+                else None
+            ),
+        )
 
 
 class GoogleCloudSettings(BaseSettings):
@@ -184,6 +191,8 @@ class GCSArchive(BaseModel):
         self._filings_bucket = self._get_bucket(self.settings.filings_bucket_name)
         self._labels_bucket = self._get_bucket(self.settings.labels_bucket_name)
 
+        Base.metadata.create_all(self._engine)
+
     def _get_bucket(self, bucket_name):
         """Return cloud storage bucket where SEC10k filings are archived."""
         storage_client = storage.Client()
@@ -212,6 +221,12 @@ class GCSArchive(BaseModel):
             creator=getconn,
         )
 
+    @contextmanager
+    def create_session(self) -> Session:
+        """Yield sqlalchemy session."""
+        with Session(self._engine) as session:
+            yield session
+
     def get_metadata(self) -> pd:
         """Return dataframe of filing metadata."""
         if self._metadata_df is None:
@@ -229,8 +244,8 @@ class GCSArchive(BaseModel):
     ) -> Path:
         """Return path to a filing in local cache based on metadata."""
         return cache_directory / Path(
-            f"{filing['CIK']}-{filing['year_quarter']}-"
-            f"{filing['Filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
+            f"{filing['cik']}-{filing['year_quarter']}-"
+            f"{filing['filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
                 ".txt", extension
             )
         )
@@ -263,7 +278,7 @@ class GCSArchive(BaseModel):
         filing_selection: pd.DataFrame,
         cache_directory: Path = Path("./sec10k_filings"),
     ) -> list[Sec10K]:
-        """Caches filings locally for quick access, and returns generator producing paths.
+        """Caches filings locally for quick access, and list of Sec10K objects.
 
         Args:
             filing_selection: Pandas dataframe with same schema as metadata df where each row
@@ -272,18 +287,51 @@ class GCSArchive(BaseModel):
         """
         filings = []
         for _, filing in filing_selection.iterrows():
-            blob = self.get_filing_blob(filing["year_quarter"], filing["Filename"])
+            blob = self.get_filing_blob(filing["year_quarter"], filing["filename"])
             local_path = self._get_local_path(cache_directory, filing)
             filing_path = self.cache_blob(blob, local_path)
-            filings.append(
-                Sec10K.from_path(
-                    filing_path,
-                    filing["CIK"],
-                    filing["year_quarter"],
-                    filing["exhibit_21_version"],
+
+            with filing_path.open() as f:
+                filings.append(
+                    Sec10K.from_file(
+                        file=f,
+                        filename=filing["filename"],
+                        cik=filing["cik"],
+                        year_quarter=filing["year_quarter"],
+                        ex_21_version=filing["exhibit_21_version"],
+                    )
                 )
-            )
         return filings
+
+    def iterate_filings(
+        self,
+        filing_selection: pd.DataFrame,
+        cache_directory: Path = Path("./sec10k_filings"),
+    ):
+        """Iterate through filings without caching locally.
+
+        This method will only download a filing when ``next()`` is called on the
+        returned iterator, and it will not save filings to disk. This is useful
+        when working with a large selection of filings to avoid using excessive
+        amounts of disk space to save all filings.
+
+        Args:
+            filing_selection: Pandas dataframe with same schema as metadata df where each row
+                is a filing to return.
+            cache_directory: Path to directory where filings should be cached.
+        """
+        for _, filing in filing_selection.iterrows():
+            yield Sec10K.from_file(
+                file=io.StringIO(
+                    self.get_filing_blob(
+                        filing["year_quarter"], filing["filename"]
+                    ).download_as_text()
+                ),
+                filename=filing["filename"],
+                cik=filing["cik"],
+                year_quarter=filing["year_quarter"],
+                ex_21_version=filing["exhibit_21_version"],
+            )
 
     def cache_training_data(
         self, json_cache_path: Path, pdf_cache_path: Path, overwrite_pdfs: bool = False
@@ -303,7 +351,7 @@ class GCSArchive(BaseModel):
             # Cache filing
             match = label_name_pattern.search(blob.name)
             filename = f"edgar/data/{match.group(1)}/{match.group(2)}.txt"
-            filing_metadata = metadata_df[metadata_df["Filename"] == filename]
+            filing_metadata = metadata_df[metadata_df["filename"] == filename]
             filing = self.get_filings(filing_metadata)[0]
             pdf_path = self._get_local_path(
                 pdf_cache_path, filing_metadata.iloc[0], extension=".pdf"
@@ -323,7 +371,7 @@ class GCSArchive(BaseModel):
 
         # Get metadata df
         logger.info("Get list of files in metadata.")
-        metadata_filenames = set(self.get_metadata()["Filename"])
+        metadata_filenames = set(self.get_metadata()["filename"])
 
         if not (valid := archive_filenames == metadata_filenames):
             logger.warning("Archive validation failed.")
@@ -367,3 +415,4 @@ def initialize_mlflow():
     os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
+    logger.info(f"Initialized tracking with mlflow server: {settings.tracking_uri}")
