@@ -229,8 +229,8 @@ class GCSArchive(BaseModel):
     ) -> Path:
         """Return path to a filing in local cache based on metadata."""
         return cache_directory / Path(
-            f"{filing['CIK']}-{filing['year_quarter']}-"
-            f"{filing['Filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
+            f"{filing['cik']}-{filing['year_quarter']}-"
+            f"{filing['filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
                 ".txt", extension
             )
         )
@@ -272,13 +272,13 @@ class GCSArchive(BaseModel):
         """
         filings = []
         for _, filing in filing_selection.iterrows():
-            blob = self.get_filing_blob(filing["year_quarter"], filing["Filename"])
+            blob = self.get_filing_blob(filing["year_quarter"], filing["filename"])
             local_path = self._get_local_path(cache_directory, filing)
             filing_path = self.cache_blob(blob, local_path)
             filings.append(
                 Sec10K.from_path(
                     filing_path,
-                    filing["CIK"],
+                    filing["cik"],
                     filing["year_quarter"],
                     filing["exhibit_21_version"],
                 )
@@ -311,7 +311,7 @@ class GCSArchive(BaseModel):
             # Cache filing
             match = label_name_pattern.search(blob.name)
             filename = f"edgar/data/{match.group(1)}/{match.group(2)}.txt"
-            filing_metadata = metadata_df[metadata_df["Filename"] == filename]
+            filing_metadata = metadata_df[metadata_df["filename"] == filename]
             filing = self.get_filings(filing_metadata)[0]
             pdf_path = self._get_local_path(
                 pdf_cache_path, filing_metadata.iloc[0], extension=".pdf"
@@ -331,7 +331,7 @@ class GCSArchive(BaseModel):
 
         # Get metadata df
         logger.info("Get list of files in metadata.")
-        metadata_filenames = set(self.get_metadata()["Filename"])
+        metadata_filenames = set(self.get_metadata()["filename"])
 
         if not (valid := archive_filenames == metadata_filenames):
             logger.warning("Archive validation failed.")
