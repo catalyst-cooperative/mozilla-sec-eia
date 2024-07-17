@@ -91,14 +91,13 @@ def extract_filings(
         )
         mlflow.set_experiment(experiment_name)
         with mlflow.start_run(run_id=run_id):
-            match dataset:
-                case "basic_10k":
-                    extraction_metadata, extracted = basic_10k.extract(
-                        filings_to_extract,
-                        extraction_metadata,
-                        extracted,
-                        archive,
-                    )
+            if dataset == "basic_10k":
+                extraction_metadata, extracted = basic_10k.extract(
+                    filings_to_extract,
+                    extraction_metadata,
+                    extracted,
+                    archive,
+                )
             mlflow.log_metrics(
                 {
                     "num_failed": (~extraction_metadata["success"]).sum(),

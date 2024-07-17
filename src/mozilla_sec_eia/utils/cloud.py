@@ -404,9 +404,11 @@ def _access_secret_version(secret_id: str, project_id: str, version_id="latest")
     return response.payload.data.decode("UTF-8")
 
 
-def initialize_mlflow():
+def initialize_mlflow(settings: GoogleCloudSettings | None = None):
     """Set appropriate environment variables to prepare connection to tracking server."""
-    settings = GoogleCloudSettings()
+    if settings is None:
+        settings = GoogleCloudSettings()
+
     os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
     os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
         "mlflow_admin_password", settings.project
