@@ -214,7 +214,16 @@ def train_model(
 
 
 def inference(dataset, model, processor):
-    """Predict entities with a fine-tuned model on Ex. 21 PDF."""
+    """Predict entities with a fine-tuned model on Ex. 21 PDF.
+
+    Returns:
+        logits: The model outputs logits of shape (batch_size, seq_len, num_labels). Seq_len is
+            the same as token length
+        predictions: From the logits, we take the highest score for each token, using argmax.
+            This serves as the predicted label for each token. It is shape (seq_len) or token
+            length.
+
+    """
 
     # TODO: make an extractor class with a train and predict method?
     def data(dataset):
@@ -261,6 +270,9 @@ class LayoutLMInferencePipeline(Pipeline):
             return_tensors="pt",
             truncation=True,
             padding="max_length",
+            # return_overflowing_tokens=True,
+            max_length=512,  # this is the maximum max_length
+            stride=128,
         )
         encoding["input_ids"] = encoding["input_ids"].to(torch.int64)
         encoding["attention_mask"] = encoding["attention_mask"].to(torch.int64)
