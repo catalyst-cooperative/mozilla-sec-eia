@@ -52,9 +52,9 @@ def _extract_10k(filing: Sec10K):
                 values.append(
                     {
                         "filename": filing.filename,
-                        "filer_count": filer_count,
+                        "filer_count": filer_count - 1,
                         "block": current_block.replace(" ", "_"),
-                        "block_count": block_counts[current_block],
+                        "block_count": block_counts[current_block] - 1,
                         "key": key.replace(" ", "_"),
                         "value": value,
                     }
