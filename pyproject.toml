@@ -29,6 +29,7 @@ dependencies = [
     "opencv-python",
     "coloredlogs>=14.0",
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
+    "pandera>=0.18",
     "pg8000",
     "pillow>=10.2,<11",
     "pydantic[email]>=2,<3",

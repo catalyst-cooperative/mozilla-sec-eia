@@ -13,7 +13,7 @@ import coloredlogs
 
 from mozilla_sec_eia.ex_21.extractor import train_model
 from mozilla_sec_eia.ex_21.rename_labeled_filings import rename_filings
-from mozilla_sec_eia.extract import extract_filings
+from mozilla_sec_eia.extract import extract_filings, validate_extraction
 from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
@@ -55,14 +55,17 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Add command to extract basic 10k data
     extract_parser = subparsers.add_parser("extract")
-    extract_parser.add_argument(
-        "--extractors", nargs="*", default=["ex21", "basic_10k"]
-    )
+    extract_parser.add_argument("--dataset", nargs=1, default="basic_10k")
     extract_parser.add_argument("--continue-run", action="store_true", default=False)
     extract_parser.add_argument("--num-filings", default=-1, nargs="?", type=int)
     extract_parser.set_defaults(func=extract_filings)
 
+    validate_extract_parser = subparsers.add_parser("validate")
+    validate_extract_parser.add_argument("--dataset", nargs=1, default="basic_10k")
+    validate_extract_parser.set_defaults(func=validate_extraction)
+
     arguments = parser.parse_args(argv[1:])
+
     return arguments
 
 

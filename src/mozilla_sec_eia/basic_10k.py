@@ -90,4 +90,7 @@ def extract(
                 ",".join(unmatched_keys),
             ]
             extracted = pd.concat([extracted, ext])
-    return extraction_metadata, extracted
+    return (
+        extraction_metadata,
+        extracted.set_index(["filename", "filer_count", "block", "block_count", "key"]),
+    )

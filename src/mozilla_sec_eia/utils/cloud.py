@@ -18,11 +18,11 @@ from google.cloud.sql.connector import Connector
 from PIL import Image
 from pydantic import BaseModel, Field, PrivateAttr
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
 
-from mozilla_sec_eia.utils.db_metadata import Base
+from mozilla_sec_eia.utils.db_metadata import Base, Sec10kMetadata
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -227,24 +227,26 @@ class GCSArchive(BaseModel):
         with Session(self._engine) as session:
             yield session
 
-    def get_metadata(self) -> pd:
+    def get_metadata(self, filenames: list[str] | None = None) -> pd:
         """Return dataframe of filing metadata."""
         if self._metadata_df is None:
-            self._metadata_df = pd.read_sql(
-                "SELECT * FROM sec10k_metadata", self._engine
-            )
+            selection = select(Sec10kMetadata)
+            if filenames is not None:
+                selection = selection.where(Sec10kMetadata.filename.in_(filenames))
+
+            self._metadata_df = pd.read_sql(selection, self._engine)
+
         return self._metadata_df
 
     def get_filing_blob(self, year_quarter: str, path: str) -> storage.Blob:
         """Return Blob pointing to file in GCS bucket."""
         return self._filings_bucket.blob(f"sec10k/sec10k-{year_quarter}/{path}")
 
-    def _get_local_path(
+    def get_local_filename(
         self, cache_directory: Path, filing: pd.Series, extension=".html"
     ) -> Path:
         """Return path to a filing in local cache based on metadata."""
         return cache_directory / Path(
-            f"{filing['cik']}-{filing['year_quarter']}-"
             f"{filing['filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
                 ".txt", extension
             )
@@ -288,7 +290,7 @@ class GCSArchive(BaseModel):
         filings = []
         for _, filing in filing_selection.iterrows():
             blob = self.get_filing_blob(filing["year_quarter"], filing["filename"])
-            local_path = self._get_local_path(cache_directory, filing)
+            local_path = self.get_local_filename(cache_directory, filing)
             filing_path = self.cache_blob(blob, local_path)
 
             with filing_path.open() as f:
@@ -353,7 +355,7 @@ class GCSArchive(BaseModel):
             filename = f"edgar/data/{match.group(1)}/{match.group(2)}.txt"
             filing_metadata = metadata_df[metadata_df["filename"] == filename]
             filing = self.get_filings(filing_metadata)[0]
-            pdf_path = self._get_local_path(
+            pdf_path = self.get_local_filename(
                 pdf_cache_path, filing_metadata.iloc[0], extension=".pdf"
             )
             if not pdf_path.exists() or overwrite_pdfs:
