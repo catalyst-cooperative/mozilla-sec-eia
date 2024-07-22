@@ -165,7 +165,6 @@ def validate_extraction(dataset: str):
             )
         # Log validation set used to compute metrics
         _log_artifact_as_csv(validation_set, "labels.csv")
-    return extracted
 
 
 def extract_filings(

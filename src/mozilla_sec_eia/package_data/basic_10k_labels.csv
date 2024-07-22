@@ -58,3 +58,42 @@ edgar/data/922237/0000950005-99-000915.txt,0,mail_address,0,street_1,19850 south
 edgar/data/922237/0000950005-99-000915.txt,0,mail_address,0,city,torrance
 edgar/data/922237/0000950005-99-000915.txt,0,mail_address,0,state,ca
 edgar/data/922237/0000950005-99-000915.txt,0,mail_address,0,zip,90502
+edgar/data/92416/0000892569-94-000102.txt,0,company_data,0,company_conformed_name,southwest gas corp
+edgar/data/92416/0000892569-94-000102.txt,0,company_data,0,central_index_key,0000092416
+edgar/data/92416/0000892569-94-000102.txt,0,company_data,0,standard_industrial_classification,4923
+edgar/data/92416/0000892569-94-000102.txt,0,company_data,0,irs_number,880085720
+edgar/data/92416/0000892569-94-000102.txt,0,company_data,0,state_of_incorporation,ca
+edgar/data/92416/0000892569-94-000102.txt,0,company_data,0,fiscal_year_end,1231
+edgar/data/92416/0000892569-94-000102.txt,0,filing_values,0,form_type,10-k
+edgar/data/92416/0000892569-94-000102.txt,0,filing_values,0,sec_act,34
+edgar/data/92416/0000892569-94-000102.txt,0,filing_values,0,sec_file_number,001-07850
+edgar/data/92416/0000892569-94-000102.txt,0,filing_values,0,film_number,94518844
+edgar/data/92416/0000892569-94-000102.txt,0,business_address,0,street_1,5241 spring mountain rd
+edgar/data/92416/0000892569-94-000102.txt,0,business_address,0,street_2,po box 98510
+edgar/data/92416/0000892569-94-000102.txt,0,business_address,0,city,las vegas
+edgar/data/92416/0000892569-94-000102.txt,0,business_address,0,state,nv
+edgar/data/92416/0000892569-94-000102.txt,0,business_address,0,zip,89193
+edgar/data/92416/0000892569-94-000102.txt,0,business_address,0,business_phone,7028767252
+edgar/data/1140414/0001387131-16-004912.txt,0,company_data,0,company_conformed_name,"legend oil & gas, ltd."
+edgar/data/1140414/0001387131-16-004912.txt,0,company_data,0,central_index_key,0001140414
+edgar/data/1140414/0001387131-16-004912.txt,0,company_data,0,standard_industrial_classification,drilling oil & gas wells [1381]
+edgar/data/1140414/0001387131-16-004912.txt,0,company_data,0,irs_number,841570556
+edgar/data/1140414/0001387131-16-004912.txt,0,company_data,0,state_of_incorporation,co
+edgar/data/1140414/0001387131-16-004912.txt,0,company_data,0,fiscal_year_end,1231
+edgar/data/1140414/0001387131-16-004912.txt,0,filing_values,0,form_type,10-k
+edgar/data/1140414/0001387131-16-004912.txt,0,filing_values,0,sec_act,1934 act
+edgar/data/1140414/0001387131-16-004912.txt,0,filing_values,0,sec_file_number,000-49752
+edgar/data/1140414/0001387131-16-004912.txt,0,filing_values,0,film_number,161560888
+edgar/data/1140414/0001387131-16-004912.txt,0,business_address,0,street_1,555 northpoint center east
+edgar/data/1140414/0001387131-16-004912.txt,0,business_address,0,street_2,suite 400
+edgar/data/1140414/0001387131-16-004912.txt,0,business_address,0,city,alpharetta
+edgar/data/1140414/0001387131-16-004912.txt,0,business_address,0,state,ga
+edgar/data/1140414/0001387131-16-004912.txt,0,business_address,0,zip,30022
+edgar/data/1140414/0001387131-16-004912.txt,0,business_address,0,business_phone,(678) 366-4400
+edgar/data/1140414/0001387131-16-004912.txt,0,mail_address,0,street_1,555 northpoint center east
+edgar/data/1140414/0001387131-16-004912.txt,0,mail_address,0,street_2,suite 400
+edgar/data/1140414/0001387131-16-004912.txt,0,mail_address,0,city,alpharetta
+edgar/data/1140414/0001387131-16-004912.txt,0,mail_address,0,state,ga
+edgar/data/1140414/0001387131-16-004912.txt,0,mail_address,0,zip,30022
+edgar/data/1140414/0001387131-16-004912.txt,0,former_company,0,former_conformed_name,sin holdings inc
+edgar/data/1140414/0001387131-16-004912.txt,0,former_company,0,date_of_name_change,20010510
