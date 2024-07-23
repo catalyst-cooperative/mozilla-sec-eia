@@ -38,7 +38,7 @@ dependencies = [
     "sqlalchemy>=2,<3",
     "timm>0.9,<1", # dependency for Hugging Face computer vision models
     "torch>=2.2,<3",
-    "transformers<=4.42.3,>=4.42.3",
+    "transformers>=4.42.3,<=4.42.4",
     "xhtml2pdf",  # Convert html to PDF files
 ]
 classifiers = [

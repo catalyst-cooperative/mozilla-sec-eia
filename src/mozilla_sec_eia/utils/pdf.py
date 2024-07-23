@@ -4,16 +4,19 @@ Used to prepare inputs for Ex. 21 extraction modeling.
 Functions include drawing bounding boxes around words.
 """
 
+import logging
 from typing import Any
 
 import cv2
 import fitz
 import numpy as np
 import pandas as pd
+from fitz import Rect
 from matplotlib import pyplot as plt
 from PIL import Image
 
 PDF_POINTS_PER_INCH = 72  # believe this is standard for all PDFs
+logger = logging.getLogger(__name__)
 
 
 def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
@@ -63,13 +66,59 @@ def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
     return contents | meta
 
 
+def combine_doc_pages(doc):
+    """Combine all pages in a PyMuPDF doc into one PyMuPDF page.
+
+    Arguments:
+        doc: The Fitz Document object with the multi page Ex. 21.
+
+    Returns:
+        combined_page: A Fitz page with all pages of the Ex. 21 combined
+            into one page.
+    """
+    combined_width = 0
+    combined_height = 0
+    rects = []
+    blank_page_nums = []
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        extracted = extract_pdf_data_from_page(page)
+        if extracted["pdf_text"].empty:
+            blank_page_nums.append(page_num)
+            rects.append(Rect())
+            continue
+        pg_width = page.rect.width
+        combined_width = max(combined_width, pg_width)
+        full_pg_height = page.rect.height
+        # instead of using page height directly, use the height of the last word + a buffer
+        pg_txt_height = extracted["pdf_text"].bottom_right_y_pdf.max() + (
+            full_pg_height / 100
+        )
+        # Translate this page down by the height of the previous page
+        rects.append(
+            Rect(0, combined_height, pg_width, combined_height + pg_txt_height)
+        )
+        page.set_cropbox(Rect(0, 0, pg_width, pg_txt_height))
+        combined_height += pg_txt_height
+
+    output_pdf = fitz.open()
+    combined_page = output_pdf.new_page(width=combined_width, height=combined_height)
+
+    for i in range(len(doc)):
+        if i in blank_page_nums:
+            continue
+        combined_page.show_pdf_page(rects[i], doc, i)
+    return combined_page
+
+
 def _parse_page_contents(page: fitz.Page) -> dict[str, pd.DataFrame]:
     """Parse page contents using fitz.TextPage."""
     flags = fitz.TEXTFLAGS_DICT
     # try getting only words
     textpage = page.get_textpage(flags=flags)
     content = textpage.extractDICT()
-    words = textpage.extractWORDS()
+    delim_str = f"{chr(8212)}{chr(151)}"
+    words = textpage.extractWORDS(delimiters=delim_str)
     images = []
     text = []
     for block in content["blocks"]:

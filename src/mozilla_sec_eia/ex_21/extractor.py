@@ -5,6 +5,8 @@ a LayoutLM model to extract unstructured Exhibit 21 tables
 from SEC 10K filings.
 """
 
+from pathlib import Path
+
 import mlflow
 import numpy as np
 from datasets import (
@@ -98,11 +100,12 @@ def _get_id_label_conversions():
     return id2label, label2id
 
 
-def load_test_train_set(processor: AutoProcessor, test_size: float):
+def load_test_train_set(
+    processor: AutoProcessor, test_size: float, ner_annotations: list[dict]
+):
     """Load training/test set and prepare for training or evaluation."""
     id2label, label2id = _get_id_label_conversions()
     # Cache/prepare training data
-    ner_annotations = format_as_ner_annotations()
     dataset = Dataset.from_list(ner_annotations)
 
     # Prepare our train & eval dataset
@@ -130,7 +133,9 @@ def load_test_train_set(processor: AutoProcessor, test_size: float):
 def log_model(finetuned_model: Trainer):
     """Log fine-tuned model to mlflow artifacts."""
     model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
-    mlflow.transformers.log_model(model, artifact_path="layoutlm_extractor")
+    mlflow.transformers.log_model(
+        model, artifact_path="layoutlm_extractor", task="token-classification"
+    )
 
 
 def load_model():
@@ -141,7 +146,12 @@ def load_model():
     )
 
 
-def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
+def train_model(
+    labeled_json_path: str,
+    gcs_training_data_dir: str = "labeled",
+    model_output_dir="layoutlm_trainer",
+    test_size=0.2,
+):
     """Train LayoutLM model with labeled data.
 
     Arguments:
@@ -161,9 +171,14 @@ def train_model(model_output_dir="layoutlm_trainer", test_size=0.2):
     processor = AutoProcessor.from_pretrained(
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
-
+    ner_annotations = format_as_ner_annotations(
+        labeled_json_path=Path(labeled_json_path),
+        gcs_folder_name=gcs_training_data_dir,
+    )
     # Get training/test data using pre-trained processor to prepare data
-    train_dataset, eval_dataset = load_test_train_set(processor, test_size)
+    train_dataset, eval_dataset = load_test_train_set(
+        processor=processor, test_size=test_size, ner_annotations=ner_annotations
+    )
 
     # Initialize our Trainer
     metric = load_metric("seqeval")

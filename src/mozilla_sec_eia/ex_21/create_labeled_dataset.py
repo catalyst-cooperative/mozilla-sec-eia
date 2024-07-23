@@ -10,6 +10,7 @@ import pandas as pd
 
 from mozilla_sec_eia.utils.cloud import GCSArchive
 from mozilla_sec_eia.utils.pdf import (
+    combine_doc_pages,
     extract_pdf_data_from_page,
     pil_to_cv2,
     render_page,
@@ -28,6 +29,7 @@ BBOX_COLS = [
 
 
 def create_inputs_for_label_studio(
+    model_version: str = "v1.0",
     pdfs_dir: Path = ROOT_DIR / "sec10k_filings/pdfs",
     cache_dir: Path = ROOT_DIR / "sec10k_filings",
 ):
@@ -56,7 +58,6 @@ def create_inputs_for_label_studio(
         pg_meta = extracted["page"]
 
         # render an image of the page and save
-        # TODO: what happens when there are multiple pages?
         full_pg_img = render_page(pg)
         image_filename = pdf_filename.split(".")[0] + ".png"
         full_pg_img.save(image_dir / image_filename)
@@ -72,7 +73,7 @@ def create_inputs_for_label_studio(
             "id": f"{filename_no_ext}",
             "data": {"ocr": f"gs://labeled-ex21-filings/unlabeled/{image_filename}"},
             "annotations": [],
-            "predictions": [{"model_version": "v1.0", "result": []}],
+            "predictions": [{"model_version": f"{model_version}", "result": []}],
         }
         result = []
         # TODO: make more efficient? change to using an apply?
@@ -97,7 +98,8 @@ def _get_pdf_data(pdf_path):
     assert pdf_path.exists()
     doc = fitz.Document(str(pdf_path))
     assert doc.is_pdf
-    pg = doc[0]
+    # keep this if statement so that one page docs don't change from v0
+    pg = combine_doc_pages(doc) if len(doc) > 1 else doc[0]
     extracted = extract_pdf_data_from_page(pg)
     return extracted, pg
 
@@ -230,28 +232,28 @@ def _get_image_dict(pdfs_dir):
 
 
 def format_as_ner_annotations(
-    labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
-    pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
+    labeled_json_path=ROOT_DIR / "sec10k_filings/labeled_jsons",
+    pdfs_path=ROOT_DIR / "sec10k_filings/pdfs",
+    gcs_folder_name: str = "labeled/",
 ) -> list[dict]:
-    """Format a dataframe of labeled Ex. 21 as NER annotations.
+    """Format a Label Studio output JSONs as NER annotations.
 
-    Expects the output of format_label_studio_output as input dataframe.
     Formats the dataframe as named entity recognition annotations.
     # TODO: say more about this format
 
     Returns:
         ner_annotations: a list of dicts, with one dict for each doc.
     """
-    GCSArchive().cache_training_data(labeled_json_dir, pdfs_dir)
+    GCSArchive().cache_training_data(labeled_json_path, pdfs_path, gcs_folder_name)
 
     labeled_df = format_label_studio_output(
-        labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
+        labeled_json_dir=labeled_json_path, pdfs_dir=pdfs_path
     )
     # convert dataframe/dictionary into NER format
     # document_annotation_to_ner https://github.com/butlerlabs/docai/blob/main/docai/annotations/ner_utils.py
     # complete dataset is a list of dicts, with one dict for each doc
     doc_filenames = labeled_df["id"].unique()
-    image_dict = _get_image_dict(pdfs_dir=pdfs_dir)
+    image_dict = _get_image_dict(pdfs_dir=pdfs_path)
     ner_annotations = []
     for filename in doc_filenames:
         annotation = {

@@ -8,16 +8,21 @@ interface.
 import argparse
 import logging
 import sys
+from pathlib import Path
 
 import coloredlogs
 
+from mozilla_sec_eia.ex_21.create_labeled_dataset import (
+    create_inputs_for_label_studio,
+)
 from mozilla_sec_eia.ex_21.extractor import train_model
 from mozilla_sec_eia.ex_21.rename_labeled_filings import rename_filings
 from mozilla_sec_eia.extract import extract_filings, validate_extraction
 from mozilla_sec_eia.utils import GCSArchive
 
 # This is the module-level logger, for any logs
-logger = logging.getLogger(f"catalystcoop.{__name__}")
+logger = logging.getLogger(__name__)
+ROOT_DIR = Path(__file__).parent.parent.parent.resolve()
 
 
 def parse_command_line(argv: list[str]) -> argparse.Namespace:
@@ -45,6 +50,8 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Add command to fine-tune ex21 extractor
     validate_parser = subparsers.add_parser("finetune_ex21")
+    validate_parser.add_argument("--labeled-json-path")
+    validate_parser.add_argument("--gcs-training-data-dir", default="labeled/")
     validate_parser.add_argument("--model-output-dir", default="layoutlm_trainer")
     validate_parser.add_argument("--test-size", default=0.2)
     validate_parser.set_defaults(func=train_model)
@@ -63,6 +70,12 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     validate_extract_parser = subparsers.add_parser("validate")
     validate_extract_parser.add_argument("--dataset", nargs=1, default="basic_10k")
     validate_extract_parser.set_defaults(func=validate_extraction)
+
+    # Add command to create Label Studio inputs from cached Ex. 21 images and PDFs
+    validate_parser = subparsers.add_parser("create_ls_inputs")
+    validate_parser.add_argument("--pdfs-dir", default=ROOT_DIR / "sec10k_filings/pdfs")
+    validate_parser.add_argument("--cache-dir", default=ROOT_DIR / "sec10k_filings")
+    validate_parser.set_defaults(func=create_inputs_for_label_studio)
 
     arguments = parser.parse_args(argv[1:])
 
