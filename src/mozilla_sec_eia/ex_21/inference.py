@@ -8,7 +8,7 @@ from datasets import Dataset
 from transformers import AutoProcessor, LayoutLMv3ForTokenClassification
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import (
-    BBOX_COLS,
+    BBOX_COLS_PDF,
     format_label_studio_output,
     get_image_dict,
 )
@@ -47,7 +47,7 @@ def create_inference_dataset(pdfs_dir, labeled_json_dir=None, has_labels=False):
         annotation = {
             "id": filename,
             "tokens": inference_df.groupby("id")["text"].apply(list).loc[filename],
-            "bboxes": inference_df.loc[inference_df["id"] == filename, :][BBOX_COLS]
+            "bboxes": inference_df.loc[inference_df["id"] == filename, :][BBOX_COLS_PDF]
             .to_numpy()
             .tolist(),
             "image": image_dict[filename],
@@ -89,7 +89,7 @@ def perform_inference(
     )
     if dataset_ind:
         dataset = dataset.select(dataset_ind)
-    logit_list, prediction_list = inference(
+    logit_list, prediction_list, output_dfs = inference(
         dataset=dataset, model=model, processor=processor
     )
-    return logit_list, prediction_list
+    return logit_list, prediction_list, output_dfs

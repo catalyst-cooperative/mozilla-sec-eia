@@ -19,7 +19,7 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 
 
-BBOX_COLS = [
+BBOX_COLS_PDF = [
     "top_left_x_pdf",
     "top_left_y_pdf",
     "bottom_right_x_pdf",
@@ -238,7 +238,7 @@ def format_as_ner_annotations(
             "id": filename,
             "tokens": labeled_df.groupby("id")["text"].apply(list).loc[filename],
             "ner_tags": labeled_df.groupby("id")["ner_tag"].apply(list).loc[filename],
-            "bboxes": labeled_df.loc[labeled_df["id"] == filename, :][BBOX_COLS]
+            "bboxes": labeled_df.loc[labeled_df["id"] == filename, :][BBOX_COLS_PDF]
             .to_numpy()
             .tolist(),
             "image": image_dict[filename],
