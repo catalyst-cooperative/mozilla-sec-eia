@@ -10,7 +10,6 @@ from pathlib import Path
 import mlflow
 import numpy as np
 import pandas as pd
-from scipy.stats import mode
 import torch
 from datasets import (
     Array2D,
@@ -21,6 +20,7 @@ from datasets import (
     Value,
     load_metric,
 )
+from scipy.stats import mode
 from transformers import (
     AutoProcessor,
     LayoutLMv3ForTokenClassification,
@@ -119,7 +119,7 @@ def clean_extracted_df(extracted_df):
     if "own_per" in extracted_df.columns:
         # could do some special character removal on all columns?
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
-            "[^\w.]", "", regex=True
+            r"[^\w.]", "", regex=True
         )
     return extracted_df
 
