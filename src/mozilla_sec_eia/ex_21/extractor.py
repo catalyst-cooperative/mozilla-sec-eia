@@ -35,7 +35,15 @@ from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotatio
 from mozilla_sec_eia.utils.cloud import initialize_mlflow
 from mozilla_sec_eia.utils.pdf import _iob_to_label
 
-LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
+LABELS = [
+    "O",
+    "B-Subsidiary",
+    "I-Subsidiary",
+    "B-Loc",
+    "I-Loc",
+    "B-Own_Per",
+    "I-Own_Per",
+]
 BBOX_COLS = ["top_left_x", "top_left_y", "bottom_right_x", "bottom_right_y"]
 
 
