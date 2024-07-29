@@ -199,13 +199,13 @@ def perform_inference(
 
     logits = []
     predictions = []
-    # TODO: don't make this a list, just make this a big dataframe with ID column
-    output_dfs = []
+    all_output_df = pd.DataFrame()
     for logit, pred, output_df in pipe(_get_data(dataset)):
         logits.append(logit)
         predictions.append(pred)
-        output_dfs.append(output_df)
-    return logits, predictions, output_dfs
+        all_output_df = pd.concat([all_output_df, output_df])
+    all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
+    return logits, predictions, all_output_df
 
 
 class LayoutLMInferencePipeline(Pipeline):
@@ -323,4 +323,5 @@ class LayoutLMInferencePipeline(Pipeline):
             index="row", columns="pred", values="word", aggfunc=lambda x: " ".join(x)
         ).reset_index()
         output_df = clean_extracted_df(output_df)
+        output_df.loc[:, "id"] = example["id"]
         return output_df
