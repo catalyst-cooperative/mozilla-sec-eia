@@ -175,6 +175,12 @@ def perform_inference(
 ):
     """Predict entities with a fine-tuned model and extract Ex. 21 tables.
 
+    This function starts by creating a HuggingFace dataset from PDFs in `pdfs_dir`
+    that the model can then perform inference on (`create_inference_dataset`).
+    Then it creates an instance of the custom LayoutLM inference pipeline and
+    runs the dataset through the pipeline. The pipeline outputs logits, predictions,
+    and an output dataframe with extracted Ex. 21 table.
+
     Arguments:
         pdfs_dir: Path to the directory with PDFs that are being used for inference.
         model: A fine-tuned LayoutLM model.
@@ -190,12 +196,18 @@ def perform_inference(
             i.e. "mps", "cpu", "cuda"
 
     Returns:
-        logits: The model outputs logits of shape (batch_size, seq_len, num_labels). Seq_len is
-            the same as token length
-        predictions: From the logits, we take the highest score for each token, using argmax.
+        logits: A list of logits. The list is the length of the number of documents in the
+            dataset (number of PDFs in pdfs_dir). Each logit object in the list is of
+            shape (batch_size, seq_len, num_labels). Seq_len is
+            the same as token length (512 in this case).
+        predictions: A list of predictions. The list is the length of the number of documents
+            in the dataset (number of PDFs in pdfs_dir).
+            From the logits, we take the highest score for each token, using argmax.
             This serves as the predicted label for each token. It is shape (seq_len) or token
             length.
-        output_dfs: The extracted Ex. 21 tables.
+        output_dfs: The extracted Ex. 21 tables. This is one big dataframe with an ID column
+            that is the filename of the extracted Ex. 21. Dataframe contains columns id,
+            subsidiary, loc, own_per.
     """
     dataset = create_inference_dataset(
         pdfs_dir=pdfs_dir, labeled_json_dir=labeled_json_dir, has_labels=has_labels
@@ -289,7 +301,16 @@ class LayoutLMInferencePipeline(Pipeline):
         return logits, predictions, output_df
 
     def extract_table(self, all_outputs):
-        """Extract a structured table from a set of inference predictions."""
+        """Extract a structured table from a set of inference predictions.
+
+        This function essentially works by stacking bounding boxes and predictions
+        into a dataframe and going from left to right and top to bottom. Then, every
+        every time a new subsidiary entity is encountered, it assigns a new group or
+        "row" to that subsidiary. Next, location and ownership percentage words/labeled
+        entities in between these subsidiary groups are assigned to a subsidiary row/group.
+        Finally, this is all formatted into a dataframe with an ID column from the original
+        filename and a basic cleaning function normalizes strings.
+        """
         predictions = all_outputs["predictions"]
         encoding = all_outputs["raw_encoding"]
         example = all_outputs["example"]

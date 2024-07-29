@@ -23,7 +23,7 @@ def get_pdf_data_from_path(pdf_path):
     """Get words, images, and bounding boxes from a PDF.
 
     Arguments:
-        pdf_path: path to the PDF
+        pdf_path: path to the PDF.
 
     Returns:
         extracted: a dictionary with keys "pdf_text", "image", and "page"
