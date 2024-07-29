@@ -29,6 +29,11 @@ from mozilla_sec_eia.utils.pdf import (
     get_pdf_data_from_path,
 )
 
+# When handling multi page documents LayoutLM uses a sliding 'frame'
+# with some overlap between frames. The overlap creates multiple
+# predictions for the same bounding boxes. If there are multiple mode
+# predictions for a bounding box, then ties are broken by setting
+# a priority for the labels and choosing the highest priority label.
 LABEL_PRIORITY = [
     "I-Subsidiary",
     "I-Loc",
@@ -114,7 +119,17 @@ def _sort_by_label_priority(target_array):
 
 
 def get_flattened_mode_predictions(token_boxes_tensor, predictions_tensor):
-    """Get the mode prediction for each box in an Ex. 21."""
+    """Get the mode prediction for each box in an Ex. 21.
+
+    When handling multi page documents LayoutLM uses a sliding 'frame'
+    with some overlap between frames. The overlap creates multiple
+    predictions for the same bounding boxes. Thus it's necessary to find
+    the mode of all the predictions for a bounding box and use that as the
+    single prediction for each box. If there are multiple mode
+    predictions for a bounding box, then ties are broken by setting
+    a priority for the labels (LABEL_PRIORITY) and choosing the highest priority
+    label.
+    """
     # Flatten the tensors
     flat_token_boxes = token_boxes_tensor.view(-1, 4)
     flat_predictions = predictions_tensor.view(-1)
