@@ -375,3 +375,4 @@ def initialize_mlflow():
     os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
+    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = True
