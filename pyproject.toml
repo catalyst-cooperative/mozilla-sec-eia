@@ -27,18 +27,21 @@ dependencies = [
     "matplotlib>=3.8,<4",
     "mlflow>=2.12",
     "opencv-python",
+    "coloredlogs>=14.0",
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
+    "pandera>=0.18",
     "pg8000",
     "psutil",
     "pynvml",
     "pillow>=10.2,<11",
     "pydantic[email]>=2,<3",
     "pydantic-settings>=2",
+    "python-bidi<0.5.0",
     "pymupdf",  # Convert PDF to image
     "sqlalchemy>=2,<3",
     "timm>0.9,<1", # dependency for Hugging Face computer vision models
     "torch>=2.2,<3",
-    "transformers>=4.42.3,<=4.43.1",
+    "transformers>=4.42.3,<=4.43.3",
     "xhtml2pdf",  # Convert html to PDF files
 ]
 classifiers = [
@@ -83,7 +86,7 @@ dev = [
 docs = [
     "doc8>=1,<2",  # Ensures clean documentation formatting
     "furo>=2022.4.7",
-    "sphinx>=6,<8",  # The default Python documentation engine
+    "sphinx>=6,<9",  # The default Python documentation engine
     "sphinx-autoapi>=2,<4",  # Generates documentation from docstrings
     "sphinx-issues>=1.2,<5",  # Allows references to GitHub issues
 
