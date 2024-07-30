@@ -105,6 +105,7 @@ def clean_extracted_df(extracted_df):
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
             r"[^\w.]", "", regex=True
         )
+        extracted_df["own_per"] = extracted_df["own_per"].astype("float64")
     return extracted_df
 
 
@@ -231,6 +232,9 @@ def perform_inference(
         logits.append(logit)
         predictions.append(pred)
         all_output_df = pd.concat([all_output_df, output_df])
+    all_output_df.columns.name = None
+    all_output_df = all_output_df.reset_index(drop=True)
+    all_output_df = clean_extracted_df(all_output_df)
     all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
     return logits, predictions, all_output_df
 
@@ -358,6 +362,5 @@ class LayoutLMInferencePipeline(Pipeline):
         output_df = grouped_df.pivot_table(
             index="row", columns="pred", values="word", aggfunc=lambda x: " ".join(x)
         ).reset_index()
-        output_df = clean_extracted_df(output_df)
         output_df.loc[:, "id"] = example["id"]
         return output_df

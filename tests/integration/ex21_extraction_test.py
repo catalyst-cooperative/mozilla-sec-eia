@@ -2,7 +2,6 @@
 
 import pandas as pd
 from mozilla_sec_eia.ex_21.inference import create_inference_dataset, perform_inference
-from mozilla_sec_eia.ex_21.train_extractor import LABELS
 from mozilla_sec_eia.utils.layoutlm import load_model
 from pandas.testing import assert_frame_equal
 
@@ -34,6 +33,6 @@ def test_inference_and_table_extraction(test_dir):
     )
     # TODO: uncomment with new model checkpoint and 7th label included
     # assert logit_list[0].shape == (1, 512, len(LABELS))
-    expected_out_path = test_dir / "inference_and_extraction_expected_out.csv"
+    expected_out_path = test_dir / "data" / "inference_and_extraction_expected_out.csv"
     expected_out_df = pd.read_csv(expected_out_path)
     assert_frame_equal(expected_out_df, output_df)
