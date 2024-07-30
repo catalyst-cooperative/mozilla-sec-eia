@@ -29,6 +29,8 @@ dependencies = [
     "opencv-python",
     "pandas[parquet,excel,fss,gcp,compression]>=2,<3",
     "pg8000",
+    "psutil",
+    "pynvml",
     "pillow>=10.2,<11",
     "pydantic[email]>=2,<3",
     "pydantic-settings>=2",
