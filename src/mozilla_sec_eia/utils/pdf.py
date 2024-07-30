@@ -26,9 +26,8 @@ def get_pdf_data_from_path(pdf_path):
         pdf_path: path to the PDF.
 
     Returns:
-        extracted: a dictionary with keys "pdf_text", "image", and "page"
-            (which contains the page metadata)
-        pg: a PyMuPDF page object which represents all pages in the PDF.
+        A page metadata dictionary with keys "pdf_text", "image", and "page"
+        and a PyMuPDF page object which represents all pages in the PDF.
     """
     # TODO: replace asserts within logging messages?
     assert pdf_path.exists()
@@ -94,8 +93,8 @@ def combine_doc_pages(doc):
         doc: The Fitz Document object with the multi page Ex. 21.
 
     Returns:
-        combined_page: A Fitz page with all pages of the Ex. 21 combined
-            into one page.
+        A Fitz page with all pages of the Ex. 21 combined
+        into one page.
     """
     combined_width = 0
     combined_height = 0
