@@ -24,7 +24,7 @@ def test_inference_and_table_extraction(test_dir):
     model_checkpoint = load_model()
     model = model_checkpoint["model"]
     processor = model_checkpoint["tokenizer"]
-    pdf_dir = test_dir / "data/test_pdfs"
+    pdf_dir = test_dir / "data" / "test_pdfs"
     logit_list, pred_list, output_df = perform_inference(
         pdfs_dir=pdf_dir,
         model=model,
