@@ -1,6 +1,33 @@
 """Util functions for training and predicting with LayoutLM on Ex. 21 tables."""
 
+import mlflow
 from PIL import ImageDraw, ImageFont
+from transformers import (
+    Trainer,
+)
+
+from mozilla_sec_eia.utils.cloud import initialize_mlflow
+
+
+def log_model(finetuned_model: Trainer):
+    """Log fine-tuned model to mlflow artifacts."""
+    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
+    mlflow.transformers.log_model(
+        model, artifact_path="layoutlm_extractor", task="token-classification"
+    )
+
+
+def load_model(version="1"):
+    """Load fine-tuned model checkpoint from mlflow artifacts.
+
+    Returns: A dictionary of the saved individual components of
+        either the Pipeline or the pre-trained model.
+    """
+    # TODO: want more ability to give load_model a model path?
+    initialize_mlflow()
+    return mlflow.transformers.load_model(
+        f"models:/layoutlm_extractor/{version}", return_type="components"
+    )
 
 
 def normalize_bboxes(txt_df, pg_meta_df):

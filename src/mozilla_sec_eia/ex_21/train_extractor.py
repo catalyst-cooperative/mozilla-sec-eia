@@ -28,7 +28,7 @@ from transformers.data.data_collator import default_data_collator
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
 from mozilla_sec_eia.utils.cloud import initialize_mlflow
-from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions
+from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions, log_model
 
 LABELS = [
     "O",
@@ -132,23 +132,6 @@ def load_test_train_set(
     dataset.set_format("torch")
     split_dataset = dataset.train_test_split(test_size=test_size)
     return split_dataset["train"], split_dataset["test"]
-
-
-def log_model(finetuned_model: Trainer):
-    """Log fine-tuned model to mlflow artifacts."""
-    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
-    mlflow.transformers.log_model(
-        model, artifact_path="layoutlm_extractor", task="token-classification"
-    )
-
-
-def load_model():
-    """Load fine-tuned model from mlflow artifacts."""
-    # TODO: want the ability to give load_model a model path?
-    initialize_mlflow()
-    return mlflow.transformers.load_model(
-        "models:/layoutlm_extractor/1", return_type="components"
-    )
 
 
 def train_model(
