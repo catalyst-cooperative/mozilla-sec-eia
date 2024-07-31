@@ -427,5 +427,5 @@ def initialize_mlflow(settings: GoogleCloudSettings | None = None):
     os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
-    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = True
+    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
     logger.info(f"Initialized tracking with mlflow server: {settings.tracking_uri}")
