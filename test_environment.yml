@@ -2,6 +2,7 @@ name: mozilla-sec-eia
 channels:
   - conda-forge
   - defaults
+  - pytorch
 dependencies:
   # Packages required for setting up the environment
   - pip>=21,<24
@@ -23,6 +24,10 @@ dependencies:
 
   # These are not normal Python packages available on PyPI
   - nodejs # Useful for Jupyter and prettier pre-commit hook
+
+  - cpuonly
+  - pytorch>=2.2,<3
+  - torchvision
 
   # Use pip to install the package defined by this repo for development:
   - pip:
