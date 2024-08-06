@@ -19,6 +19,14 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Set default GCP credentials
+        id: gcloud-auth
+        continue-on-error: true
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: "projects/345950277072/locations/global/workloadIdentityPools/gh-actions-pool/providers/gh-actions-provider"
+          service_account: "mozilla-dev-sa@catalyst-cooperative-mozilla.iam.gserviceaccount.com"
+
       - name: Set up conda environment for testing
         uses: mamba-org/setup-micromamba@v1
         with:
