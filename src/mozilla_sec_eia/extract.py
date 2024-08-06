@@ -2,7 +2,6 @@
 
 import io
 import logging
-import os
 from importlib import resources
 
 import mlflow
@@ -140,7 +139,6 @@ def compute_validation_metrics(
 
 def validate_extraction(dataset: str):
     """Run extraction on validation set and compare results to labeled data."""
-    logger.info(f"{os.environ.keys()}")
     validation_set = pd.read_csv(
         resources.files("mozilla_sec_eia.package_data") / f"{dataset}_labels.csv"
     )
