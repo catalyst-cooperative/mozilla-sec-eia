@@ -48,6 +48,14 @@ jobs:
           printenv | sort
 
       - name: Run PyTest with Tox
+        env:
+          GCS_FILINGS_BUCKET_NAME: ${{ secrets.GCS_FILINGS_BUCKET_NAME }}
+          GCS_IAM_USER: ${{ secrets.GCS_IAM_USER }}
+          GCS_LABELS_BUCKET_NAME: ${{ secrets.GCS_LABELS_BUCKET_NAME }}
+          GCS_METADATA_DB_INSTANCE_CONNECTION: ${{ secrets.GCS_METADATA_DB_INSTANCE_CONNECTION }}
+          GCS_METADATA_DB_NAME: ${{ secrets.GCS_METADATA_DB_NAME }}
+          GCS_PROJECT: ${{ secrets.GCS_PROJECT }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
           tox
 
