@@ -43,11 +43,11 @@ def _log_artifact_as_csv(
 def _get_most_recent_run(experiment_name: str):
     """Search mlflow for most recent extraction run with specified experiment name."""
     run_metadata = mlflow.search_runs(experiment_names=[experiment_name])
-    return mlflow.get_run(
-        run_metadata[run_metadata["end_time"] == run_metadata["end_time"].max()][
-            "run_id"
-        ][0]
-    )
+
+    # Mlflow returns runs ordered by their runtime, so it's easy to grab the latest run
+    # This assert will ensure this doesn't silently break if the ordering changes
+    assert run_metadata.loc[0, "end_time"] == run_metadata["end_time"].max()
+    return mlflow.get_run(run_metadata.loc[0, "run_id"])
 
 
 def _get_filings_to_extract(
