@@ -242,6 +242,6 @@ def extract_filings(
         _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
         _log_artifact_as_csv(extracted, "extracted.csv")
     logger.info(
-        f"Finished extraction {len(extraction_metadata)} filings from {dataset}."
+        f"Finished extracting {len(extraction_metadata)} filings from {dataset}."
     )
     return extracted
