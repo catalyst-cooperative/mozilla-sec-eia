@@ -6,6 +6,9 @@ on: [push, pull_request]
 jobs:
   ci-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
@@ -19,10 +22,18 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Set default GCP credentials
+        id: gcloud-auth
+        continue-on-error: true
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: "projects/345950277072/locations/global/workloadIdentityPools/gh-actions-pool/providers/gh-actions-provider"
+          service_account: "mozilla-dev-sa@catalyst-cooperative-mozilla.iam.gserviceaccount.com"
+
       - name: Set up conda environment for testing
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: environment.yml
+          environment-file: test_environment.yml
           cache-environment: true
           cache-environment-key: environment-${{ hashFiles('pyproject.toml') }}
           condarc: |
@@ -38,6 +49,17 @@ jobs:
           conda config --show-sources
           conda config --show
           printenv | sort
+
+      - name: Create env file
+        run: |
+          touch .env
+          echo GCS_FILINGS_BUCKET_NAME=${{ secrets.GCS_FILINGS_BUCKET_NAME }} >> .env
+          echo GCS_IAM_USER=${{ secrets.GCS_IAM_USER }} >> .env
+          echo GCS_LABELS_BUCKET_NAME=${{ secrets.GCS_LABELS_BUCKET_NAME }} >> .env
+          echo GCS_METADATA_DB_INSTANCE_CONNECTION=${{ secrets.GCS_METADATA_DB_INSTANCE_CONNECTION }} >> .env
+          echo GCS_METADATA_DB_NAME=${{ secrets.GCS_METADATA_DB_NAME }} >> .env
+          echo GCS_PROJECT=${{ secrets.GCS_PROJECT }} >> .env
+          echo MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }} >> .env
 
       - name: Run PyTest with Tox
         run: |
