@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import BinaryIO, TextIO
 
 import fitz
+import mlflow
 import pandas as pd
 import pg8000
 from google.cloud import secretmanager, storage
@@ -419,11 +420,13 @@ def initialize_mlflow(settings: GoogleCloudSettings | None = None):
     if settings is None:
         settings = GoogleCloudSettings()
 
+    # Set tracking uri through API rather than env variable to avoid overriding .env
+    mlflow.set_tracking_uri(settings.tracking_uri)
+
     os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
     os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
         "mlflow_admin_password", settings.project
     )
-    os.environ["MLFLOW_TRACKING_URI"] = settings.tracking_uri
     os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"

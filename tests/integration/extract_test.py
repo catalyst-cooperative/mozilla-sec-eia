@@ -3,6 +3,7 @@
 import unittest
 
 import pandas as pd
+import pytest
 from mozilla_sec_eia.ex_21.inference import create_inference_dataset, perform_inference
 from mozilla_sec_eia.extract import (
     _get_experiment_name,
@@ -26,9 +27,14 @@ def test_basic_10k_extraction(test_mlflow_init_func):
     assert run.data.metrics["recall"] == 1
 
 
-def test_model_loading():
+@pytest.fixture
+def model_checkpoint():
+    """Load model from tracking server and return."""
+    return load_model()
+
+
+def test_model_loading(model_checkpoint):
     """Test loading a fine-tuned LayoutLM model from MLFlow."""
-    model_checkpoint = load_model()
     assert "model" in model_checkpoint
     assert "tokenizer" in model_checkpoint
 
@@ -39,9 +45,8 @@ def test_dataset_creation(test_dir):
     assert dataset.shape == (2, 4)
 
 
-def test_inference_and_table_extraction(test_dir):
+def test_inference_and_table_extraction(test_dir, model_checkpoint):
     """Test performing inference and extracting an Ex. 21 table."""
-    model_checkpoint = load_model()
     model = model_checkpoint["model"]
     processor = model_checkpoint["tokenizer"]
     pdf_dir = test_dir / "data" / "test_pdfs"
