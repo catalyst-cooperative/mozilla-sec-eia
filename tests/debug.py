@@ -1,8 +1,9 @@
-from mozilla_sec_eia.utils.layoutlm import load_model
-from mozilla_sec_eia.ex_21.inference import perform_inference
-import pandas as pd
-from pandas.testing import assert_frame_equal
 from pathlib import Path
+
+import pandas as pd
+from mozilla_sec_eia.ex_21.inference import perform_inference
+from mozilla_sec_eia.utils.layoutlm import load_model
+from pandas.testing import assert_frame_equal
 
 model_checkpoint = load_model()
 model = model_checkpoint["model"]
