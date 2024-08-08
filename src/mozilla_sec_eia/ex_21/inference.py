@@ -341,6 +341,7 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         df = df[~invalid_mask]
         # we want to get actual words on the dataframe, not just subwords that correspond to tokens
+        # subwords from the same word share the same bounding box coordinates
         # so we merge the original words onto our dataframe on bbox coordinates
         words_df = pd.DataFrame(data=example["bboxes"], columns=BBOX_COLS)
         words_df.loc[:, "word"] = example["tokens"]
@@ -350,7 +351,9 @@ class LayoutLMInferencePipeline(Pipeline):
         # filter for just words that were labeled with non "other" entities
         entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
         entities_df = entities_df[entities_df["pred"] != "other"]
-        # merge B and I entities to form one entity group, assign a group ID
+        # words are labeled with IOB format which stands for inside, outside, beginning
+        # merge B and I entities to form one entity group
+        # (i.e. "B-Subsidiary" and "I-Subsidiary" become just "subsidiary"), assign a group ID
         entities_df["group"] = (entities_df["iob_pred"].str.startswith("B-")).cumsum()
         grouped_df = (
             entities_df.groupby(["group", "pred"])["word"]
