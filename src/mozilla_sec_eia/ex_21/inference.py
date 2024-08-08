@@ -233,9 +233,9 @@ def perform_inference(
         predictions.append(pred)
         all_output_df = pd.concat([all_output_df, output_df])
     all_output_df.columns.name = None
-    all_output_df = all_output_df.reset_index(drop=True)
     all_output_df = clean_extracted_df(all_output_df)
     all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
+    all_output_df = all_output_df.reset_index(drop=True)
     return logits, predictions, all_output_df
 
 

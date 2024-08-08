@@ -56,9 +56,13 @@ def test_inference_and_table_extraction(test_dir, model_checkpoint):
         processor=processor,
         device="cpu",
     )
-    output_df = output_df.sort_values(by="id")
+    # we don't normally want to sort by id and subsidiary
+    # but sort here for the sake of just testing whether dataframe
+    # row values are the same without worrying about order
+    output_df = output_df.sort_values(by=["id", "subsidiary"])
     # TODO: uncomment with new model checkpoint and 7th label included
     # assert logit_list[0].shape == (1, 512, len(LABELS))
     expected_out_path = test_dir / "data" / "inference_and_extraction_expected_out.csv"
     expected_out_df = pd.read_csv(expected_out_path)
-    assert_frame_equal(expected_out_df, output_df)
+    expected_out_df = expected_out_df.sort_values(by=["id", "subsidiary"])
+    assert_frame_equal(expected_out_df, output_df, check_like=True)
