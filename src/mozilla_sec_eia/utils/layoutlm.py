@@ -17,7 +17,7 @@ def log_model(finetuned_model: Trainer):
     )
 
 
-def load_model(version="1"):
+def load_model(version=1):
     """Load fine-tuned model checkpoint from mlflow artifacts.
 
     Returns: A dictionary of the saved individual components of
