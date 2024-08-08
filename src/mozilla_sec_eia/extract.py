@@ -2,7 +2,9 @@
 
 import io
 import logging
+import tempfile
 from importlib import resources
+from pathlib import Path
 
 import mlflow
 import pandas as pd
@@ -38,6 +40,22 @@ def _log_artifact_as_csv(
 ):
     """Upload a DataFrame as a CSV to mlflow tracking server."""
     return mlflow.log_text(artifact.to_csv(index=index), artifact_name)
+
+
+def _load_artifact_as_parquet(run: Run, artifact_name: str) -> pd.DataFrame:
+    """Download a CSV and parse to DataFrame from mlflow tracking server."""
+    df = pd.read_parquet(run.info.artifact_uri + artifact_name)
+    return df
+
+
+def _log_artifact_as_parquet(
+    artifact: pd.DataFrame, artifact_name: str, index: bool = True
+):
+    """Upload a DataFrame as a CSV to mlflow tracking server."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        parquet_path = Path(tmp_dir) / artifact_name
+        artifact.to_parquet(parquet_path, index=index)
+        return mlflow.log_artifact(parquet_path, artifact_name)
 
 
 def _get_most_recent_run(experiment_name: str):
@@ -76,7 +94,7 @@ def _get_filings_to_extract(
                 most_recent_run, "/extraction_metadata.csv"
             ).set_index("filename")
         )
-        extracted = _load_artifact_as_csv(most_recent_run, "/extracted.csv")
+        extracted = _load_artifact_as_parquet(most_recent_run, "/extracted.parquet")
         run_id = most_recent_run.info.run_id
 
     filings_to_extract = metadata[~metadata["filename"].isin(extraction_metadata.index)]
@@ -240,7 +258,7 @@ def extract_filings(
 
         # Log the extraction results + metadata for future reference/analysis
         _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
-        _log_artifact_as_csv(extracted, "extracted.csv")
+        _log_artifact_as_parquet(extracted, "extracted.parquet")
     logger.info(
         f"Finished extracting {len(extraction_metadata)} filings from {dataset}."
     )
