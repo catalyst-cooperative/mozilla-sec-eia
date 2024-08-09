@@ -1,5 +1,6 @@
 """Module for formatting inputs and performing inference with a fine-tuned LayoutLM model."""
 
+import logging
 import os
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from transformers import (
     Pipeline,
     pipeline,
 )
+from transformers.tokenization_utils_base import BatchEncoding
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import (
     BBOX_COLS_PDF,
@@ -43,6 +45,8 @@ LABEL_PRIORITY = [
     "B-Own_Per",
     "O",
 ]
+
+logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 def format_unlabeled_pdf_dataframe(pdfs_dir):
@@ -186,7 +190,7 @@ def perform_inference(
         pdfs_dir: Path to the directory with PDFs that are being used for inference.
         model: A fine-tuned LayoutLM model.
         processor: The tokenizer and encoder for model inputs.
-        dataset_ind: A list of index numbers of dataset examples to be used for inference
+        dataset_ind: A list of index numbers of dataset records to be used for inference
             Default is None, in which the entire dataset created from the PDF directory
             is used.
         labeled_json_dir: Path to the directory with labeled JSONs from Label Studio. Cannot
@@ -252,11 +256,11 @@ class LayoutLMInferencePipeline(Pipeline):
             preprocess_kwargs["maybe_arg"] = kwargs["maybe_arg"]
         return preprocess_kwargs, {}, {}
 
-    def preprocess(self, example):
+    def preprocess(self, doc_dict):
         """Encode and tokenize model inputs."""
-        image = example["image"]
-        words = example["tokens"]
-        boxes = example["bboxes"]
+        image = doc_dict["image"]
+        words = doc_dict["tokens"]
+        boxes = doc_dict["bboxes"]
         encoding = self.tokenizer(
             image,
             words,
@@ -271,7 +275,7 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         model_inputs = {}
         model_inputs["raw_encoding"] = encoding.copy()
-        model_inputs["example"] = example
+        model_inputs["doc_dict"] = doc_dict
         model_inputs["offset_mapping"] = encoding.pop("offset_mapping")
         model_inputs["sample_mapping"] = encoding.pop("overflow_to_sample_mapping")
         # TODO: do we actually need to make these into ints?
@@ -283,7 +287,9 @@ class LayoutLMInferencePipeline(Pipeline):
         return model_inputs
 
     def _forward(self, model_inputs):
-        encoding = model_inputs["encoding"]
+        # encoding is passed as a UserDict in the model_inputs dictionary
+        # turn it back into a BatchEncoding
+        encoding = BatchEncoding(model_inputs["encoding"])
         if torch.cuda.is_available():
             encoding.to("cuda")
             self.model.to("cuda")
@@ -294,7 +300,7 @@ class LayoutLMInferencePipeline(Pipeline):
                 "logits": output.logits,
                 "predictions": output.logits.argmax(-1).squeeze().tolist(),
                 "raw_encoding": model_inputs["raw_encoding"],
-                "example": model_inputs["example"],
+                "doc_dict": model_inputs["doc_dict"],
             }
 
     def postprocess(self, all_outputs):
@@ -315,9 +321,11 @@ class LayoutLMInferencePipeline(Pipeline):
         Finally, this is all formatted into a dataframe with an ID column from the original
         filename and a basic cleaning function normalizes strings.
         """
+        # TODO: when model more mature, break this into sub functions to make it
+        # clearer what's going on
         predictions = all_outputs["predictions"]
         encoding = all_outputs["raw_encoding"]
-        example = all_outputs["example"]
+        doc_dict = all_outputs["doc_dict"]
 
         token_boxes_tensor = encoding["bbox"].flatten(start_dim=0, end_dim=1)
         predictions_tensor = torch.tensor(predictions)
@@ -343,8 +351,8 @@ class LayoutLMInferencePipeline(Pipeline):
         # we want to get actual words on the dataframe, not just subwords that correspond to tokens
         # subwords from the same word share the same bounding box coordinates
         # so we merge the original words onto our dataframe on bbox coordinates
-        words_df = pd.DataFrame(data=example["bboxes"], columns=BBOX_COLS)
-        words_df.loc[:, "word"] = example["tokens"]
+        words_df = pd.DataFrame(data=doc_dict["bboxes"], columns=BBOX_COLS)
+        words_df.loc[:, "word"] = doc_dict["tokens"]
         df = df.merge(words_df, how="left", on=BBOX_COLS).drop_duplicates(
             subset=BBOX_COLS + ["pred", "word"]
         )
@@ -365,5 +373,5 @@ class LayoutLMInferencePipeline(Pipeline):
         output_df = grouped_df.pivot_table(
             index="row", columns="pred", values="word", aggfunc=lambda x: " ".join(x)
         ).reset_index()
-        output_df.loc[:, "id"] = example["id"]
+        output_df.loc[:, "id"] = doc_dict["id"]
         return output_df
