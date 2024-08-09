@@ -71,9 +71,9 @@ def test_inference_and_table_extraction(test_dir, model_checkpoint):
         expected_out_path,
         dtype={"id": str, "subsidiary": str, "loc": str, "own_per": np.float64},
     )
-    logger.debug(f"HEAD: {expected_out_df.head(10)}")
-    logger.debug(f"TAIL: {expected_out_df.tail(10)}")
+    logger.warning(f"HEAD: {expected_out_df.head(10)}")
+    logger.warning(f"TAIL: {expected_out_df.tail(10)}")
     expected_out_df = expected_out_df.sort_values(by=["id", "subsidiary"])
-    logger.debug(f"HEAD: {expected_out_df.head(10)}")
-    logger.debug(f"TAIL: {expected_out_df.tail(10)}")
+    logger.warning(f"HEAD: {expected_out_df.head(10)}")
+    logger.warning(f"TAIL: {expected_out_df.tail(10)}")
     assert_frame_equal(expected_out_df, output_df, check_like=True)
