@@ -63,7 +63,7 @@ def test_inference_and_table_extraction(test_dir, model_checkpoint):
     # we don't normally want to sort by id and subsidiary
     # but sort here for the sake of just testing whether dataframe
     # row values are the same without worrying about order
-    output_df = output_df.sort_values(by=["id", "subsidiary"])
+    output_df = output_df.sort_values(by=["id", "subsidiary"]).reset_index(drop=True)
     # TODO: uncomment with new model checkpoint and 7th label included
     # assert logit_list[0].shape == (1, 512, len(LABELS))
     expected_out_path = test_dir / "data" / "inference_and_extraction_expected_out.csv"
@@ -75,7 +75,9 @@ def test_inference_and_table_extraction(test_dir, model_checkpoint):
     logger.warning(f"HEAD output_df: {output_df[['id', 'subsidiary']].head(10)}")
     logger.warning(f"TAIL: {expected_out_df[['id', 'subsidiary']].tail(10)}")
     logger.warning(f"TAIL output_df: {output_df[['id', 'subsidiary']].tail(10)}")
-    expected_out_df = expected_out_df.sort_values(by=["id", "subsidiary"])
+    expected_out_df = expected_out_df.sort_values(by=["id", "subsidiary"]).reset_index(
+        drop=True
+    )
     logger.warning(f"HEAD: {expected_out_df[['id', 'subsidiary']].head(10)}")
     logger.warning(f"HEAD output_df: {output_df[['id', 'subsidiary']].head(10)}")
     logger.warning(f"TAIL: {expected_out_df[['id', 'subsidiary']].tail(10)}")
