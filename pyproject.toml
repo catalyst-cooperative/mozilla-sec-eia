@@ -37,7 +37,7 @@ dependencies = [
     "python-bidi<0.7.0",
     "pymupdf",  # Convert PDF to image
     "sqlalchemy>=2,<3",
-    "timm>0.9,<1", # dependency for Hugging Face computer vision models
+    "timm>0.9,<2", # dependency for Hugging Face computer vision models
     "torch>=2.2,<3",
     "transformers>=4.42.3,<=4.43.3",
     "xhtml2pdf",  # Convert html to PDF files
