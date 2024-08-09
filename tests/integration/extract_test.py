@@ -1,5 +1,6 @@
 """Validate basic 10k and exhibit 21 extraction."""
 
+import logging
 import unittest
 
 import numpy as np
@@ -13,6 +14,8 @@ from mozilla_sec_eia.extract import (
 )
 from mozilla_sec_eia.utils.layoutlm import load_model
 from pandas.testing import assert_frame_equal
+
+logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 def test_basic_10k_extraction(test_mlflow_init_func):
@@ -68,5 +71,9 @@ def test_inference_and_table_extraction(test_dir, model_checkpoint):
         expected_out_path,
         dtype={"id": str, "subsidiary": str, "loc": str, "own_per": np.float64},
     )
+    logger.info(f"HEAD: {expected_out_df.head(10)}")
+    logger.info(f"TAIL: {expected_out_df.tail(10)}")
     expected_out_df = expected_out_df.sort_values(by=["id", "subsidiary"])
+    logger.info(f"HEAD: {expected_out_df.head(10)}")
+    logger.info(f"TAIL: {expected_out_df.tail(10)}")
     assert_frame_equal(expected_out_df, output_df, check_like=True)
