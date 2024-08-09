@@ -19,6 +19,26 @@ PDF_POINTS_PER_INCH = 72  # believe this is standard for all PDFs
 logger = logging.getLogger(__name__)
 
 
+def get_pdf_data_from_path(pdf_path):
+    """Get words, images, and bounding boxes from a PDF.
+
+    Arguments:
+        pdf_path: path to the PDF.
+
+    Returns:
+        A page metadata dictionary with keys "pdf_text", "image", and "page"
+        and a PyMuPDF page object which represents all pages in the PDF.
+    """
+    # TODO: replace asserts within logging messages?
+    assert pdf_path.exists()
+    doc = fitz.Document(str(pdf_path))
+    assert doc.is_pdf
+    # keep this if statement so that one page docs don't change from v0
+    pg = combine_doc_pages(doc) if len(doc) > 1 else doc[0]
+    extracted = extract_pdf_data_from_page(pg)
+    return extracted, pg
+
+
 def extract_pdf_data_from_page(page: fitz.Page) -> dict[str, pd.DataFrame]:
     """Parse PDF page data."""
     contents = _parse_page_contents(page)
@@ -73,8 +93,8 @@ def combine_doc_pages(doc):
         doc: The Fitz Document object with the multi page Ex. 21.
 
     Returns:
-        combined_page: A Fitz page with all pages of the Ex. 21 combined
-            into one page.
+        A Fitz page with all pages of the Ex. 21 combined
+        into one page.
     """
     combined_width = 0
     combined_height = 0

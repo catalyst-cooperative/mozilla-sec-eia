@@ -15,8 +15,8 @@ import coloredlogs
 from mozilla_sec_eia.ex_21.create_labeled_dataset import (
     create_inputs_for_label_studio,
 )
-from mozilla_sec_eia.ex_21.extractor import train_model
 from mozilla_sec_eia.ex_21.rename_labeled_filings import rename_filings
+from mozilla_sec_eia.ex_21.train_extractor import train_model
 from mozilla_sec_eia.extract import extract_filings, validate_extraction
 from mozilla_sec_eia.utils import GCSArchive
 

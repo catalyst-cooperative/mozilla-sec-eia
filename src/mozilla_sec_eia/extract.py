@@ -227,6 +227,12 @@ def extract_filings(
                 archive,
             )
         else:
+            # TODO: add in ex.21 extraction here
+            # model_checkpoint = load_model()
+            # model = model_checkpoint["model"]
+            # processor = model_checkpoint["tokenizer"]
+            # need to create a PDFs dir or can just give filings
+            # extraction_metadata, extracted = perform_inference()
             logger.warning("Exhibit 21 extraction is not yet implemented.")
 
         # Use metadata to log generic metrics
