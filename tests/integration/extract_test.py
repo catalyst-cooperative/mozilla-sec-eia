@@ -31,6 +31,17 @@ def test_basic_10k_extraction(test_mlflow_init_func):
     assert run.data.metrics["recall"] == 1
 
 
+def test_ex21_validation(test_mlflow_init_func):
+    with unittest.mock.patch("mozilla_sec_eia.extract.initialize_mlflow"):
+        test_mlflow_init_func()
+        validate_extraction("ex21")
+    run = _get_most_recent_run(
+        _get_experiment_name("ex21", experiment_suffix="validation")
+    )
+    # TODO: add in actual metric checks once validation is ready
+    assert run.data.metrics["ratio_extracted"] == 1
+
+
 @pytest.fixture
 def model_checkpoint():
     """Load model from tracking server and return."""
@@ -49,7 +60,7 @@ def test_dataset_creation(test_dir):
     assert dataset.shape == (2, 4)
 
 
-def test_inference_and_table_extraction(test_dir, model_checkpoint):
+def test_ex21_inference_and_table_extraction(test_dir, model_checkpoint):
     """Test performing inference and extracting an Ex. 21 table."""
     model = model_checkpoint["model"]
     processor = model_checkpoint["tokenizer"]

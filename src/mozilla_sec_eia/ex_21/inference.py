@@ -22,6 +22,7 @@ from mozilla_sec_eia.ex_21.create_labeled_dataset import (
     get_image_dict,
 )
 from mozilla_sec_eia.ex_21.train_extractor import BBOX_COLS, LABELS
+from mozilla_sec_eia.utils.cloud import get_metadata_filename
 from mozilla_sec_eia.utils.layoutlm import (
     get_id_label_conversions,
     iob_to_label,
@@ -49,10 +50,12 @@ LABEL_PRIORITY = [
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-def format_unlabeled_pdf_dataframe(pdfs_dir):
+def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
     """Read and format PDFs into a dataframe (without labels)."""
     inference_df = pd.DataFrame()
     for pdf_filename in os.listdir(pdfs_dir):
+        if not pdf_filename.endswith(".pdf"):
+            continue
         src_path = pdfs_dir / pdf_filename
         filename = Path(pdf_filename).stem
         extracted, pg = get_pdf_data_from_path(src_path)
@@ -65,7 +68,7 @@ def format_unlabeled_pdf_dataframe(pdfs_dir):
     return inference_df
 
 
-def create_inference_dataset(pdfs_dir, labeled_json_dir=None, has_labels=False):
+def create_inference_dataset(pdfs_dir: Path, labeled_json_dir=None, has_labels=False):
     """Create a Hugging Face Dataset from PDFs for inference."""
     if has_labels:
         inference_df = format_label_studio_output(
@@ -105,11 +108,14 @@ def clean_extracted_df(extracted_df):
     if "loc" in extracted_df.columns:
         extracted_df["loc"] = extracted_df["loc"].str.strip().str.lower()
     if "own_per" in extracted_df.columns:
-        # could do some special character removal on all columns?
+        # remove special chars and letters
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
-            r"[^\w.]", "", regex=True
+            r"[^\d.]", "", regex=True
         )
-        extracted_df["own_per"] = extracted_df["own_per"].astype("float64")
+        extracted_df["own_per"] = extracted_df["own_per"].replace("", np.nan)
+        extracted_df["own_per"] = extracted_df["own_per"].astype(
+            "float64", errors="ignore"
+        )
     return extracted_df
 
 
@@ -173,6 +179,7 @@ def perform_inference(
     pdfs_dir: Path,
     model: LayoutLMv3ForTokenClassification,
     processor: AutoProcessor,
+    extraction_metadata: pd.DataFrame,
     dataset_ind: list = None,
     labeled_json_dir: Path = None,
     has_labels: bool = False,
@@ -190,6 +197,8 @@ def perform_inference(
         pdfs_dir: Path to the directory with PDFs that are being used for inference.
         model: A fine-tuned LayoutLM model.
         processor: The tokenizer and encoder for model inputs.
+        extraction_metadata: A dataframe to track extraction success metrics. Should
+            have columns 'filename' and 'success'.
         dataset_ind: A list of index numbers of dataset records to be used for inference
             Default is None, in which the entire dataset created from the PDF directory
             is used.
@@ -235,12 +244,15 @@ def perform_inference(
     for logit, pred, output_df in pipe(_get_data(dataset)):
         logits.append(logit)
         predictions.append(pred)
+        if not output_df.empty:
+            filename = get_metadata_filename(output_df["id"].iloc[0])
+            extraction_metadata.loc[filename, ["success"]] = True
         all_output_df = pd.concat([all_output_df, output_df])
     all_output_df.columns.name = None
     all_output_df = clean_extracted_df(all_output_df)
     all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
     all_output_df = all_output_df.reset_index(drop=True)
-    return logits, predictions, all_output_df
+    return logits, predictions, all_output_df, extraction_metadata
 
 
 class LayoutLMInferencePipeline(Pipeline):
@@ -373,5 +385,7 @@ class LayoutLMInferencePipeline(Pipeline):
         output_df = grouped_df.pivot_table(
             index="row", columns="pred", values="word", aggfunc=lambda x: " ".join(x)
         ).reset_index()
+        if output_df.empty:
+            return output_df
         output_df.loc[:, "id"] = doc_dict["id"]
         return output_df

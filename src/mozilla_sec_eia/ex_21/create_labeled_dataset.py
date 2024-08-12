@@ -151,7 +151,7 @@ def format_label_studio_output(
     # TODO: make this path stuff less janky?
     tracking_df = pd.read_csv(ROOT_DIR / "labeled_data_tracking.csv")
     for json_filename in os.listdir(labeled_json_dir):
-        if not json_filename[0].isdigit():
+        if not json_filename[0].isdigit() or json_filename.endswith(".json"):
             continue
         json_file_path = labeled_json_dir / json_filename
         with Path.open(json_file_path) as j:
