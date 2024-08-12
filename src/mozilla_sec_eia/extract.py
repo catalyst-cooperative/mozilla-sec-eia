@@ -223,22 +223,6 @@ def compute_ex21_validation_metrics(
         prec_recall_df,
         artifact_name="precision_recall_per_table.csv",
     )
-    # change this to actually log a side by side of the columns
-    validation_comparison_df = validation_df[
-        validation_df["id"].isin(incorrect_files)
-    ].set_index("id")
-    computed_comparison_df = computed_df[
-        computed_df["id"].isin(incorrect_files)
-    ].set_index("id")
-    comparison_df = pd.merge(
-        validation_comparison_df,
-        computed_comparison_df,
-        left_index=True,
-        right_index=True,
-        how="left",
-        suffixes=("_validation", "_computed"),
-    )
-    _log_artifact_as_csv(comparison_df, artifact_name="incorrect_table_comparison.csv")
     _log_artifact_as_csv(
         pd.DataFrame({"filename": incorrect_files}),
         artifact_name="incorrect_filenames.csv",

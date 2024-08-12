@@ -65,10 +65,14 @@ def test_ex21_inference_and_table_extraction(test_dir, model_checkpoint):
     model = model_checkpoint["model"]
     processor = model_checkpoint["tokenizer"]
     pdf_dir = test_dir / "data" / "test_pdfs"
+    extraction_metadata = pd.DataFrame(
+        {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+    ).set_index("filename")
     logit_list, pred_list, output_df = perform_inference(
         pdfs_dir=pdf_dir,
         model=model,
         processor=processor,
+        extraction_metadata=extraction_metadata,
         device="cpu",
     )
     # we don't normally want to sort by id and subsidiary

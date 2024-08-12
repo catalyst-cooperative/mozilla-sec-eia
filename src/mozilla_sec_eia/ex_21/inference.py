@@ -240,7 +240,7 @@ def perform_inference(
 
     logits = []
     predictions = []
-    all_output_df = pd.DataFrame()
+    all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
     for logit, pred, output_df in pipe(_get_data(dataset)):
         logits.append(logit)
         predictions.append(pred)
