@@ -149,14 +149,24 @@ def compute_validation_metrics(
     }
 
 
-def jaccard_similarity(computed_col: pd.Series, validation_col: pd.Series):
+def jaccard_similarity(
+    computed_df: pd.DataFrame, validation_df: pd.DataFrame, value_col: str
+) -> float:
     """Get the Jaccard similarity between two Series.
 
     Calculated as the intersection of the set divided
     by the union of the set.
+
+    Args:
+        computed_df: Extracted data.
+        validation_df: Expected extraction results.
+        value_col: Column to calculate Jaccard similarity on.
+            Must be present in both dataframes.
     """
-    intersection = set(computed_col).intersection(set(validation_col))
-    union = set(computed_col).union(set(validation_col))
+    intersection = set(computed_df[value_col]).intersection(
+        set(validation_df[value_col])
+    )
+    union = set(computed_df[value_col]).union(set(validation_df[value_col]))
     return float(len(intersection)) / float(len(union))
 
 
@@ -170,12 +180,8 @@ def compute_ex21_validation_metrics(
     validation_filenames = validation_df["id"].unique()
     n_files = len(validation_filenames)
     table_metrics_dict = {}
-    subsidiary_sim_dict = {}
-    loc_sim_dict = {}
-    own_per_sim_dict = {}
-    total_subsidiary_sim = 0
-    total_loc_sim = 0
-    total_own_per_sim = 0
+    jaccard_dict = {}
+    incorrect_files = []
     # iterate through each file and check each extracted table
     for filename in validation_filenames:
         extracted_table_df = computed_df[computed_df["id"] == filename].reset_index(
@@ -187,35 +193,68 @@ def compute_ex21_validation_metrics(
         # check if the tables are exactly equal
         if extracted_table_df.equals(validation_table_df):
             n_equal += 1
+        else:
+            incorrect_files.append(filename)
         # compute precision and recall for each column
         table_metrics_dict[filename] = {}
+        jaccard_dict[filename] = {}
         for col in ["subsidiary", "loc", "own_per"]:
-            table_metrics_dict[filename][col] = compute_validation_metrics(
+            table_prec_recall = compute_validation_metrics(
                 extracted_table_df, validation_table_df, value_col=col
             )
-        # TODO: wrap jaccard sim into the for loop above
-        # get the jaccard similarity between sets
-        jaccard_subsidiary = jaccard_similarity(
-            extracted_table_df["subsidiary"], validation_table_df["subsidiary"]
-        )
-        subsidiary_sim_dict[filename] = jaccard_subsidiary
-        total_subsidiary_sim += jaccard_subsidiary
-        jaccard_loc = jaccard_similarity(
-            extracted_table_df["loc"], validation_table_df["loc"]
-        )
-        loc_sim_dict[filename] = jaccard_loc
-        total_loc_sim += jaccard_loc
-        jaccard_own_per = jaccard_similarity(
-            extracted_table_df["own_per"], validation_table_df["own_per"]
-        )
-        own_per_sim_dict[filename] = jaccard_own_per
-        total_own_per_sim += jaccard_own_per
+            table_metrics_dict[filename][f"{col}_precision"] = table_prec_recall[
+                "precision"
+            ]
+            table_metrics_dict[filename][f"{col}_recall"] = table_prec_recall["recall"]
+            # get the jaccard similarity between columns
+            jaccard_dict[filename][col] = jaccard_similarity(
+                computed_df=extracted_table_df,
+                validation_df=validation_table_df,
+                value_col=col,
+            )
 
+    jaccard_df = pd.DataFrame.from_dict(jaccard_dict, orient="index")
+    prec_recall_df = pd.DataFrame.from_dict(table_metrics_dict, orient="index")
+    _log_artifact_as_csv(
+        jaccard_df,
+        artifact_name="jaccard_per_table.csv",
+    )
+    _log_artifact_as_csv(
+        prec_recall_df,
+        artifact_name="precision_recall_per_table.csv",
+    )
+    # change this to actually log a side by side of the columns
+    validation_comparison_df = validation_df[
+        validation_df["id"].isin(incorrect_files)
+    ].set_index("id")
+    computed_comparison_df = computed_df[
+        computed_df["id"].isin(incorrect_files)
+    ].set_index("id")
+    comparison_df = pd.merge(
+        validation_comparison_df,
+        computed_comparison_df,
+        left_index=True,
+        right_index=True,
+        how="left",
+        suffixes=("_validation", "_computed"),
+    )
+    _log_artifact_as_csv(comparison_df, artifact_name="incorrect_table_comparison.csv")
+    _log_artifact_as_csv(
+        pd.DataFrame({"filename": incorrect_files}),
+        artifact_name="incorrect_filenames.csv",
+    )
     return {
         "table_accuracy": n_equal / n_files,
-        "avg_subsidiary_jaccard_sim": total_subsidiary_sim / n_files,
-        "avg_location_jaccard_sim": total_loc_sim / n_files,
-        "avg_own_per_jaccard_sim": total_own_per_sim / n_files,
+        "avg_subsidiary_jaccard_sim": jaccard_df["subsidiary"].sum() / n_files,
+        "avg_location_jaccard_sim": jaccard_df["loc"].sum() / n_files,
+        "avg_own_per_jaccard_sim": jaccard_df["own_per"].sum() / n_files,
+        "avg_subsidiary_precision": prec_recall_df["subsidiary_precision"].sum()
+        / n_files,
+        "avg_location_precision": prec_recall_df["loc_precision"].sum() / n_files,
+        "avg_own_per_precision": prec_recall_df["own_per_precision"].sum() / n_files,
+        "avg_subsidiary_recall": prec_recall_df["subsidiary_recall"].sum() / n_files,
+        "avg_location_recall": prec_recall_df["loc_recall"].sum() / n_files,
+        "avg_own_per_recall": prec_recall_df["own_per_recall"].sum() / n_files,
     }
 
 
