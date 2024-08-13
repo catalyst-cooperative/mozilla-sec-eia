@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import BinaryIO, TextIO
 
 import fitz
+import mlflow
 import pandas as pd
 import pg8000
 from google.cloud import secretmanager, storage
@@ -279,13 +280,15 @@ class GCSArchive(BaseModel):
         self,
         filing_selection: pd.DataFrame,
         cache_directory: Path = Path("./sec10k_filings"),
+        cache_pdf: bool = False,
     ) -> list[Sec10K]:
-        """Caches filings locally for quick access, and list of Sec10K objects.
+        """Get list of Sec10K objects and cache filings.
 
         Args:
             filing_selection: Pandas dataframe with same schema as metadata df where each row
                 is a filing to return.
             cache_directory: Path to directory where filings should be cached.
+            cache_pdf: Boolean indicating whether to also cache a PDF of the Ex. 21
         """
         filings = []
         for _, filing in filing_selection.iterrows():
@@ -294,15 +297,23 @@ class GCSArchive(BaseModel):
             filing_path = self.cache_blob(blob, local_path)
 
             with filing_path.open() as f:
-                filings.append(
-                    Sec10K.from_file(
-                        file=f,
-                        filename=filing["filename"],
-                        cik=filing["cik"],
-                        year_quarter=filing["year_quarter"],
-                        ex_21_version=filing["exhibit_21_version"],
-                    )
+                sec10k_filing = Sec10K.from_file(
+                    file=f,
+                    filename=filing["filename"],
+                    cik=filing["cik"],
+                    year_quarter=filing["year_quarter"],
+                    ex_21_version=filing["exhibit_21_version"],
                 )
+                filings.append(sec10k_filing)
+            if cache_pdf:
+                pdf_path = self.get_local_filename(
+                    cache_directory=cache_directory,
+                    filing=filing,
+                    extension=".pdf",
+                )
+                if not pdf_path.exists():
+                    with pdf_path.open("wb") as f:
+                        sec10k_filing.ex_21.save_as_pdf(f)
         return filings
 
     def iterate_filings(
@@ -400,6 +411,11 @@ class GCSArchive(BaseModel):
         return valid
 
 
+def get_metadata_filename(local_filename: str):
+    """Transform a local filename into the filename in GCSArchiver metadata."""
+    return "edgar/data/" + local_filename.replace("-", "/", 1) + ".txt"
+
+
 def _access_secret_version(secret_id: str, project_id: str, version_id="latest"):
     # Create the Secret Manager client.
     client = secretmanager.SecretManagerServiceClient()
@@ -419,12 +435,15 @@ def initialize_mlflow(settings: GoogleCloudSettings | None = None):
     if settings is None:
         settings = GoogleCloudSettings()
 
+    # Set tracking uri through API rather than env variable to avoid overriding .env
+    mlflow.set_tracking_uri(settings.tracking_uri)
+
     os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
     os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
         "mlflow_admin_password", settings.project
     )
-    os.environ["MLFLOW_TRACKING_URI"] = settings.tracking_uri
     os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
+    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
     logger.info(f"Initialized tracking with mlflow server: {settings.tracking_uri}")

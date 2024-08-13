@@ -28,8 +28,19 @@ from transformers.data.data_collator import default_data_collator
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
 from mozilla_sec_eia.utils.cloud import initialize_mlflow
+from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions, log_model
 
-LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
+LABELS = [
+    "O",
+    "B-Subsidiary",
+    "I-Subsidiary",
+    "B-Loc",
+    "I-Loc",
+    "B-Own_Per",
+    "I-Own_Per",
+]
+
+BBOX_COLS = ["top_left_x", "top_left_y", "bottom_right_x", "bottom_right_y"]
 
 
 def compute_metrics(p, metric, label_list, return_entity_level_metrics=False):
@@ -93,18 +104,11 @@ def _prepare_dataset(annotations, processor, label2id):
     return encoding
 
 
-def _get_id_label_conversions():
-    """Return dicts mapping ids to labels and labels to ids."""
-    id2label = dict(enumerate(LABELS))
-    label2id = {v: k for k, v in enumerate(LABELS)}
-    return id2label, label2id
-
-
 def load_test_train_set(
     processor: AutoProcessor, test_size: float, ner_annotations: list[dict]
 ):
     """Load training/test set and prepare for training or evaluation."""
-    id2label, label2id = _get_id_label_conversions()
+    id2label, label2id = get_id_label_conversions(LABELS)
     # Cache/prepare training data
     dataset = Dataset.from_list(ner_annotations)
 
@@ -130,22 +134,6 @@ def load_test_train_set(
     return split_dataset["train"], split_dataset["test"]
 
 
-def log_model(finetuned_model: Trainer):
-    """Log fine-tuned model to mlflow artifacts."""
-    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
-    mlflow.transformers.log_model(
-        model, artifact_path="layoutlm_extractor", task="token-classification"
-    )
-
-
-def load_model():
-    """Load fine-tuned model from mlflow artifacts."""
-    initialize_mlflow()
-    return mlflow.transformers.load_model(
-        "models:/layoutlm_extractor/1", return_type="components"
-    )
-
-
 def train_model(
     labeled_json_path: str,
     gcs_training_data_dir: str = "labeled",
@@ -164,7 +152,7 @@ def train_model(
     mlflow.set_experiment("/finetune-layoutlmv3")
 
     # Prepare model
-    id2label, label2id = _get_id_label_conversions()
+    id2label, label2id = get_id_label_conversions(LABELS)
     model = LayoutLMv3ForTokenClassification.from_pretrained(
         "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
     )
