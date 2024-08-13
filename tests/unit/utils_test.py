@@ -9,7 +9,6 @@ import pytest
 from mozilla_sec_eia.utils.cloud import (
     Exhibit21,
     GCSArchive,
-    GoogleCloudSettings,
     Sec10K,
 )
 
@@ -21,17 +20,16 @@ def test_archive():
         unittest.mock.patch("mozilla_sec_eia.utils.cloud.GCSArchive._get_engine"),
         unittest.mock.patch("mozilla_sec_eia.utils.cloud.GCSArchive._get_bucket"),
     ):
-        return GCSArchive(
-            settings=GoogleCloudSettings(
-                GCS_FILINGS_BUCKET_NAME="filings_bucket_name",
-                GCS_LABELS_BUCKET_NAME="labels_bucket_name",
-                GCS_METADATA_DB_INSTANCE_CONNECTION="metadata_db_instance_connection",
-                GCS_IAM_USER="user",
-                GCS_METADATA_DB_NAME="metadata_db_name",
-                GCS_PROJECT="project_name",
-                MLFLOW_TRACKING_URI="http://tracking.server",
-            )
+        archive = GCSArchive(
+            filings_bucket_name="filings_bucket_name",
+            labels_bucket_name="labels_bucket_name",
+            metadata_db_instance_connection="metadata_db_instance_connection",
+            user="user",
+            metadata_db_name="metadata_db_name",
+            project="project_name",
         )
+        archive.setup_for_execution("fake_context")
+        return archive
 
 
 @dataclass

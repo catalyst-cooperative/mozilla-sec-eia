@@ -27,7 +27,6 @@ from transformers import (
 from transformers.data.data_collator import default_data_collator
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
-from mozilla_sec_eia.utils.cloud import initialize_mlflow
 
 LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
 
@@ -140,7 +139,6 @@ def log_model(finetuned_model: Trainer):
 
 def load_model():
     """Load fine-tuned model from mlflow artifacts."""
-    initialize_mlflow()
     return mlflow.transformers.load_model(
         "models:/layoutlm_extractor/1", return_type="components"
     )
@@ -160,7 +158,6 @@ def train_model(
         test_size: Proportion of labeled dataset to use for test set.
     """
     # Prepare mlflow for tracking/logging model
-    initialize_mlflow()
     mlflow.set_experiment("/finetune-layoutlmv3")
 
     # Prepare model

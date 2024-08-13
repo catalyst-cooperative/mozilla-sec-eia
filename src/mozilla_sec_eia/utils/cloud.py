@@ -11,13 +11,14 @@ from pathlib import Path
 from typing import BinaryIO, TextIO
 
 import fitz
+import mlflow
 import pandas as pd
 import pg8000
+from dagster import ConfigurableResource
 from google.cloud import secretmanager, storage
 from google.cloud.sql.connector import Connector
 from PIL import Image
-from pydantic import BaseModel, Field, PrivateAttr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, PrivateAttr
 from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
@@ -142,8 +143,8 @@ class Sec10K(BaseModel):
         )
 
 
-class GoogleCloudSettings(BaseSettings):
-    """Load environment variables to manage access to cloud resources.
+class GCSArchive(ConfigurableResource):
+    """Provides an interface for archived filings on GCS.
 
     This class looks for several environment variables to configure
     access to cloud resources. These can be set directly, or be in a
@@ -161,35 +162,23 @@ class GoogleCloudSettings(BaseSettings):
     MLFLOW_TRACKING_URI: URI of mlflow tracking server.
     """
 
-    model_config = SettingsConfigDict(env_file=".env")
-
-    filings_bucket_name: str = Field(validation_alias="GCS_FILINGS_BUCKET_NAME")
-    labels_bucket_name: str = Field(validation_alias="GCS_LABELS_BUCKET_NAME")
-    metadata_db_instance_connection: str = Field(
-        validation_alias="GCS_METADATA_DB_INSTANCE_CONNECTION"
-    )
-    user: str = Field(validation_alias="GCS_IAM_USER")
-    metadata_db_name: str = Field(validation_alias="GCS_METADATA_DB_NAME")
-    project: str = Field(validation_alias="GCS_PROJECT")
-    tracking_uri: str = Field(validation_alias="MLFLOW_TRACKING_URI")
-
-
-class GCSArchive(BaseModel):
-    """Provides an interface for archived filings on GCS."""
-
-    settings: GoogleCloudSettings = Field(default_factory=lambda: GoogleCloudSettings())
+    filings_bucket_name: str
+    labels_bucket_name: str
+    metadata_db_instance_connection: str
+    user: str
+    metadata_db_name: str
+    project: str
 
     _filings_bucket = PrivateAttr()
     _labels_bucket = PrivateAttr()
     _engine = PrivateAttr()
     _metadata_df = PrivateAttr(default=None)
 
-    def __init__(self, **kwargs):
+    def setup_for_execution(self, context):
         """Initialize interface to filings archive on GCS."""
-        super().__init__(**kwargs)
         self._engine = self._get_engine()
-        self._filings_bucket = self._get_bucket(self.settings.filings_bucket_name)
-        self._labels_bucket = self._get_bucket(self.settings.labels_bucket_name)
+        self._filings_bucket = self._get_bucket(self.filings_bucket_name)
+        self._labels_bucket = self._get_bucket(self.labels_bucket_name)
 
         Base.metadata.create_all(self._engine)
 
@@ -208,10 +197,10 @@ class GCSArchive(BaseModel):
 
         def getconn() -> pg8000.dbapi.Connection:
             conn: pg8000.dbapi.Connection = connector.connect(
-                self.settings.metadata_db_instance_connection,
+                self.metadata_db_instance_connection,
                 "pg8000",
-                user=self.settings.user,
-                db=self.settings.metadata_db_name,
+                user=self.user,
+                db=self.metadata_db_name,
                 enable_iam_auth=True,
             )
             return conn
@@ -414,17 +403,34 @@ def _access_secret_version(secret_id: str, project_id: str, version_id="latest")
     return response.payload.data.decode("UTF-8")
 
 
-def initialize_mlflow(settings: GoogleCloudSettings | None = None):
-    """Set appropriate environment variables to prepare connection to tracking server."""
-    if settings is None:
-        settings = GoogleCloudSettings()
+class MlflowInterface(ConfigurableResource):
+    """Initialize interface to mlflow for desired experiment."""
 
-    os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
-    os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
-        "mlflow_admin_password", settings.project
-    )
-    os.environ["MLFLOW_TRACKING_URI"] = settings.tracking_uri
-    os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
-    os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
-    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
-    logger.info(f"Initialized tracking with mlflow server: {settings.tracking_uri}")
+    experiment_name: str
+    continue_run: bool = False
+    tracking_uri: str
+    cloud_interface: GCSArchive
+    artifact_location: str | None = None
+
+    def setup_for_execution(self, context):
+        """Do runtime configuration of mlflow."""
+        os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
+        os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
+            "mlflow_admin_password", self.cloud_interface.project
+        )
+        os.environ["MLFLOW_TRACKING_URI"] = self.tracking_uri
+        os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
+        os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
+        os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
+        logger.info(f"Initialized tracking with mlflow server: {self.tracking_uri}")
+
+        self.create_experiment()
+
+    def create_experiment(self):
+        """Create experiment if it doesn't already exist."""
+        logger.info(f"Creating experiment: {self.experiment_name}")
+        if not mlflow.get_experiment_by_name(self.experiment_name):
+            mlflow.create_experiment(
+                name=self.experiment_name,
+                artifact_location=self.artifact_location,
+            )

@@ -2,15 +2,18 @@
 
 import io
 import logging
+import tempfile
 from importlib import resources
+from pathlib import Path
 
 import mlflow
 import pandas as pd
 import pandera as pa
+from dagster import ConfigurableResource, asset
 from mlflow.entities import Run
 
 from mozilla_sec_eia import basic_10k
-from mozilla_sec_eia.utils.cloud import GCSArchive, initialize_mlflow
+from mozilla_sec_eia.utils.cloud import GCSArchive
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -38,6 +41,22 @@ def _log_artifact_as_csv(
 ):
     """Upload a DataFrame as a CSV to mlflow tracking server."""
     return mlflow.log_text(artifact.to_csv(index=index), artifact_name)
+
+
+def _load_artifact_as_parquet(run: Run, artifact_name: str) -> pd.DataFrame:
+    """Download a CSV and parse to DataFrame from mlflow tracking server."""
+    df = pd.read_parquet(run.info.artifact_uri + artifact_name)
+    return df
+
+
+def _log_artifact_as_parquet(
+    artifact: pd.DataFrame, artifact_name: str, index: bool = True
+):
+    """Upload a DataFrame as a CSV to mlflow tracking server."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        parquet_path = Path(tmp_dir) / artifact_name
+        artifact.to_parquet(parquet_path, index=index)
+        return mlflow.log_artifact(parquet_path, artifact_name)
 
 
 def _get_most_recent_run(experiment_name: str):
@@ -76,7 +95,7 @@ def _get_filings_to_extract(
                 most_recent_run, "/extraction_metadata.csv"
             ).set_index("filename")
         )
-        extracted = _load_artifact_as_csv(most_recent_run, "/extracted.csv")
+        extracted = _load_artifact_as_parquet(most_recent_run, "/extracted.parquet")
         run_id = most_recent_run.info.run_id
 
     filings_to_extract = metadata[~metadata["filename"].isin(extraction_metadata.index)]
@@ -137,25 +156,135 @@ def compute_validation_metrics(
     }
 
 
-def validate_extraction(dataset: str):
+def extract_filings(
+    dataset: str,
+    filings_to_extract: pd.DataFrame,
+    extraction_metadata: pd.DataFrame,
+    extracted: pd.DataFrame,
+    num_filings: int,
+    experiment_name: str,
+    cloud_interface: GCSArchive,
+    run_id: str | None = None,
+) -> pd.DataFrame:
+    """Extract filings in `filings_to_extract`."""
+    mlflow.set_experiment(experiment_name)
+    with mlflow.start_run(run_id=run_id):
+        # Extract data for desired filings
+        if dataset == "basic_10k":
+            extraction_metadata, extracted = basic_10k.extract(
+                filings_to_extract,
+                extraction_metadata,
+                extracted,
+                cloud_interface,
+            )
+        else:
+            logger.warning("Exhibit 21 extraction is not yet implemented.")
+
+        # Use metadata to log generic metrics
+        extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
+        mlflow.log_metrics(
+            {
+                "num_failed": (~extraction_metadata["success"]).sum(),
+                "ratio_extracted": len(extraction_metadata) / num_filings,
+            }
+        )
+
+        # Log the extraction results + metadata for future reference/analysis
+        _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
+        _log_artifact_as_parquet(extracted, "extracted.parquet")
+    logger.info(
+        f"Finished extracting {len(extraction_metadata)} filings from {dataset}."
+    )
+    return extracted
+
+
+class ExtractConfig(ConfigurableResource):
+    """Basic configuration for an extraction run."""
+
+    num_filings: int = -1
+
+
+def extract_asset_factory(dataset: str) -> asset:
+    """Produce asset to extract `dataset`."""
+
+    @asset(
+        name=f"{dataset}_extract",
+        required_resource_keys={
+            f"{dataset}_extract_config",
+            f"{dataset}_extract_mlflow",
+            "cloud_interface",
+        },
+    )
+    def extract(context) -> pd.DataFrame:
+        config = context.resources.original_resource_dict[f"{dataset}_extract_config"]
+        cloud_interface: GCSArchive = context.resources.cloud_interface
+        mlflow_interface = context.resources.original_resource_dict[
+            f"{dataset}_extract_mlflow"
+        ]
+        experiment_name = mlflow_interface.experiment_name
+        metadata = cloud_interface.get_metadata()
+
+        # Get filings to extract as well as any existing metadata for run
+        filings_to_extract, extraction_metadata, extracted, run_id = (
+            _get_filings_to_extract(
+                experiment_name,
+                metadata,
+                continue_run=mlflow_interface.continue_run,
+                num_filings=config.num_filings,
+            )
+        )
+
+        return extract_filings(
+            dataset=dataset,
+            filings_to_extract=filings_to_extract,
+            extraction_metadata=extraction_metadata,
+            extracted=extracted,
+            num_filings=len(metadata),
+            experiment_name=experiment_name,
+            cloud_interface=cloud_interface,
+            run_id=run_id,
+        )
+
+    return extract
+
+
+def validate_extraction(
+    dataset: str, experiment_name: str, cloud_interface: GCSArchive
+):
     """Run extraction on validation set and compare results to labeled data."""
     validation_set = pd.read_csv(
         resources.files("mozilla_sec_eia.package_data") / f"{dataset}_labels.csv"
     )
 
     # Get metadata for labelled filings
-    archive = GCSArchive()
-    to_extract = archive.get_metadata(filenames=list(validation_set["filename"]))
+    to_extract = cloud_interface.get_metadata(
+        filenames=list(validation_set["filename"])
+    )
+
+    # Get filings to extract as well as any existing metadata for run
+    filings_to_extract, extraction_metadata, extracted, run_id = (
+        _get_filings_to_extract(
+            experiment_name,
+            to_extract,
+        )
+    )
 
     # Extract data from filings
     extracted = extract_filings(
-        dataset=dataset, metadata=to_extract, experiment_suffix="validation"
+        dataset=dataset,
+        filings_to_extract=filings_to_extract,
+        extraction_metadata=extraction_metadata,
+        extracted=extracted,
+        num_filings=len(to_extract),
+        experiment_name=experiment_name,
+        cloud_interface=cloud_interface,
+        run_id=run_id,
     )
+
     # Set index for validation set based on returned extracted DF
     validation_set = validation_set.set_index(extracted.index.names)
 
     # Get extraction run from mlflow and start again to log validation metrics
-    experiment_name = _get_experiment_name(dataset, experiment_suffix="validation")
     run = _get_most_recent_run(experiment_name)
     with mlflow.start_run(run_id=run.info.run_id):
         # Compute metrics and log
@@ -167,81 +296,25 @@ def validate_extraction(dataset: str):
         _log_artifact_as_csv(validation_set, "labels.csv")
 
 
-def extract_filings(
-    dataset: str,
-    continue_run: bool = False,
-    num_filings: int = -1,
-    metadata: pd.DataFrame | None = None,
-    experiment_suffix: str | None = None,
-) -> pd.DataFrame:
-    """Extra data from SEC 10k and exhibit 21 filings.
+def validate_extraction_asset_factory(dataset: str):
+    """Create asset that extracts validation filings and compute validation metrics."""
 
-    This function takes several parameters to decide which filings to extract data
-    from. If `continue_run` is set, it will search the mlflow tracking server for
-    the most recent extraction run for the specified dataset, and download corresponding
-    metadata and extraction results. It will then filter out any filings that were
-    already extracted in the run. This is useful for testing to be able perform extraction
-    on subsets of the data and continue where it left off. If `metadata` is passed
-    in, this is expected to be a selection of filing metadata that specifies exactly
-    which filings to extract. This is used for validation to only extract filings in
-    the validation set.
-
-    Args:
-        dataset: Data to extract, should be 'basic_10k' or 'ex21'.
-        continue_run: Whether to continue a previous extraction run.
-        num_filings: Number of filings to extract in run.
-        metadata: Specific selection of filing metadata to extract.
-        experiment_suffix: Add to mlflow run to differentiate run from basic extraction.
-    """
-    if dataset not in ["ex21", "basic_10k"]:
-        raise RuntimeError(
-            f"{dataset} is not a valid dataset. Must be 'ex21' or 'basic_10k'."
-        )
-
-    initialize_mlflow()
-
-    # Get filing metadata if not passed in explicitly
-    archive = GCSArchive()
-    if metadata is None:
-        metadata = archive.get_metadata()
-
-    experiment_name = _get_experiment_name(dataset, experiment_suffix=experiment_suffix)
-
-    # Get filings to extract as well as any existing metadata for run
-    filings_to_extract, extraction_metadata, extracted, run_id = (
-        _get_filings_to_extract(
-            experiment_name,
-            metadata,
-            continue_run=continue_run,
-            num_filings=num_filings,
-        )
+    @asset(
+        name=f"{dataset}_extract_validate",
+        required_resource_keys={
+            f"{dataset}_extract_validate_mlflow",
+            "cloud_interface",
+        },
     )
-    mlflow.set_experiment(experiment_name)
-    with mlflow.start_run(run_id=run_id):
-        # Extract data for desired filings
-        if dataset == "basic_10k":
-            extraction_metadata, extracted = basic_10k.extract(
-                filings_to_extract,
-                extraction_metadata,
-                extracted,
-                archive,
-            )
-        else:
-            logger.warning("Exhibit 21 extraction is not yet implemented.")
+    def validate(context):
+        cloud_interface: GCSArchive = context.resources.cloud_interface
+        experiment_name = context.resources.original_resource_dict[
+            f"{dataset}_extract_validate_mlflow"
+        ].experiment_name
+        return validate_extraction(dataset, experiment_name, cloud_interface)
 
-        # Use metadata to log generic metrics
-        extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
-        mlflow.log_metrics(
-            {
-                "num_failed": (~extraction_metadata["success"]).sum(),
-                "ratio_extracted": len(extraction_metadata) / len(metadata),
-            }
-        )
+    return validate
 
-        # Log the extraction results + metadata for future reference/analysis
-        _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
-        _log_artifact_as_csv(extracted, "extracted.csv")
-    logger.info(
-        f"Finished extracting {len(extraction_metadata)} filings from {dataset}."
-    )
-    return extracted
+
+basic_10k_extract = extract_asset_factory("basic_10k")
+basic_10k_validate = validate_extraction_asset_factory("basic_10k")
