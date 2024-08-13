@@ -68,7 +68,7 @@ def test_ex21_inference_and_table_extraction(test_dir, model_checkpoint):
     extraction_metadata = pd.DataFrame(
         {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
     ).set_index("filename")
-    logit_list, pred_list, output_df = perform_inference(
+    logit_list, pred_list, output_df, extraction_metadata = perform_inference(
         pdfs_dir=pdf_dir,
         model=model,
         processor=processor,

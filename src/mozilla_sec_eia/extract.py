@@ -192,6 +192,7 @@ def compute_ex21_validation_metrics(
         ].reset_index(drop=True)
         # check if the tables are exactly equal
         if extracted_table_df.equals(validation_table_df):
+            # TODO: strip llc and other company strings before comparison
             n_equal += 1
         else:
             incorrect_files.append(filename)

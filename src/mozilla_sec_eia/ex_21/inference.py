@@ -105,8 +105,15 @@ def clean_extracted_df(extracted_df):
     if "row" in extracted_df.columns:
         extracted_df = extracted_df.drop(columns=["row"])
     extracted_df["subsidiary"] = extracted_df["subsidiary"].str.strip().str.lower()
+    # strip special chars from the start and end of the string
+    extracted_df["subsidiary"] = extracted_df["subsidiary"].str.replace(
+        r"^[^\w&\s]+|[^\w&\s]+$", "", regex=True
+    )
     if "loc" in extracted_df.columns:
         extracted_df["loc"] = extracted_df["loc"].str.strip().str.lower()
+        extracted_df["loc"] = extracted_df["loc"].str.replace(
+            r"[^a-zA-Z&,\s]", "", regex=True
+        )
     if "own_per" in extracted_df.columns:
         # remove special chars and letters
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
@@ -116,6 +123,8 @@ def clean_extracted_df(extracted_df):
         extracted_df["own_per"] = extracted_df["own_per"].astype(
             "float64", errors="ignore"
         )
+    # drop rows that have a null subsidiary value
+    extracted_df = extracted_df.dropna(subset="subsidiary")
     return extracted_df
 
 
@@ -368,6 +377,13 @@ class LayoutLMInferencePipeline(Pipeline):
         df = df.merge(words_df, how="left", on=BBOX_COLS).drop_duplicates(
             subset=BBOX_COLS + ["pred", "word"]
         )
+        # rows that are the first occurrence in a new group (subsidiary, loc, own_per)
+        # should always have a B entity label. Manually override labels so this is true.
+        first_in_group_df = df[
+            (df["pred"].ne(df["pred"].shift())) & (df["pred"] != "other")
+        ]
+        first_in_group_df["iob_pred"] = "B" + first_in_group_df["iob_pred"].str[1:]
+        df.update(first_in_group_df)
         # filter for just words that were labeled with non "other" entities
         entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
         entities_df = entities_df[entities_df["pred"] != "other"]
