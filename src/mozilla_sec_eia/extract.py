@@ -163,6 +163,15 @@ def jaccard_similarity(
         value_col: Column to calculate Jaccard similarity on.
             Must be present in both dataframes.
     """
+    # fill nans to make similarity comparison more accurate
+    if (computed_df[value_col].dtype == float) and (
+        validation_df[value_col].dtype == float
+    ):
+        computed_df[value_col] = computed_df[value_col].fillna(999)
+        validation_df[value_col] = validation_df[value_col].fillna(999)
+    else:
+        computed_df[value_col] = computed_df[value_col].fillna("zzz")
+        validation_df[value_col] = validation_df[value_col].fillna("zzz")
     intersection = set(computed_df[value_col]).intersection(
         set(validation_df[value_col])
     )
@@ -214,8 +223,10 @@ def compute_ex21_validation_metrics(
                 value_col=col,
             )
 
-    jaccard_df = pd.DataFrame.from_dict(jaccard_dict, orient="index")
-    prec_recall_df = pd.DataFrame.from_dict(table_metrics_dict, orient="index")
+    jaccard_df = pd.DataFrame.from_dict(jaccard_dict, orient="index").reset_index()
+    prec_recall_df = pd.DataFrame.from_dict(
+        table_metrics_dict, orient="index"
+    ).reset_index()
     _log_artifact_as_csv(
         jaccard_df,
         artifact_name="jaccard_per_table.csv",
