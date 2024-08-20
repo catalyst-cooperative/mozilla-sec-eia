@@ -9,6 +9,7 @@ from pathlib import Path
 
 import mlflow
 import numpy as np
+from dagster import Config, asset
 from datasets import (
     Array2D,
     Array3D,
@@ -27,8 +28,20 @@ from transformers import (
 from transformers.data.data_collator import default_data_collator
 
 from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
+from mozilla_sec_eia.utils.cloud import MlflowInterface
+from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions, log_model
 
-LABELS = ["O", "B-Subsidiary", "I-Subsidiary", "B-Loc", "I-Loc", "B-Own_Per"]
+LABELS = [
+    "O",
+    "B-Subsidiary",
+    "I-Subsidiary",
+    "B-Loc",
+    "I-Loc",
+    "B-Own_Per",
+    "I-Own_Per",
+]
+
+BBOX_COLS = ["top_left_x", "top_left_y", "bottom_right_x", "bottom_right_y"]
 
 
 def compute_metrics(p, metric, label_list, return_entity_level_metrics=False):
@@ -92,18 +105,11 @@ def _prepare_dataset(annotations, processor, label2id):
     return encoding
 
 
-def _get_id_label_conversions():
-    """Return dicts mapping ids to labels and labels to ids."""
-    id2label = dict(enumerate(LABELS))
-    label2id = {v: k for k, v in enumerate(LABELS)}
-    return id2label, label2id
-
-
 def load_test_train_set(
     processor: AutoProcessor, test_size: float, ner_annotations: list[dict]
 ):
     """Load training/test set and prepare for training or evaluation."""
-    id2label, label2id = _get_id_label_conversions()
+    id2label, label2id = get_id_label_conversions(LABELS)
     # Cache/prepare training data
     dataset = Dataset.from_list(ner_annotations)
 
@@ -129,39 +135,23 @@ def load_test_train_set(
     return split_dataset["train"], split_dataset["test"]
 
 
-def log_model(finetuned_model: Trainer):
-    """Log fine-tuned model to mlflow artifacts."""
-    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
-    mlflow.transformers.log_model(
-        model, artifact_path="layoutlm_extractor", task="token-classification"
-    )
+class FineTuneConfig(Config):
+    """Configuration to supply to `train_model`."""
+
+    labeled_json_path: str
+    gcs_training_data_dir: str = "labeled"
+    output_dir: str = "layoutlm_trainer"
+    test_size: float = 0.2
 
 
-def load_model():
-    """Load fine-tuned model from mlflow artifacts."""
-    return mlflow.transformers.load_model(
-        "models:/layoutlm_extractor/1", return_type="components"
-    )
-
-
+@asset
 def train_model(
-    labeled_json_path: str,
-    gcs_training_data_dir: str = "labeled",
-    model_output_dir="layoutlm_trainer",
-    test_size=0.2,
+    config: FineTuneConfig,
+    layoutlm_mlflow_interface: MlflowInterface,
 ):
-    """Train LayoutLM model with labeled data.
-
-    Arguments:
-        model_output_dir: Path to directory where model
-            checkpoints are saved.
-        test_size: Proportion of labeled dataset to use for test set.
-    """
-    # Prepare mlflow for tracking/logging model
-    mlflow.set_experiment("/finetune-layoutlmv3")
-
+    """Train LayoutLM model with labeled data."""
     # Prepare model
-    id2label, label2id = _get_id_label_conversions()
+    id2label, label2id = get_id_label_conversions(LABELS)
     model = LayoutLMv3ForTokenClassification.from_pretrained(
         "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
     )
@@ -169,18 +159,18 @@ def train_model(
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
     ner_annotations = format_as_ner_annotations(
-        labeled_json_path=Path(labeled_json_path),
-        gcs_folder_name=gcs_training_data_dir,
+        labeled_json_path=Path(config.labeled_json_path),
+        gcs_folder_name=config.gcs_training_data_dir,
     )
     # Get training/test data using pre-trained processor to prepare data
     train_dataset, eval_dataset = load_test_train_set(
-        processor=processor, test_size=test_size, ner_annotations=ner_annotations
+        processor=processor, test_size=config.test_size, ner_annotations=ner_annotations
     )
 
     # Initialize our Trainer
     metric = load_metric("seqeval")
     training_args = TrainingArguments(
-        output_dir=model_output_dir,
+        output_dir=config.output_dir,
         max_steps=1000,
         per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
