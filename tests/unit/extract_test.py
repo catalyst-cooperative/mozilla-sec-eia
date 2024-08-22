@@ -1,15 +1,23 @@
 """Test extraction tools/methods."""
 
+import logging
 import unittest
 
 import mlflow
+import numpy as np
 import pandas as pd
 import pytest
 from mozilla_sec_eia.extract import (
+    _fill_nulls_for_comparison,
     _get_most_recent_run,
-    compute_validation_metrics,
+    clean_ex21_validation_set,
+    compute_precision_and_recall,
     extract_filings,
+    jaccard_similarity,
+    strip_down_company_names,
 )
+
+logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 @pytest.fixture
@@ -159,11 +167,81 @@ def test_extract_basic_10k(
         ),
     ],
 )
-def test_compute_validation_metrics(
+def test_compute_precision_and_recall(
     computed_set, validation_set, expected_precision, expected_recall
 ):
     """Test validation metrics with test sets."""
-    metrics = compute_validation_metrics(computed_set, validation_set, "value")
+    metrics = compute_precision_and_recall(computed_set, validation_set, "value")
 
     assert metrics["precision"] == expected_precision
     assert metrics["recall"] == expected_recall
+
+
+@pytest.mark.parametrize(
+    "computed_df,validation_df,expected_subsidiary_jaccard,expected_loc_jaccard,expected_own_per_jaccard",
+    [
+        (
+            pd.DataFrame(
+                {
+                    "id": ["1", "1", "2", "3"],
+                    "subsidiary": [
+                        "atc management, inc.",
+                        "american transmission company",
+                        "bostco llc",
+                        "acorpa",
+                    ],
+                    "loc": ["wisconsin", "wisconsin", "wisconsin", pd.NA],
+                    "own_per": [26.5, 23.04, np.nan, np.nan],
+                },
+                index=[0, 1, 2, 3],
+            ),
+            pd.DataFrame(
+                {
+                    "Filename": ["1", "1", "2", "3"],
+                    "Subsidiary": [
+                        "atc management, inc",
+                        "american transmission company llc",
+                        "bostco llc ",
+                        "acorpa",
+                    ],
+                    "Location of Incorporation": [
+                        "wisconsin",
+                        "wisconsin ",
+                        " Wisconsin",
+                        pd.NA,
+                    ],
+                    "Ownership Percentage": [26.5, 23.04, np.nan, np.nan],
+                },
+                index=[0, 1, 2, 3],
+            ),
+            1,
+            1,
+            1,
+        ),
+    ],
+)
+def test_ex21_validation_cleaning(
+    computed_df,
+    validation_df,
+    expected_subsidiary_jaccard,
+    expected_loc_jaccard,
+    expected_own_per_jaccard,
+):
+    validation_df = clean_ex21_validation_set(validation_df=validation_df)
+    computed_df["subsidiary"] = strip_down_company_names(computed_df["subsidiary"])
+    validation_df["subsidiary"] = strip_down_company_names(validation_df["subsidiary"])
+    for col in ["subsidiary", "loc", "own_per"]:
+        computed_df[col] = _fill_nulls_for_comparison(computed_df[col])
+        validation_df[col] = _fill_nulls_for_comparison(validation_df[col])
+    logger.info(f"validation: {validation_df}")
+    logger.info(f"computed: {computed_df}")
+    assert expected_subsidiary_jaccard == jaccard_similarity(
+        computed_df=computed_df, validation_df=validation_df, value_col="subsidiary"
+    )
+    assert expected_loc_jaccard == jaccard_similarity(
+        computed_df=computed_df, validation_df=validation_df, value_col="loc"
+    )
+    assert expected_own_per_jaccard == jaccard_similarity(
+        computed_df=computed_df, validation_df=validation_df, value_col="own_per"
+    )
+    return

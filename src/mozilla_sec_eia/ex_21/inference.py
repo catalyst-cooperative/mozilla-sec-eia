@@ -98,7 +98,7 @@ def create_inference_dataset(pdfs_dir: Path, labeled_json_dir=None, has_labels=F
     return dataset
 
 
-def clean_extracted_df(extracted_df):
+def clean_extracted_df(extracted_df: pd.DataFrame) -> pd.DataFrame:
     """Perform basic cleaning on a dataframe extracted from an Ex. 21."""
     if extracted_df.empty:
         return extracted_df

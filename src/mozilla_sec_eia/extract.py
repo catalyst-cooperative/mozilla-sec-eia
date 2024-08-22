@@ -1,7 +1,9 @@
 """Implement top level extraction methods and tooling."""
 
 import io
+import json
 import logging
+import re
 import tempfile
 from importlib import resources
 from pathlib import Path
@@ -109,7 +111,7 @@ def _get_experiment_name(dataset: str, experiment_suffix: str | None = None) -> 
     return experiment_name
 
 
-def compute_validation_metrics(
+def compute_precision_and_recall(
     computed_set: pd.DataFrame,
     validation_set: pd.DataFrame,
     value_col: str,
@@ -163,20 +165,37 @@ def jaccard_similarity(
         value_col: Column to calculate Jaccard similarity on.
             Must be present in both dataframes.
     """
-    # fill nans to make similarity comparison more accurate
-    if (computed_df[value_col].dtype == float) and (
-        validation_df[value_col].dtype == float
-    ):
-        computed_df[value_col] = computed_df[value_col].fillna(999)
-        validation_df[value_col] = validation_df[value_col].fillna(999)
-    else:
-        computed_df[value_col] = computed_df[value_col].fillna("zzz")
-        validation_df[value_col] = validation_df[value_col].fillna("zzz")
     intersection = set(computed_df[value_col]).intersection(
         set(validation_df[value_col])
     )
     union = set(computed_df[value_col]).union(set(validation_df[value_col]))
     return float(len(intersection)) / float(len(union))
+
+
+def strip_down_company_names(ser: pd.Series) -> pd.Series:
+    """Strip LLC and other company name suffixes from a column."""
+    # this JSON is taken from PUDL package data (used for CompanyNameCleaner)
+    json_source = (
+        resources.files("mozilla_sec_eia.package_data") / "us_legal_forms.json"
+    )
+    with json_source.open() as json_file:
+        legal_terms_dict = json.load(json_file)["legal_forms"]["en"]
+    terms_list = list(legal_terms_dict.keys())
+    for key in legal_terms_dict:
+        terms_list += legal_terms_dict[key]
+    reg = r"\b(?:" + "|".join(re.escape(word) for word in terms_list) + r")\b"
+    ser = ser.replace(reg, "", regex=True)
+    ser = ser.str.strip()
+    # strip commas or other special chars that might be at the end of the name
+    ser = ser.str.replace(r"[^[^\w&\s]+|[^\w&\s]+$]+", "", regex=True)
+    ser = ser.str.strip()
+    return ser
+
+
+def _fill_nulls_for_comparison(ser: pd.Series):
+    """Fill nans in column to make similarity comparison more accurate."""
+    ser = ser.fillna(999) if ser.dtype == float else ser.fillna("zzz")
+    return ser
 
 
 def compute_ex21_validation_metrics(
@@ -185,6 +204,9 @@ def compute_ex21_validation_metrics(
     """Compute validation metrics for Ex. 21 extraction."""
     shared_cols = validation_df.columns.intersection(computed_df.columns)
     validation_df = validation_df.astype(computed_df[shared_cols].dtypes)
+    # strip llc and other company name parts for the similarity comparison
+    computed_df["subsidiary"] = strip_down_company_names(computed_df["subsidiary"])
+    validation_df["subsidiary"] = strip_down_company_names(validation_df["subsidiary"])
     n_equal = 0
     validation_filenames = validation_df["id"].unique()
     n_files = len(validation_filenames)
@@ -201,15 +223,20 @@ def compute_ex21_validation_metrics(
         ].reset_index(drop=True)
         # check if the tables are exactly equal
         if extracted_table_df.equals(validation_table_df):
-            # TODO: strip llc and other company strings before comparison
             n_equal += 1
         else:
             incorrect_files.append(filename)
-        # compute precision and recall for each column
+        # compute jaccard sim + precision and recall for each column
         table_metrics_dict[filename] = {}
         jaccard_dict[filename] = {}
         for col in ["subsidiary", "loc", "own_per"]:
-            table_prec_recall = compute_validation_metrics(
+            extracted_table_df[col] = _fill_nulls_for_comparison(
+                extracted_table_df[col]
+            )
+            validation_table_df[col] = _fill_nulls_for_comparison(
+                validation_table_df[col]
+            )
+            table_prec_recall = compute_precision_and_recall(
                 extracted_table_df, validation_table_df, value_col=col
             )
             table_metrics_dict[filename][f"{col}_precision"] = table_prec_recall[
@@ -270,6 +297,8 @@ def clean_ex21_validation_set(validation_df: pd.DataFrame):
     return validation_df
 
 
+# TODO: move this validation into a separate validate module
+# and keep this module for extraction?
 def validate_extraction(dataset: str):
     """Run extraction on validation set and compare results to labeled data."""
     if dataset not in DATASETS:
@@ -301,7 +330,7 @@ def validate_extraction(dataset: str):
         # Compute metrics and log
         if dataset == "basic_10k":
             mlflow.log_metrics(
-                compute_validation_metrics(extracted, validation_set, "value")
+                compute_precision_and_recall(extracted, validation_set, "value")
             )
         else:
             mlflow.log_metrics(

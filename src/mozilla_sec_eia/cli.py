@@ -68,7 +68,7 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     extract_parser.set_defaults(func=extract_filings)
 
     validate_extract_parser = subparsers.add_parser("validate")
-    validate_extract_parser.add_argument("--dataset", nargs=1, default="basic_10k")
+    validate_extract_parser.add_argument("--dataset", default="basic_10k")
     validate_extract_parser.set_defaults(func=validate_extraction)
 
     # Add command to create Label Studio inputs from cached Ex. 21 images and PDFs
