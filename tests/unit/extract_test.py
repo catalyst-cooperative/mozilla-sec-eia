@@ -1,6 +1,5 @@
 """Test extraction tools/methods."""
 
-import logging
 import unittest
 
 import mlflow
@@ -16,8 +15,6 @@ from mozilla_sec_eia.extract import (
     jaccard_similarity,
     strip_down_company_names,
 )
-
-logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 @pytest.fixture
@@ -233,8 +230,6 @@ def test_ex21_validation_cleaning(
     for col in ["subsidiary", "loc", "own_per"]:
         computed_df[col] = _fill_nulls_for_comparison(computed_df[col])
         validation_df[col] = _fill_nulls_for_comparison(validation_df[col])
-    logger.info(f"validation: {validation_df}")
-    logger.info(f"computed: {computed_df}")
     assert expected_subsidiary_jaccard == jaccard_similarity(
         computed_df=computed_df, validation_df=validation_df, value_col="subsidiary"
     )
