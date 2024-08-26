@@ -315,6 +315,7 @@ def validate_extraction(dataset: str):
     if dataset == "ex21":
         validation_set = clean_ex21_validation_set(validation_set)
     to_extract = archive.get_metadata(filenames=list(validation_set["filename"]))
+    n_docs = len(validation_set["filename"].unique())
 
     # Extract data from filings
     extracted = extract_filings(
@@ -329,10 +330,12 @@ def validate_extraction(dataset: str):
     with mlflow.start_run(run_id=run.info.run_id):
         # Compute metrics and log
         if dataset == "basic_10k":
+            mlflow.log_param("validation_set_size", n_docs)
             mlflow.log_metrics(
                 compute_precision_and_recall(extracted, validation_set, "value")
             )
         else:
+            mlflow.log_param("validation_set_size", n_docs)
             mlflow.log_metrics(
                 compute_ex21_validation_metrics(extracted, validation_set)
             )

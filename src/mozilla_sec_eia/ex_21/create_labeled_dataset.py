@@ -157,6 +157,9 @@ def format_label_studio_output(
         with Path.open(json_file_path) as j:
             doc_dict = json.loads(j.read())
             filename = doc_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
+            # check if old local naming schema is being used
+            if len(filename.split("-")) == 6:
+                filename = "-".join(filename.split("-")[2:])
             if not _is_cik_in_training_data(filename, tracking_df=tracking_df):
                 continue
             pdf_filename = filename + ".pdf"

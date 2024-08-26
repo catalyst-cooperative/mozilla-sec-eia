@@ -357,7 +357,8 @@ class GCSArchive(BaseModel):
         json_cache_path.mkdir(parents=True, exist_ok=True)
         pdf_cache_path.mkdir(parents=True, exist_ok=True)
         metadata_df = self.get_metadata()
-        label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
+        # label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
+        label_name_pattern = re.compile(r"(\d+)-(.+)")
         if gcs_folder_name[-1] != "/":
             gcs_folder_name += "/"
         for blob in self._labels_bucket.list_blobs(match_glob=f"{gcs_folder_name}*"):

@@ -176,10 +176,11 @@ def train_model(
         per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         learning_rate=1e-5,
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         eval_steps=100,
         load_best_model_at_end=True,
         metric_for_best_model="f1",
+        use_mps_device=True,
     )
     trainer = Trainer(
         model=model,
