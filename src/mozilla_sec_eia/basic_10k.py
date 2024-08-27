@@ -1,9 +1,9 @@
 """Implement functions for handling data from basic 10k filings (not exhibit 21)."""
 
 import logging
-from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
+from dagster import Out, op
 
 from mozilla_sec_eia.utils.cloud import GCSArchive, Sec10K
 
@@ -67,11 +67,10 @@ def _extract_10k(filing: Sec10K):
     return pd.DataFrame(values), filing.filename, unmatched_keys
 
 
+@op(out={"extraction_metadata": Out(), "extracted": Out()})
 def extract(
+    cloud_interface: GCSArchive,
     filings_to_extract: pd.DataFrame,
-    extraction_metadata: pd.DataFrame,
-    extracted: pd.DataFrame,
-    archive: GCSArchive,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract basic 10K data and write to postgres table.
 
@@ -81,15 +80,20 @@ def extract(
     """
     logger.info("Starting basic 10K extraction.")
     logger.info(f"Extracting {len(filings_to_extract)} filings.")
-    with ProcessPoolExecutor() as executor:
-        for ext, filename, unmatched_keys in executor.map(
-            _extract_10k, archive.iterate_filings(filings_to_extract)
-        ):
-            extraction_metadata.loc[filename, ["success", "unmatched_keys"]] = [
-                len(ext) > 0,
-                ",".join(unmatched_keys),
-            ]
-            extracted = pd.concat([extracted, ext])
+
+    extraction_metadata = pd.DataFrame(
+        {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+    ).set_index("filename")
+    extracted = pd.DataFrame()
+
+    for filing in cloud_interface.iterate_filings(filings_to_extract):
+        ext, filename, unmatched_keys = _extract_10k(filing)
+        extraction_metadata.loc[filename, ["success", "unmatched_keys"]] = [
+            len(ext) > 0,
+            ",".join(unmatched_keys),
+        ]
+        extracted = pd.concat([extracted, ext])
+
     return (
         extraction_metadata,
         extracted.set_index(["filename", "filer_count", "block", "block_count", "key"]),

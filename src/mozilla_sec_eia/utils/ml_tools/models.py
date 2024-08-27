@@ -1,0 +1,162 @@
+"""Provides tooling for developing/tracking ml models within PUDL.
+
+The main interface from this module is the :func:`pudl_model` decorator, which
+is meant to be applied to a dagster `graph`. This decorator will handle finding all
+configuration for a model/passing configuration to dagster, creating an
+:class:`ExperimentTracker` for the model, and ultimately will return a `job`
+from the model.
+
+There are a few different ways to provide configuration for a PUDL model. First, configuration will come from default values for any dagster `Config`'s which are associated
+with `op`'s which make up the model `graph`. For more info on dagster configuration,
+see https://docs.dagster.io/concepts/configuration/config-schema. The next way to
+provide configuration is through the yaml file: `pudl.package_data.settings.pudl_models.yml`.
+Any configuration in this file should be follow dagster's config-schema formatting,
+see the `ferc_to_ferc` entry as an example. Configuration provided this way will
+override any default values. The final way to provide configuration is through the
+dagster UI. To provide configuration this way, click `Open Launchpad` in the UI, and
+values can be edited here. This configuration will override both default values and
+yaml configuration, but will only be used for a single run.
+"""
+
+import importlib
+import logging
+
+import mlflow
+import yaml
+from dagster import (
+    EnvVar,
+    GraphDefinition,
+    HookContext,
+    JobDefinition,
+    OpDefinition,
+    RunConfig,
+    job,
+    op,
+    success_hook,
+)
+
+from mozilla_sec_eia.utils import GCSArchive
+
+from .experiment_tracking import (
+    ExperimentTracker,
+    experiment_tracker_teardown_factory,
+    get_tracking_resource_name,
+)
+
+logger = logging.getLogger(f"catalystcoop.{__name__}")
+MODEL_RESOURCES = {}
+PUDL_MODELS = {}
+
+
+def get_yml_config(experiment_name: str) -> dict:
+    """Load model configuration from yaml file."""
+    config_file = (
+        importlib.resources.files("pudl.package_data.settings") / "pudl_models.yml"
+    )
+    config = yaml.safe_load(config_file.open("r"))
+
+    if not (model_config := config.get(experiment_name)):
+        raise RuntimeError(f"No {experiment_name} entry in {config_file}")
+
+    return {experiment_name: model_config}
+
+
+def get_default_config(model_graph: GraphDefinition) -> dict:
+    """Get default config values for model."""
+
+    def _get_default_from_ops(node: OpDefinition | GraphDefinition):
+        config = {}
+        if isinstance(node, GraphDefinition):
+            config = {
+                "ops": {
+                    child_node.name: _get_default_from_ops(child_node)
+                    for child_node in node.node_defs
+                }
+            }
+        else:
+            if node.config_schema.default_provided:
+                config = {"config": node.config_schema.default_value}
+            else:
+                config = {"config": None}
+
+        return config
+
+    config = {model_graph.name: _get_default_from_ops(model_graph)}
+    return config
+
+
+def get_pudl_model_job_name(experiment_name: str) -> str:
+    """Return expected pudl model job name based on experiment_name."""
+    return f"{experiment_name}_job"
+
+
+def pudl_model(experiment_name: str, config_from_yaml: bool = False) -> JobDefinition:
+    """Decorator for an ML model that will handle providing configuration to dagster."""
+
+    def _decorator(model_graph: GraphDefinition):
+        model_config = get_default_config(model_graph)
+        if config_from_yaml:
+            model_config |= get_yml_config(model_graph.name)
+
+        # Add resources to resource dict
+        cloud_interface = GCSArchive(
+            filings_bucket_name=EnvVar("GCS_FILINGS_BUCKET_NAME"),
+            labels_bucket_name=EnvVar("GCS_LABELS_BUCKET_NAME"),
+            metadata_db_instance_connection=EnvVar(
+                "GCS_METADATA_DB_INSTANCE_CONNECTION"
+            ),
+            user=EnvVar("GCS_IAM_USER"),
+            metadata_db_name=EnvVar("GCS_METADATA_DB_NAME"),
+            project=EnvVar("GCS_PROJECT"),
+        )
+        MODEL_RESOURCES.update(
+            {
+                get_tracking_resource_name(experiment_name): ExperimentTracker(
+                    experiment_name=experiment_name,
+                    tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
+                    project=EnvVar("GCS_PROJECT"),
+                ),
+                "cloud_interface": cloud_interface,
+            }
+        )
+
+        default_config = RunConfig(
+            ops=model_config,
+        )
+
+        @op
+        def _collect_results(model_graph_output, _implicit_dependencies: list):
+            return model_graph_output
+
+        @success_hook(
+            required_resource_keys={get_tracking_resource_name(experiment_name)}
+        )
+        def _log_config_hook(context: HookContext):
+            if (config := context.op_config) is not None:
+                mlflow.log_params(
+                    {
+                        f"{context.op.name}.{param}": value
+                        for param, value in config.items()
+                    }
+                )
+
+        @job(
+            name=get_pudl_model_job_name(experiment_name),
+            config=default_config,
+            hooks={_log_config_hook},
+        )
+        def model_asset(**kwargs):
+            tracker_teardown = experiment_tracker_teardown_factory(
+                experiment_name=model_graph.name,
+            )
+            graph_output = model_graph(**kwargs)
+
+            # Pass output to teardown to create a dependency
+            teardown = tracker_teardown(graph_output)
+
+            _collect_results(graph_output, [teardown])
+
+        PUDL_MODELS[get_pudl_model_job_name(experiment_name)]
+        return model_asset
+
+    return _decorator

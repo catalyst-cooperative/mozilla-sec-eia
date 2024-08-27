@@ -3,7 +3,6 @@
 import base64
 import io
 import logging
-import os
 import re
 from contextlib import contextmanager
 from hashlib import md5
@@ -11,11 +10,10 @@ from pathlib import Path
 from typing import BinaryIO, TextIO
 
 import fitz
-import mlflow
 import pandas as pd
 import pg8000
 from dagster import ConfigurableResource
-from google.cloud import secretmanager, storage
+from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from PIL import Image
 from pydantic import BaseModel, PrivateAttr
@@ -400,51 +398,3 @@ class GCSArchive(ConfigurableResource):
 def get_metadata_filename(local_filename: str):
     """Transform a local filename into the filename in GCSArchiver metadata."""
     return "edgar/data/" + local_filename.replace("-", "/", 1) + ".txt"
-
-
-def _access_secret_version(secret_id: str, project_id: str, version_id="latest"):
-    # Create the Secret Manager client.
-    client = secretmanager.SecretManagerServiceClient()
-
-    # Build the resource name of the secret version.
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-
-    # Access the secret version.
-    response = client.access_secret_version(name=name)
-
-    # Return the decoded payload.
-    return response.payload.data.decode("UTF-8")
-
-
-class MlflowInterface(ConfigurableResource):
-    """Initialize interface to mlflow for desired experiment."""
-
-    experiment_name: str
-    continue_run: bool = False
-    tracking_uri: str
-    cloud_interface: GCSArchive
-    artifact_location: str | None = None
-
-    def setup_for_execution(self, context):
-        """Do runtime configuration of mlflow."""
-        os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
-        os.environ["MLFLOW_TRACKING_PASSWORD"] = _access_secret_version(
-            "mlflow_admin_password", self.cloud_interface.project
-        )
-        os.environ["MLFLOW_TRACKING_URI"] = self.tracking_uri
-        os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
-        os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
-        os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
-        os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
-        logger.info(f"Initialized tracking with mlflow server: {self.tracking_uri}")
-
-        self.create_experiment()
-
-    def create_experiment(self):
-        """Create experiment if it doesn't already exist."""
-        logger.info(f"Creating experiment: {self.experiment_name}")
-        if not mlflow.get_experiment_by_name(self.experiment_name):
-            mlflow.create_experiment(
-                name=self.experiment_name,
-                artifact_location=self.artifact_location,
-            )
