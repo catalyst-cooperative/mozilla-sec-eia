@@ -21,46 +21,6 @@ from google.cloud import secretmanager
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-def _flatten_model_config(model_config: dict) -> dict:
-    """Take nested dictionary defining model config and flatten for logging purposes.
-
-    This is essentially a translation layer between Dagster configuration and mlflow,
-    which does not support displaying nested parameters in the UI.
-
-    Examples:
-        >>> _flatten_model_config(
-        ...     {
-        ...         'ferc_to_ferc': {
-        ...             'link_ids_cross_year': {
-        ...                 'compute_distance_matrix': {
-        ...                     'distance_threshold': .5,
-        ...                      'metric': 'euclidean',
-        ...                 },
-        ...                 'match_orphaned_records': {'distance_threshold': 0.5},
-        ...             }
-        ...         }
-        ...     }
-        ... ) == {
-        ...     'ferc_to_ferc.link_ids_cross_year.compute_distance_matrix.distance_threshold': 0.5,
-        ...     'ferc_to_ferc.link_ids_cross_year.compute_distance_matrix.metric': 'euclidean',
-        ...     'ferc_to_ferc.link_ids_cross_year.match_orphaned_records.distance_threshold': 0.5
-        ... }
-        True
-    """
-
-    def _flatten_level(config_level: dict, param_name: str):
-        flattened_dict = {}
-        for key, val in config_level.items():
-            flattened_param = f"{param_name}.{key}"
-            if isinstance(val, dict):
-                flattened_dict |= _flatten_level(val, param_name=flattened_param)
-            else:
-                flattened_dict[flattened_param[1:]] = val
-        return flattened_dict
-
-    return _flatten_level(model_config, "")
-
-
 class ExperimentTracker(ConfigurableResource):
     """Class to manage tracking a machine learning model using MLflow.
 
