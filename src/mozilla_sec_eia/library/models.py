@@ -151,7 +151,7 @@ def pudl_model(
             config=default_config,
             hooks={_log_config_hook, _end_mlflow_run_with_failure},
         )
-        def model_asset(**kwargs):
+        def model_job(**kwargs):
             tracker_teardown = experiment_tracker_teardown_factory(
                 experiment_name=model_graph.name,
             )
@@ -162,7 +162,7 @@ def pudl_model(
 
             _collect_results(graph_output, [teardown])
 
-        PUDL_MODELS[get_pudl_model_job_name(experiment_name)] = model_asset
-        return model_asset
+        PUDL_MODELS[get_pudl_model_job_name(experiment_name)] = model_job
+        return model_job
 
     return _decorator
