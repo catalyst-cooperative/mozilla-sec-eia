@@ -23,11 +23,11 @@ from dagster import (
 )
 from mlflow.entities import Run
 
-from mozilla_sec_eia.library.ml_tools.experiment_tracking import (
+from mozilla_sec_eia.library.experiment_tracking import (
     get_most_recent_run,
     get_tracking_resource_name,
 )
-from mozilla_sec_eia.library.ml_tools.models import pudl_model
+from mozilla_sec_eia.library.models import pudl_model
 
 from . import basic_10k
 from .utils.cloud import GCSArchive, cloud_interface_resource

@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 import pytest
-from mozilla_sec_eia.library.ml_tools.experiment_tracking import ExperimentTracker
+from mozilla_sec_eia.library.experiment_tracking import ExperimentTracker
 
 logger = logging.getLogger(__name__)
 

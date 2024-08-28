@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 import pytest
 from dagster import Out, op
-from mozilla_sec_eia.library.ml_tools.experiment_tracking import (
+from mozilla_sec_eia.library.experiment_tracking import (
     get_most_recent_run,
     get_tracking_resource_name,
 )
