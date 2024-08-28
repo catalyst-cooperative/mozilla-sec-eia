@@ -1,18 +1,20 @@
 """Test extraction tools/methods."""
 
 import logging
-import unittest
 
 import pandas as pd
 import pytest
-from dagster import build_asset_context
-from mozilla_sec_eia.extract import (
-    ExtractConfig,
-    _get_most_recent_run,
-    basic_10k_extract,
-    compute_validation_metrics,
+from dagster import Out, op
+from mozilla_sec_eia.library.ml_tools.experiment_tracking import (
+    get_most_recent_run,
+    get_tracking_resource_name,
 )
-from mozilla_sec_eia.utils.cloud import GCSArchive, MlflowInterface
+from mozilla_sec_eia.models.sec10k.extract import (
+    ChunkFilingsConfig,
+    compute_validation_metrics,
+    extract_model_factory,
+)
+from mozilla_sec_eia.models.sec10k.utils.cloud import GCSArchive
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -62,11 +64,11 @@ def second_run_results():
     )
 
 
-def test_extract_basic_10k(
+def test_sec10k_extract_pipeline(
     filings_metadata,
     first_run_results,
     second_run_results,
-    tmp_path,
+    test_tracker_factory,
 ):
     """Test high level extraction workflow."""
 
@@ -84,44 +86,33 @@ def test_extract_basic_10k(
         def get_metadata(self):
             return filings_metadata
 
-    # Initialize mlflow with test settings
-    experiment_name = "basic_10k_extract_unit_test"
+    dataset_name = "test_pipeline"
+    experiment_name = f"{dataset_name}_extraction"
+    test_tracker = test_tracker_factory(experiment_name)
 
-    with unittest.mock.patch(
-        "mozilla_sec_eia.utils.cloud._access_secret_version", new=lambda *args: ""
-    ):
-        for i, results in enumerate([first_run_results, second_run_results]):
-            logger.info(f"Run {i} of basic 10k extraction.")
-            with (
-                build_asset_context(
-                    resources={
-                        "basic_10k_extract_config": ExtractConfig(
-                            num_filings=3 if i == 0 else -1
-                        ),
-                        "basic_10k_extract_mlflow": MlflowInterface(
-                            experiment_name=experiment_name,
-                            continue_run=i > 0,
-                            tracking_uri="sqlite:///:memory:",
-                            cloud_interface=FakeArchive(),
-                            artifact_location=str(tmp_path),
-                        ),
-                        "cloud_interface": FakeArchive(),
-                    }
-                ) as context,
-                unittest.mock.patch(
-                    "mozilla_sec_eia.extract.basic_10k.extract",
-                    new=lambda *args: results,
-                ),
-            ):
-                metadata = results[0]
+    for i, results in enumerate([first_run_results, second_run_results]):
 
-                # Run extract method
-                basic_10k_extract(context)
-                run = _get_most_recent_run(experiment_name)
-                assert run.data.metrics["num_failed"] == (~metadata["success"]).sum()
-                assert run.data.metrics["ratio_extracted"] == len(metadata) / len(
-                    filings_metadata
-                )
+        @op(out={"extraction_metadata": Out(), "extracted": Out()})
+        def _fake_extract(_filings_to_extract):
+            return results[0], results[1]
+
+        test_job = extract_model_factory(dataset_name, _fake_extract)
+        resources = {
+            "basic_10k_extract_config": ChunkFilingsConfig(
+                num_filings=3 if i == 0 else -1
+            ),
+            get_tracking_resource_name(experiment_name): test_tracker,
+            "cloud_interface": FakeArchive(),
+        }
+        metadata = results[0]
+
+        # Run extract method
+        test_job.execute_in_process(resources=resources)
+        run = get_most_recent_run(experiment_name, dagster_run_id="")
+        assert run.data.metrics["num_failed"] == (~metadata["success"]).sum()
+        assert run.data.metrics["ratio_extracted"] == len(metadata) / len(
+            filings_metadata
+        )
 
 
 @pytest.mark.parametrize(

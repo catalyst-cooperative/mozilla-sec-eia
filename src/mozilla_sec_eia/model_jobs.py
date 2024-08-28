@@ -5,7 +5,7 @@ import logging
 import coloredlogs
 from dagster import Definitions
 
-from mozilla_sec_eia.utils import ml_tools
+from mozilla_sec_eia.library import ml_tools
 
 logger = logging.getLogger("catalystcoop")
 log_format = "%(asctime)s [%(levelname)8s] %(name)s:%(lineno)s %(message)s"

@@ -5,7 +5,7 @@ import logging
 
 import pandas as pd
 
-from mozilla_sec_eia.utils.cloud import GCSArchive
+from ..utils.cloud import GCSArchive
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 

@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 import pytest
+from mozilla_sec_eia.library.ml_tools.experiment_tracking import ExperimentTracker
 
 logger = logging.getLogger(__name__)
 
@@ -33,3 +34,27 @@ def test_dir() -> Path:
     Mostly this is meant as an example of a fixture.
     """
     return Path(__file__).parent
+
+
+class TestTracker(ExperimentTracker):
+    """Create sub-class of `ExperimentTracker` to use in testing context.
+
+    Test class creates an in-memory sqlite db for tracking, and a temporary directory
+    for artifact storage.
+    """
+
+    def _get_tracking_password(self):
+        return "password"
+
+
+@pytest.fixture
+def test_tracker_factory(tmp_path):
+    def factory(experiment_name: str) -> TestTracker:
+        return TestTracker(
+            artifact_location=str(tmp_path),
+            tracking_uri="sqlite:///:memory:",
+            experiment_name=experiment_name,
+            project="",
+        )
+
+    return factory

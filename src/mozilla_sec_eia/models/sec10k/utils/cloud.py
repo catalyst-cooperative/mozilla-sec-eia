@@ -12,7 +12,7 @@ from typing import BinaryIO, TextIO
 import fitz
 import pandas as pd
 import pg8000
-from dagster import ConfigurableResource
+from dagster import ConfigurableResource, EnvVar
 from google.cloud import storage
 from google.cloud.sql.connector import Connector
 from PIL import Image
@@ -21,7 +21,7 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
 
-from mozilla_sec_eia.utils.db_metadata import Base, Sec10kMetadata
+from .db_metadata import Base, Sec10kMetadata
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -398,3 +398,13 @@ class GCSArchive(ConfigurableResource):
 def get_metadata_filename(local_filename: str):
     """Transform a local filename into the filename in GCSArchiver metadata."""
     return "edgar/data/" + local_filename.replace("-", "/", 1) + ".txt"
+
+
+cloud_interface_resource = GCSArchive(
+    filings_bucket_name=EnvVar("GCS_FILINGS_BUCKET_NAME"),
+    labels_bucket_name=EnvVar("GCS_LABELS_BUCKET_NAME"),
+    metadata_db_instance_connection=EnvVar("GCS_METADATA_DB_INSTANCE_CONNECTION"),
+    user=EnvVar("GCS_IAM_USER"),
+    metadata_db_name=EnvVar("GCS_METADATA_DB_NAME"),
+    project=EnvVar("GCS_PROJECT"),
+)

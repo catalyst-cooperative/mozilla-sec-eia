@@ -16,17 +16,21 @@ from dagster import (
     DynamicOutput,
     GraphDefinition,
     OpDefinition,
+    OpExecutionContext,
+    Out,
     graph,
     op,
 )
 from mlflow.entities import Run
 
-from mozilla_sec_eia import basic_10k
-from mozilla_sec_eia.utils.cloud import GCSArchive
-from mozilla_sec_eia.utils.ml_tools.experiment_tracking import (
+from mozilla_sec_eia.library.ml_tools.experiment_tracking import (
+    get_most_recent_run,
     get_tracking_resource_name,
 )
-from mozilla_sec_eia.utils.ml_tools.models import pudl_model
+from mozilla_sec_eia.library.ml_tools.models import pudl_model
+
+from . import basic_10k
+from .utils.cloud import GCSArchive, cloud_interface_resource
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -107,6 +111,12 @@ def chunk_filings(
         yield DynamicOutput(chunk, mapping_key=str(i))
 
 
+class GetMostRecentRunResultsConfig(Config):
+    """Configuration specifying whether to get run results and continue."""
+
+    continue_run: bool = False
+
+
 def extract_model_factory(
     dataset_name: str, extract_op: OpDefinition | GraphDefinition
 ):
@@ -114,14 +124,50 @@ def extract_model_factory(
     experiment_name = f"{dataset_name}_extraction"
     experiment_tracker_resource = get_tracking_resource_name(experiment_name)
 
+    @op(
+        required_resource_keys=[experiment_tracker_resource],
+        out={
+            "extraction_metadata": Out(),
+            "extracted": Out(),
+            "filings_to_extract": Out(),
+        },
+    )
+    def get_most_recent_run_results(
+        context: OpExecutionContext,
+        config: GetMostRecentRunResultsConfig,
+        filings_to_extract: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        extraction_metadata = pd.DataFrame(
+            {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+        ).set_index("filename")
+        extracted = pd.DataFrame()
+
+        if config.continue_run:
+            most_recent_run = get_most_recent_run(experiment_name, context.run_id)
+            extraction_metadata = ExtractionMetadataSchema.validate(
+                _load_artifact_as_csv(
+                    most_recent_run, "/extraction_metadata.csv"
+                ).set_index("filename")
+            )
+            extracted = _load_artifact_as_parquet(most_recent_run, "/extracted.parquet")
+            filings_to_extract = filings_to_extract[
+                ~filings_to_extract["filename"].isin(extraction_metadata.index)
+            ]
+
+        return extraction_metadata, extracted, filings_to_extract
+
     @op(required_resource_keys=[experiment_tracker_resource])
     def log_extraction_data(
         metadata: pd.DataFrame,
         extraction_metadata: list[pd.DataFrame],
         extracted: list[pd.DataFrame],
+        previous_run_extraction_metadata: pd.DataFrame,
+        previous_run_extracted_data: pd.DataFrame,
     ):
-        extraction_metadata = pd.concat(extraction_metadata)
-        extracted = pd.concat(extracted)
+        extraction_metadata = pd.concat(
+            extraction_metadata + [previous_run_extraction_metadata]
+        )
+        extracted = pd.concat(extracted + [previous_run_extracted_data])
         # Use metadata to log generic metrics
         extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
         mlflow.log_metrics(
@@ -135,17 +181,25 @@ def extract_model_factory(
         _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
         _log_artifact_as_parquet(extracted, "extracted.parquet")
 
-    @pudl_model(experiment_name=experiment_name)
+    @pudl_model(
+        experiment_name=experiment_name,
+        resources={"cloud_interface": cloud_interface_resource},
+    )
     @graph(name=experiment_name)
     def extract_filings():
-        filings_to_extract = get_filings_to_extract()
+        metadata = get_filings_to_extract()
+        previous_extraction_metadata, previous_extracted, filings_to_extract = (
+            get_most_recent_run_results(metadata)
+        )
         filing_chunks = chunk_filings(filings_to_extract)
         extraction_metadata, extracted = filing_chunks.map(extract_op)
 
         return log_extraction_data(
-            filings_to_extract,
+            metadata,
             extraction_metadata.collect(),
             extracted.collect(),
+            previous_extraction_metadata,
+            previous_extracted,
         )
 
     return extract_filings

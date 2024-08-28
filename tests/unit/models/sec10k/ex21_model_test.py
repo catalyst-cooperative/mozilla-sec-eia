@@ -1,9 +1,9 @@
 """Unit tests for the LayoutLM model and table extractor."""
 
 import torch
-from mozilla_sec_eia.ex_21.inference import get_flattened_mode_predictions
-from mozilla_sec_eia.ex_21.train_extractor import LABELS
-from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions
+from mozilla_sec_eia.models.sec10k.ex_21.inference import get_flattened_mode_predictions
+from mozilla_sec_eia.models.sec10k.ex_21.train_extractor import LABELS
+from mozilla_sec_eia.models.sec10k.utils.layoutlm import get_id_label_conversions
 
 
 def test_bbox_overlap_prediction_tie_break():

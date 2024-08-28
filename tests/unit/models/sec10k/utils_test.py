@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import pytest
-from mozilla_sec_eia.utils.cloud import (
+from mozilla_sec_eia.models.sec10k.utils.cloud import (
     Exhibit21,
     GCSArchive,
     Sec10K,
@@ -17,8 +17,12 @@ from mozilla_sec_eia.utils.cloud import (
 def test_archive():
     """Return test GCSArchive class."""
     with (
-        unittest.mock.patch("mozilla_sec_eia.utils.cloud.GCSArchive._get_engine"),
-        unittest.mock.patch("mozilla_sec_eia.utils.cloud.GCSArchive._get_bucket"),
+        unittest.mock.patch(
+            "mozilla_sec_eia.models.sec10k.utils.cloud.GCSArchive._get_engine"
+        ),
+        unittest.mock.patch(
+            "mozilla_sec_eia.models.sec10k.utils.cloud.GCSArchive._get_bucket"
+        ),
     ):
         archive = GCSArchive(
             filings_bucket_name="filings_bucket_name",
@@ -91,7 +95,8 @@ def test_validate_archive(test_archive, archive_files, metadata_files, valid, mo
         return_value=pd.DataFrame({"filename": metadata_files})
     )
     mocker.patch(
-        "mozilla_sec_eia.utils.cloud.GCSArchive.get_metadata", new=metadata_mock
+        "mozilla_sec_eia.models.sec10k.utils.cloud.GCSArchive.get_metadata",
+        new=metadata_mock,
     )
 
     assert test_archive.validate_archive() == valid
@@ -174,7 +179,9 @@ def test_validate_archive(test_archive, archive_files, metadata_files, valid, mo
 )
 def test_10k(filing_text, ex_21_version, actually_has_ex_21):
     """Test that SEC10k's are properly parsed."""
-    with unittest.mock.patch("mozilla_sec_eia.utils.cloud.logger") as mock_logger:
+    with unittest.mock.patch(
+        "mozilla_sec_eia.models.sec10k.utils.cloud.logger"
+    ) as mock_logger:
         filing = Sec10K.from_file(
             file=io.StringIO(filing_text),
             filename="sec10k.html",

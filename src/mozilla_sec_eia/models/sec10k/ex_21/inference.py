@@ -16,21 +16,21 @@ from transformers import (
 )
 from transformers.tokenization_utils_base import BatchEncoding
 
-from mozilla_sec_eia.ex_21.create_labeled_dataset import (
-    BBOX_COLS_PDF,
-    format_label_studio_output,
-    get_image_dict,
-)
-from mozilla_sec_eia.ex_21.train_extractor import BBOX_COLS, LABELS
-from mozilla_sec_eia.utils.cloud import get_metadata_filename
-from mozilla_sec_eia.utils.layoutlm import (
+from ..utils.cloud import get_metadata_filename
+from ..utils.layoutlm import (
     get_id_label_conversions,
     iob_to_label,
     normalize_bboxes,
 )
-from mozilla_sec_eia.utils.pdf import (
+from ..utils.pdf import (
     get_pdf_data_from_path,
 )
+from .create_labeled_dataset import (
+    BBOX_COLS_PDF,
+    format_label_studio_output,
+    get_image_dict,
+)
+from .train_extractor import BBOX_COLS, LABELS
 
 # When handling multi page documents LayoutLM uses a sliding 'frame'
 # with some overlap between frames. The overlap creates multiple

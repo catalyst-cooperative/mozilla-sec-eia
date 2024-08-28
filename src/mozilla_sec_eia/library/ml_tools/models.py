@@ -29,13 +29,12 @@ from dagster import (
     HookContext,
     JobDefinition,
     OpDefinition,
+    ResourceDefinition,
     RunConfig,
     job,
     op,
     success_hook,
 )
-
-from mozilla_sec_eia.utils import GCSArchive
 
 from .experiment_tracking import (
     ExperimentTracker,
@@ -90,7 +89,11 @@ def get_pudl_model_job_name(experiment_name: str) -> str:
     return f"{experiment_name}_job"
 
 
-def pudl_model(experiment_name: str, config_from_yaml: bool = False) -> JobDefinition:
+def pudl_model(
+    experiment_name: str,
+    resources: dict[str, ResourceDefinition] = {},
+    config_from_yaml: bool = False,
+) -> JobDefinition:
     """Decorator for an ML model that will handle providing configuration to dagster."""
 
     def _decorator(model_graph: GraphDefinition):
@@ -99,16 +102,6 @@ def pudl_model(experiment_name: str, config_from_yaml: bool = False) -> JobDefin
             model_config |= get_yml_config(model_graph.name)
 
         # Add resources to resource dict
-        cloud_interface = GCSArchive(
-            filings_bucket_name=EnvVar("GCS_FILINGS_BUCKET_NAME"),
-            labels_bucket_name=EnvVar("GCS_LABELS_BUCKET_NAME"),
-            metadata_db_instance_connection=EnvVar(
-                "GCS_METADATA_DB_INSTANCE_CONNECTION"
-            ),
-            user=EnvVar("GCS_IAM_USER"),
-            metadata_db_name=EnvVar("GCS_METADATA_DB_NAME"),
-            project=EnvVar("GCS_PROJECT"),
-        )
         MODEL_RESOURCES.update(
             {
                 get_tracking_resource_name(experiment_name): ExperimentTracker(
@@ -116,8 +109,8 @@ def pudl_model(experiment_name: str, config_from_yaml: bool = False) -> JobDefin
                     tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
                     project=EnvVar("GCS_PROJECT"),
                 ),
-                "cloud_interface": cloud_interface,
             }
+            | resources
         )
 
         default_config = RunConfig(
@@ -156,7 +149,7 @@ def pudl_model(experiment_name: str, config_from_yaml: bool = False) -> JobDefin
 
             _collect_results(graph_output, [teardown])
 
-        PUDL_MODELS[get_pudl_model_job_name(experiment_name)]
+        PUDL_MODELS[get_pudl_model_job_name(experiment_name)] = model_asset
         return model_asset
 
     return _decorator

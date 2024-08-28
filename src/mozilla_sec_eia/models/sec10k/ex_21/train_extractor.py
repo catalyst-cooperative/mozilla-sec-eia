@@ -9,7 +9,7 @@ from pathlib import Path
 
 import mlflow
 import numpy as np
-from dagster import Config, asset
+from dagster import Config
 from datasets import (
     Array2D,
     Array3D,
@@ -27,9 +27,8 @@ from transformers import (
 )
 from transformers.data.data_collator import default_data_collator
 
-from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
-from mozilla_sec_eia.utils.cloud import MlflowInterface
-from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions, log_model
+from ..utils.layoutlm import get_id_label_conversions, log_model
+from .create_labeled_dataset import format_as_ner_annotations
 
 LABELS = [
     "O",
@@ -144,10 +143,9 @@ class FineTuneConfig(Config):
     test_size: float = 0.2
 
 
-@asset
 def train_model(
     config: FineTuneConfig,
-    layoutlm_mlflow_interface: MlflowInterface,
+    layoutlm_mlflow_interface,
 ):
     """Train LayoutLM model with labeled data."""
     # Prepare model

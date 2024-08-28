@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 from dagster import Out, op
 
-from mozilla_sec_eia.utils.cloud import GCSArchive, Sec10K
+from .utils.cloud import GCSArchive, Sec10K
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 EXPERIMENT_NAME = "basic_10k_extraction"
