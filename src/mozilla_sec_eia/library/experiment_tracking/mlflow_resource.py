@@ -15,8 +15,9 @@ import os
 from contextlib import contextmanager
 
 import mlflow
-from dagster import ConfigurableResource, InitResourceContext, op
+from dagster import ConfigurableResource, In, InitResourceContext, Nothing, op
 from google.cloud import secretmanager
+from pydantic import PrivateAttr
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -50,14 +51,23 @@ class ExperimentTracker(ConfigurableResource):
     tags: dict = {}
     project: str
 
+    _run_id: str = PrivateAttr()
+
     @contextmanager
     def yield_for_execution(
         self,
         context: InitResourceContext,
     ) -> "ExperimentTracker":
         """Create experiment tracker for specified experiment."""
+        self._run_id = context.run_id
+
         if self.tracking_enabled:
             self._configure_mlflow()
+
+            # Hack to stop mlflow from ending run at process barrier
+            # This is borrowed from the official dagster mlflow resource found here:
+            # https://github.com/dagster-io/dagster/blob/master/python_modules/libraries/dagster-mlflow/dagster_mlflow/resources.py
+            atexit.unregister(mlflow.end_run)
 
             # Get run_id associated with current dagster run
             experiment_id = self.get_or_create_experiment(
@@ -66,18 +76,18 @@ class ExperimentTracker(ConfigurableResource):
             )
             mlflow_run_id = self._get_mlflow_run_id(context.run_id, experiment_id)
 
-            # Hack to stop mlflow from ending run at process barrier
-            # This is borrowed from the official dagster mlflow resource found here:
-            # https://github.com/dagster-io/dagster/blob/master/python_modules/libraries/dagster-mlflow/dagster_mlflow/resources.py
-            atexit.unregister(mlflow.end_run)
-
-            # Create new run under specified experiment
-            with mlflow.start_run(
-                run_id=mlflow_run_id,
-                experiment_id=experiment_id,
-                tags=self.tags | {"dagster_run_id": context.run_id},
-            ):
+            if (active_run := mlflow.active_run()) is not None:
+                if active_run.info.run_id != mlflow_run_id:
+                    raise RuntimeError("Found conflicting active mlflow run!")
                 yield self
+            else:
+                # Create new run under specified experiment
+                with mlflow.start_run(
+                    run_id=mlflow_run_id,
+                    experiment_id=experiment_id,
+                    tags=self.tags | {"dagster_run_id": context.run_id},
+                ):
+                    yield self
 
     def _get_tracking_password(self, version_id: str = "latest"):
         """Get tracking server password from gcloud secrets."""
@@ -115,6 +125,10 @@ class ExperimentTracker(ConfigurableResource):
             run_id = run_df.loc[0, "run_id"]
         return run_id
 
+    def get_run_id(self):
+        """Return current dagster run_id."""
+        return self._run_id
+
     @staticmethod
     def get_or_create_experiment(
         experiment_name: str, artifact_location: str = ""
@@ -147,8 +161,9 @@ def experiment_tracker_teardown_factory(
     @op(
         name=f"{experiment_name}_tracker_teardown",
         required_resource_keys=["experiment_tracker"],
+        ins={"model_done": In(Nothing)},
     )
-    def teardown_experiment_tracker(_results):
+    def teardown_experiment_tracker():
         mlflow.end_run()
 
     return teardown_experiment_tracker

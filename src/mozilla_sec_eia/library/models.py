@@ -40,6 +40,7 @@ from mlflow.entities.run_status import RunStatus
 
 from .experiment_tracking import (
     ExperimentTracker,
+    MlflowPandasArtifactIOManager,
     experiment_tracker_teardown_factory,
 )
 
@@ -92,6 +93,7 @@ def get_pudl_model_job_name(experiment_name: str) -> str:
 
 def pudl_model(
     experiment_name: str,
+    mlflow_pandas_io_manager_file_type: str = "parquet",
     resources: dict[str, ResourceDefinition] = {},
     config_from_yaml: bool = False,
 ) -> JobDefinition:
@@ -103,11 +105,21 @@ def pudl_model(
             model_config |= get_yml_config(model_graph.name)
 
         # Add resources to resource dict
+        experiment_tracker = ExperimentTracker(
+            experiment_name=experiment_name,
+            tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
+            project=EnvVar("GCS_PROJECT"),
+        )
         model_resources = {
-            "experiment_tracker": ExperimentTracker(
-                experiment_name=experiment_name,
-                tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
-                project=EnvVar("GCS_PROJECT"),
+            "experiment_tracker": experiment_tracker,
+            "mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
+                file_type=mlflow_pandas_io_manager_file_type,
+                experiment_tracker=experiment_tracker,
+            ),
+            "previous_run_mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
+                use_previous_mlflow_run=True,
+                file_type=mlflow_pandas_io_manager_file_type,
+                experiment_tracker=experiment_tracker,
             ),
         } | resources
 
@@ -151,9 +163,7 @@ def pudl_model(
             graph_output = model_graph(**kwargs)
 
             # Pass output to teardown to create a dependency
-            teardown = tracker_teardown(graph_output)
-
-            _collect_results(graph_output, [teardown])
+            tracker_teardown(graph_output)
 
         PUDL_MODELS[get_pudl_model_job_name(experiment_name)] = model_job
         return model_job

@@ -4,14 +4,14 @@ import logging
 
 import pandas as pd
 import pytest
-from dagster import Out, op
-from mozilla_sec_eia.library.experiment_tracking import (
-    get_most_recent_run,
+from dagster import Out, RunConfig, op
+from mozilla_sec_eia.library.experiment_tracking.mlflow_io_managers import (
+    MlflowPandasArtifactIOManager,
 )
 from mozilla_sec_eia.models.sec10k.extract import (
-    ChunkFilingsConfig,
+    FilingsToExtractConfig,
     compute_validation_metrics,
-    extract_model_factory,
+    extract_graph_factory,
 )
 from mozilla_sec_eia.models.sec10k.utils.cloud import GCSArchive
 
@@ -63,11 +63,58 @@ def second_run_results():
     )
 
 
+@pytest.mark.parametrize(
+    "filings_metadata,previous_extraction_metadata,num_filings,num_failed",
+    [
+        (
+            pd.DataFrame(
+                {"filename": ["filing1", "filing2", "filing3", "filing4", "filing5"]}
+            ),
+            pd.DataFrame(
+                {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+            ).set_index("filename"),
+            -1,
+            0,
+        ),
+        (
+            pd.DataFrame(
+                {"filename": ["filing1", "filing2", "filing3", "filing4", "filing5"]}
+            ),
+            pd.DataFrame(
+                {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+            ).set_index("filename"),
+            -1,
+            3,
+        ),
+        (
+            pd.DataFrame(
+                {"filename": ["filing1", "filing2", "filing3", "filing4", "filing5"]}
+            ),
+            pd.DataFrame(
+                {"filename": ["filing1", "filing2"], "success": [True, True]}
+            ).set_index("filename"),
+            -1,
+            0,
+        ),
+        (
+            pd.DataFrame(
+                {"filename": ["filing1", "filing2", "filing3", "filing4", "filing5"]}
+            ),
+            pd.DataFrame(
+                {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+            ).set_index("filename"),
+            2,
+            1,
+        ),
+    ],
+)
 def test_sec10k_extract_pipeline(
     filings_metadata,
-    first_run_results,
-    second_run_results,
+    previous_extraction_metadata,
+    num_filings,
+    num_failed,
     test_tracker_factory,
+    get_most_recent_mlflow_run_factory,
 ):
     """Test high level extraction workflow."""
 
@@ -85,35 +132,52 @@ def test_sec10k_extract_pipeline(
         def get_metadata(self):
             return filings_metadata
 
+    @op(out={"extraction_metadata": Out(), "extracted": Out()})
+    def test_extract(
+        cloud_interface: GCSArchive,
+        filings_to_extract: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        md = filings_to_extract
+        md["success"] = True
+        md.iloc[:num_failed, 1] = False
+        return md.set_index("filename"), pd.DataFrame()
+
     dataset_name = "test_pipeline"
     experiment_name = f"{dataset_name}_extraction"
     test_tracker = test_tracker_factory(experiment_name)
 
-    for i, results in enumerate([first_run_results, second_run_results]):
-
-        @op(out={"extraction_metadata": Out(), "extracted": Out()})
-        def _fake_extract(_filings_to_extract):
-            return results[0], results[1]
-
-        resources = {
-            "basic_10k_extract_config": ChunkFilingsConfig(
-                num_filings=3 if i == 0 else -1
+    test_graph = extract_graph_factory("test_extract", test_extract)
+    resources = {
+        "experiment_tracker": test_tracker,
+        "cloud_interface": FakeArchive(),
+        "mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
+            experiment_tracker=test_tracker
+        ),
+    }
+    extraction_metadata = (
+        test_graph.to_job()
+        .execute_in_process(
+            resources=resources,
+            run_config=RunConfig(
+                {
+                    "get_filings_to_extract": FilingsToExtractConfig(
+                        num_filings=num_filings
+                    )
+                }
             ),
-            "experiment_tracker": test_tracker,
-            "cloud_interface": FakeArchive(),
-        }
-        test_job = extract_model_factory(
-            dataset_name, _fake_extract, resources=resources
+            input_values={
+                "previous_extraction_metadata": previous_extraction_metadata,
+                "previous_extracted": pd.DataFrame(),
+            },
         )
-        metadata = results[0]
+        .output_value()
+    )
 
-        # Run extract method
-        test_job.execute_in_process()
-        run = get_most_recent_run(experiment_name, dagster_run_id="")
-        assert run.data.metrics["num_failed"] == (~metadata["success"]).sum()
-        assert run.data.metrics["ratio_extracted"] == len(metadata) / len(
-            filings_metadata
-        )
+    run = get_most_recent_mlflow_run_factory(experiment_name)
+    assert run.data.metrics["num_failed"] == num_failed
+    assert run.data.metrics["ratio_extracted"] == len(extraction_metadata) / len(
+        filings_metadata
+    )
 
 
 @pytest.mark.parametrize(
