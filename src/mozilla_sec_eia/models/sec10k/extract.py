@@ -18,14 +18,15 @@ from dagster import (
     OpDefinition,
     OpExecutionContext,
     Out,
+    ResourceDefinition,
     graph,
     op,
 )
 from mlflow.entities import Run
 
 from mozilla_sec_eia.library.experiment_tracking import (
+    ExperimentTracker,
     get_most_recent_run,
-    get_tracking_resource_name,
 )
 from mozilla_sec_eia.library.models import pudl_model
 
@@ -117,73 +118,80 @@ class GetMostRecentRunResultsConfig(Config):
     continue_run: bool = False
 
 
+@op(
+    out={
+        "extraction_metadata": Out(),
+        "extracted": Out(),
+        "filings_to_extract": Out(),
+    },
+)
+def get_most_recent_run_results(
+    context: OpExecutionContext,
+    config: GetMostRecentRunResultsConfig,
+    experiment_tracker: ExperimentTracker,
+    filings_to_extract: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Get results from previous run to continue extraction."""
+    extraction_metadata = pd.DataFrame(
+        {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+    ).set_index("filename")
+    extracted = pd.DataFrame()
+
+    if config.continue_run:
+        most_recent_run = get_most_recent_run(
+            experiment_tracker.experiment_name, context.run_id
+        )
+        extraction_metadata = ExtractionMetadataSchema.validate(
+            _load_artifact_as_csv(
+                most_recent_run, "/extraction_metadata.csv"
+            ).set_index("filename")
+        )
+        extracted = _load_artifact_as_parquet(most_recent_run, "/extracted.parquet")
+        filings_to_extract = filings_to_extract[
+            ~filings_to_extract["filename"].isin(extraction_metadata.index)
+        ]
+
+    return extraction_metadata, extracted, filings_to_extract
+
+
+@op(required_resource_keys=["experiment_tracker"])
+def log_extraction_data(
+    metadata: pd.DataFrame,
+    extraction_metadata: list[pd.DataFrame],
+    extracted: list[pd.DataFrame],
+    previous_run_extraction_metadata: pd.DataFrame,
+    previous_run_extracted_data: pd.DataFrame,
+):
+    """Log results from extraction run."""
+    extraction_metadata = pd.concat(
+        extraction_metadata + [previous_run_extraction_metadata]
+    )
+    extracted = pd.concat(extracted + [previous_run_extracted_data])
+    # Use metadata to log generic metrics
+    extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
+    mlflow.log_metrics(
+        {
+            "num_failed": (~extraction_metadata["success"]).sum(),
+            "ratio_extracted": len(extraction_metadata) / len(metadata),
+        }
+    )
+
+    # Log the extraction results + metadata for future reference/analysis
+    _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
+    _log_artifact_as_parquet(extracted, "extracted.parquet")
+
+
 def extract_model_factory(
-    dataset_name: str, extract_op: OpDefinition | GraphDefinition
+    dataset_name: str,
+    extract_op: OpDefinition | GraphDefinition,
+    resources: dict[str, ResourceDefinition] = {},
 ):
     """Produce a `pudl_model` to extract data from sec10k filings."""
     experiment_name = f"{dataset_name}_extraction"
-    experiment_tracker_resource = get_tracking_resource_name(experiment_name)
-
-    @op(
-        required_resource_keys=[experiment_tracker_resource],
-        out={
-            "extraction_metadata": Out(),
-            "extracted": Out(),
-            "filings_to_extract": Out(),
-        },
-    )
-    def get_most_recent_run_results(
-        context: OpExecutionContext,
-        config: GetMostRecentRunResultsConfig,
-        filings_to_extract: pd.DataFrame,
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        extraction_metadata = pd.DataFrame(
-            {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
-        ).set_index("filename")
-        extracted = pd.DataFrame()
-
-        if config.continue_run:
-            most_recent_run = get_most_recent_run(experiment_name, context.run_id)
-            extraction_metadata = ExtractionMetadataSchema.validate(
-                _load_artifact_as_csv(
-                    most_recent_run, "/extraction_metadata.csv"
-                ).set_index("filename")
-            )
-            extracted = _load_artifact_as_parquet(most_recent_run, "/extracted.parquet")
-            filings_to_extract = filings_to_extract[
-                ~filings_to_extract["filename"].isin(extraction_metadata.index)
-            ]
-
-        return extraction_metadata, extracted, filings_to_extract
-
-    @op(required_resource_keys=[experiment_tracker_resource])
-    def log_extraction_data(
-        metadata: pd.DataFrame,
-        extraction_metadata: list[pd.DataFrame],
-        extracted: list[pd.DataFrame],
-        previous_run_extraction_metadata: pd.DataFrame,
-        previous_run_extracted_data: pd.DataFrame,
-    ):
-        extraction_metadata = pd.concat(
-            extraction_metadata + [previous_run_extraction_metadata]
-        )
-        extracted = pd.concat(extracted + [previous_run_extracted_data])
-        # Use metadata to log generic metrics
-        extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
-        mlflow.log_metrics(
-            {
-                "num_failed": (~extraction_metadata["success"]).sum(),
-                "ratio_extracted": len(extraction_metadata) / len(metadata),
-            }
-        )
-
-        # Log the extraction results + metadata for future reference/analysis
-        _log_artifact_as_csv(extraction_metadata, "extraction_metadata.csv")
-        _log_artifact_as_parquet(extracted, "extracted.parquet")
 
     @pudl_model(
         experiment_name=experiment_name,
-        resources={"cloud_interface": cloud_interface_resource},
+        resources={"cloud_interface": cloud_interface_resource} | resources,
     )
     @graph(name=experiment_name)
     def extract_filings():

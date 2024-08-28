@@ -138,11 +138,6 @@ class ExperimentTracker(ConfigurableResource):
         return experiment_id
 
 
-def get_tracking_resource_name(experiment_name: str):
-    """Return expected name of experiment tracking resource given experiment name."""
-    return f"{experiment_name}_tracker"
-
-
 def experiment_tracker_teardown_factory(
     experiment_name: str,
 ) -> ExperimentTracker:
@@ -151,7 +146,7 @@ def experiment_tracker_teardown_factory(
 
     @op(
         name=f"{experiment_name}_tracker_teardown",
-        required_resource_keys=[f"{experiment_name}_tracker"],
+        required_resource_keys=["experiment_tracker"],
     )
     def teardown_experiment_tracker(_results):
         mlflow.end_run()

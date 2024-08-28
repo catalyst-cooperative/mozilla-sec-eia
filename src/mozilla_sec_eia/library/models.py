@@ -41,7 +41,6 @@ from mlflow.entities.run_status import RunStatus
 from .experiment_tracking import (
     ExperimentTracker,
     experiment_tracker_teardown_factory,
-    get_tracking_resource_name,
 )
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
@@ -104,16 +103,13 @@ def pudl_model(
             model_config |= get_yml_config(model_graph.name)
 
         # Add resources to resource dict
-        MODEL_RESOURCES.update(
-            {
-                get_tracking_resource_name(experiment_name): ExperimentTracker(
-                    experiment_name=experiment_name,
-                    tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
-                    project=EnvVar("GCS_PROJECT"),
-                ),
-            }
-            | resources
-        )
+        model_resources = {
+            "experiment_tracker": ExperimentTracker(
+                experiment_name=experiment_name,
+                tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
+                project=EnvVar("GCS_PROJECT"),
+            ),
+        } | resources
 
         default_config = RunConfig(
             ops=model_config,
@@ -123,9 +119,7 @@ def pudl_model(
         def _collect_results(model_graph_output, _implicit_dependencies: list):
             return model_graph_output
 
-        @success_hook(
-            required_resource_keys={get_tracking_resource_name(experiment_name)}
-        )
+        @success_hook(required_resource_keys={"experiment_tracker"})
         def _log_config_hook(context: HookContext):
             if (config := context.op_config) is not None:
                 mlflow.log_params(
@@ -135,9 +129,7 @@ def pudl_model(
                     }
                 )
 
-        @failure_hook(
-            required_resource_keys={get_tracking_resource_name(experiment_name)}
-        )
+        @failure_hook(required_resource_keys={"experiment_tracker"})
         def _end_mlflow_run_with_failure(context: HookContext):
             exception = context.op_exception
 
@@ -150,6 +142,7 @@ def pudl_model(
             name=get_pudl_model_job_name(experiment_name),
             config=default_config,
             hooks={_log_config_hook, _end_mlflow_run_with_failure},
+            resource_defs=model_resources,
         )
         def model_job(**kwargs):
             tracker_teardown = experiment_tracker_teardown_factory(

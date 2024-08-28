@@ -7,7 +7,6 @@ import pytest
 from dagster import Out, op
 from mozilla_sec_eia.library.experiment_tracking import (
     get_most_recent_run,
-    get_tracking_resource_name,
 )
 from mozilla_sec_eia.models.sec10k.extract import (
     ChunkFilingsConfig,
@@ -96,18 +95,20 @@ def test_sec10k_extract_pipeline(
         def _fake_extract(_filings_to_extract):
             return results[0], results[1]
 
-        test_job = extract_model_factory(dataset_name, _fake_extract)
         resources = {
             "basic_10k_extract_config": ChunkFilingsConfig(
                 num_filings=3 if i == 0 else -1
             ),
-            get_tracking_resource_name(experiment_name): test_tracker,
+            "experiment_tracker": test_tracker,
             "cloud_interface": FakeArchive(),
         }
+        test_job = extract_model_factory(
+            dataset_name, _fake_extract, resources=resources
+        )
         metadata = results[0]
 
         # Run extract method
-        test_job.execute_in_process(resources=resources)
+        test_job.execute_in_process()
         run = get_most_recent_run(experiment_name, dagster_run_id="")
         assert run.data.metrics["num_failed"] == (~metadata["success"]).sum()
         assert run.data.metrics["ratio_extracted"] == len(metadata) / len(
