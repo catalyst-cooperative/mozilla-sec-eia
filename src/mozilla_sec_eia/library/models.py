@@ -31,10 +31,12 @@ from dagster import (
     OpDefinition,
     ResourceDefinition,
     RunConfig,
+    failure_hook,
     job,
     op,
     success_hook,
 )
+from mlflow.entities.run_status import RunStatus
 
 from .experiment_tracking import (
     ExperimentTracker,
@@ -133,10 +135,21 @@ def pudl_model(
                     }
                 )
 
+        @failure_hook(
+            required_resource_keys={get_tracking_resource_name(experiment_name)}
+        )
+        def _end_mlflow_run_with_failure(context: HookContext):
+            exception = context.op_exception
+
+            if isinstance(exception, KeyboardInterrupt):
+                mlflow.end_run(status=RunStatus.to_string(RunStatus.KILLED))
+            else:
+                mlflow.end_run(status=RunStatus.to_string(RunStatus.FAILED))
+
         @job(
             name=get_pudl_model_job_name(experiment_name),
             config=default_config,
-            hooks={_log_config_hook},
+            hooks={_log_config_hook, _end_mlflow_run_with_failure},
         )
         def model_asset(**kwargs):
             tracker_teardown = experiment_tracker_teardown_factory(
