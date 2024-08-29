@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from dagster import Out, RunConfig, op
 from mozilla_sec_eia.library.experiment_tracking.mlflow_io_managers import (
+    MlflowMetricsIOManager,
     MlflowPandasArtifactIOManager,
 )
 from mozilla_sec_eia.models.sec10k.extract import (
@@ -108,24 +109,23 @@ def test_sec10k_extract_pipeline(
         "mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
             experiment_tracker=test_tracker
         ),
+        "mlflow_metrics_io_manager": MlflowMetricsIOManager(
+            experiment_tracker=test_tracker,
+        ),
     }
-    extraction_metadata, extracted = (
-        test_graph.to_job()
-        .execute_in_process(
-            resources=resources,
-            run_config=RunConfig(
-                {
-                    "get_filings_to_extract": FilingsToExtractConfig(
-                        num_filings=num_filings
-                    )
-                }
-            ),
-            input_values={
-                "previous_extraction_metadata": previous_extraction_metadata,
-                "previous_extracted": pd.DataFrame(),
-            },
-        )
-        .output_value()
+    graph_result = test_graph.to_job().execute_in_process(
+        resources=resources,
+        run_config=RunConfig(
+            {"get_filings_to_extract": FilingsToExtractConfig(num_filings=num_filings)}
+        ),
+        input_values={
+            "previous_extraction_metadata": previous_extraction_metadata,
+            "previous_extracted": pd.DataFrame(),
+        },
+    )
+    extraction_metadata, metrics = (
+        graph_result.output_value("extraction_metadata"),
+        graph_result.output_value("extraction_metrics"),
     )
 
     run = get_most_recent_mlflow_run_factory(experiment_name)
@@ -133,6 +133,7 @@ def test_sec10k_extract_pipeline(
     assert run.data.metrics["ratio_extracted"] == len(extraction_metadata) / len(
         filings_metadata
     )
+    assert run.data.metrics == metrics
 
 
 @pytest.mark.parametrize(

@@ -16,12 +16,32 @@ from .mlflow_resource import ExperimentTracker
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-class MlflowPandasArtifactIOManager(ConfigurableIOManager):
-    """Implement IO manager for logging/loading parquet files as mlflow artifacts."""
+class MlflowBaseIOManager(ConfigurableIOManager):
+    """Specify base config and implement helper functions for mlflow io-managers."""
 
     experiment_tracker: ExperimentTracker
     #: By default handles artifacts from current run, but can be used with previous run.
     use_previous_mlflow_run: bool = False
+
+    def _get_run_info(self) -> Run:
+        """Use `dagster_run_id` and `use_previous_mlflow_run` to get run info from appropriate mlflow run."""
+        dagster_run_id = self.experiment_tracker.get_run_id()
+        filter_string = f"tags.dagster_run_id='{dagster_run_id}'"
+        if self.use_previous_mlflow_run:
+            filter_string = f"tags.dagster_run_id!='{dagster_run_id}'"
+
+        run_metadata = mlflow.search_runs(
+            experiment_names=[self.experiment_tracker.experiment_name],
+            filter_string=filter_string,
+        )
+
+        # Mlflow returns runs ordered by their runtime, so it's easy to grab the latest run
+        return mlflow.get_run(run_metadata.loc[0, "run_id"])
+
+
+class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
+    """Implement IO manager for logging/loading parquet files as mlflow artifacts."""
+
     file_type: Literal["parquet", "csv"] = "parquet"
 
     def _load_artifact_as_csv(self, run: Run, artifact_name: str) -> pd.DataFrame:
@@ -69,21 +89,6 @@ class MlflowPandasArtifactIOManager(ConfigurableIOManager):
         else:
             self._log_artifact_as_parquet(df, artifact_name=f"{context.name}.parquet")
 
-    def _get_run_info(self) -> Run:
-        """Use `dagster_run_id` and `use_previous_mlflow_run` to get run info from appropriate mlflow run."""
-        dagster_run_id = self.experiment_tracker.get_run_id()
-        filter_string = f"tags.dagster_run_id='{dagster_run_id}'"
-        if self.use_previous_mlflow_run:
-            filter_string = f"tags.dagster_run_id!='{dagster_run_id}'"
-
-        run_metadata = mlflow.search_runs(
-            experiment_names=[self.experiment_tracker.experiment_name],
-            filter_string=filter_string,
-        )
-
-        # Mlflow returns runs ordered by their runtime, so it's easy to grab the latest run
-        return mlflow.get_run(run_metadata.loc[0, "run_id"])
-
     def load_input(self, context: InputContext) -> pd.DataFrame:
         """Handle loading dataframes from mlflow run artifacts."""
         mlflow_run = self._get_run_info()
@@ -98,3 +103,18 @@ class MlflowPandasArtifactIOManager(ConfigurableIOManager):
             )
 
         return df
+
+
+class MlflowMetricsIOManager(MlflowBaseIOManager):
+    """Log/load models from mlflow tracking server."""
+
+    experiment_tracker: ExperimentTracker
+
+    def handle_output(self, context: OutputContext, obj: dict[str, float]):
+        """Log metrics to mlflow run/experiment from `experiment_tracker`."""
+        mlflow.log_metrics(obj)
+
+    def load_input(self, context: OutputContext) -> dict[str, float]:
+        """Log metrics to mlflow run/experiment from `experiment_tracker`."""
+        run = self._get_run_info()
+        return run.data.metrics

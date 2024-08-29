@@ -3,7 +3,6 @@
 import logging
 import math
 
-import mlflow
 import numpy as np
 import pandas as pd
 import pandera as pa
@@ -75,21 +74,17 @@ class GetMostRecentRunResultsConfig(Config):
     continue_run: bool = False
 
 
-@op(required_resource_keys=["experiment_tracker"])
+@op(out={"basic_extraction_metrics": Out(io_manager_key="mlflow_metrics_io_manager")})
 def log_extraction_data(
     metadata: pd.DataFrame,
     extraction_metadata: pd.DataFrame,
     extracted: pd.DataFrame,
 ):
     """Log results from extraction run."""
-    mlflow.log_metrics(
-        {
-            "num_failed": (~extraction_metadata["success"]).sum(),
-            "ratio_extracted": len(extraction_metadata) / len(metadata),
-        }
-    )
-
-    return extraction_metadata, extracted
+    return {
+        "num_failed": (~extraction_metadata["success"]).sum(),
+        "ratio_extracted": len(extraction_metadata) / len(metadata),
+    }
 
 
 @op(
@@ -147,7 +142,14 @@ def extract_graph_factory(
     """Produce a `pudl_model` to extract data from sec10k filings."""
     experiment_name = f"{dataset_name}_extraction"
 
-    @graph(name=experiment_name)
+    @graph(
+        name=experiment_name,
+        out={
+            "extraction_metadata": GraphOut(),
+            "extracted": GraphOut(),
+            "extraction_metrics": GraphOut(),
+        },
+    )
     def extract_filings(previous_extraction_metadata, previous_extracted):
         metadata = get_filing_metadata()
         filings_to_extract = get_filings_to_extract(
@@ -165,11 +167,12 @@ def extract_graph_factory(
             previous_extracted,
         )
 
-        return log_extraction_data(
+        extraction_metrics = log_extraction_data(
             metadata,
             extraction_metadata,
             extracted,
         )
+        return extraction_metadata, extracted, extraction_metrics
 
     return extract_filings
 

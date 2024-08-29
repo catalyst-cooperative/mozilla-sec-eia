@@ -39,6 +39,7 @@ from mlflow.entities.run_status import RunStatus
 
 from .experiment_tracking import (
     ExperimentTracker,
+    MlflowMetricsIOManager,
     MlflowPandasArtifactIOManager,
     experiment_tracker_teardown_factory,
 )
@@ -136,6 +137,9 @@ def pudl_model(
             "previous_run_mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
                 use_previous_mlflow_run=True,
                 file_type=mlflow_pandas_io_manager_file_type,
+                experiment_tracker=experiment_tracker,
+            ),
+            "mlflow_metrics_io_manager": MlflowMetricsIOManager(
                 experiment_tracker=experiment_tracker,
             ),
         } | resources
