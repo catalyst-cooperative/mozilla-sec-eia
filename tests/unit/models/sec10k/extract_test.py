@@ -11,7 +11,6 @@ from mozilla_sec_eia.library.experiment_tracking.mlflow_io_managers import (
 )
 from mozilla_sec_eia.models.sec10k.extract import (
     FilingsToExtractConfig,
-    compute_validation_metrics,
     extract_graph_factory,
 )
 from mozilla_sec_eia.models.sec10k.utils.cloud import GCSArchive
@@ -134,76 +133,3 @@ def test_sec10k_extract_pipeline(
         filings_metadata
     )
     assert run.data.metrics == metrics
-
-
-@pytest.mark.parametrize(
-    "computed_set,validation_set,expected_precision,expected_recall",
-    [
-        (
-            pd.DataFrame({"value": ["a", "b", "c"]}, index=[0, 1, 2]),
-            pd.DataFrame({"value": ["a", "b", "c"]}, index=[0, 1, 2]),
-            1,
-            1,
-        ),
-        (
-            pd.DataFrame({"value": ["a", "b", "c", "d"]}, index=[0, 1, 2, 3]),
-            pd.DataFrame({"value": ["a", "b", "c"]}, index=[0, 1, 2]),
-            3 / 4,
-            1,
-        ),
-        (
-            pd.DataFrame({"value": ["a", "b", "c"]}, index=[0, 1, 2]),
-            pd.DataFrame({"value": ["a", "b", "c", "d"]}, index=[0, 1, 2, 3]),
-            1,
-            3 / 4,
-        ),
-        (
-            pd.DataFrame({"value": ["a", "b", "d"]}, index=[0, 1, 2]),
-            pd.DataFrame({"value": ["a", "b", "c"]}, index=[0, 1, 2]),
-            2 / 3,
-            2 / 3,
-        ),
-        (
-            pd.DataFrame(
-                {"value": ["a", "b", "d"], "idx0": ["1", "2", "3"], "idx1": [4, 2, 1]}
-            ).set_index(["idx0", "idx1"]),
-            pd.DataFrame(
-                {"value": ["a", "b", "c"], "idx0": ["1", "2", "3"], "idx1": [4, 2, 1]}
-            ).set_index(["idx0", "idx1"]),
-            2 / 3,
-            2 / 3,
-        ),
-        (
-            pd.DataFrame(
-                {
-                    "value": ["a", "b", "c", "d"],
-                    "idx0": ["1", "2", "3", "4"],
-                    "idx1": [4, 2, 1, 5],
-                }
-            ).set_index(["idx0", "idx1"]),
-            pd.DataFrame(
-                {"value": ["a", "b", "c"], "idx0": ["1", "2", "3"], "idx1": [4, 2, 1]}
-            ).set_index(["idx0", "idx1"]),
-            3 / 4,
-            1,
-        ),
-        (
-            pd.DataFrame(
-                {"value": ["c", "b", "a"], "idx0": ["3", "2", "1"], "idx1": [1, 2, 4]}
-            ).set_index(["idx0", "idx1"]),
-            pd.DataFrame(
-                {"value": ["a", "b", "c"], "idx0": ["1", "2", "3"], "idx1": [4, 2, 1]}
-            ).set_index(["idx0", "idx1"]),
-            1,
-            1,
-        ),
-    ],
-)
-def test_compute_validation_metrics(
-    computed_set, validation_set, expected_precision, expected_recall
-):
-    """Test validation metrics with test sets."""
-    metrics = compute_validation_metrics(computed_set, validation_set, "value")
-
-    assert metrics["precision"] == expected_precision
-    assert metrics["recall"] == expected_recall

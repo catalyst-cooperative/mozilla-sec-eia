@@ -3,11 +3,6 @@
 from . import models
 
 
-def get_ml_model_resources():
-    """Return default configuration for all PUDL models."""
-    return models.MODEL_RESOURCES
-
-
-def get_ml_model_jobs() -> list[str]:
+def get_ml_pipeline_jobs() -> list[str]:
     """Return all jobs created through `pudl_model` decorator."""
-    return list(models.PUDL_MODELS.values())
+    return list(models.PUDL_PIPELINES.values())

@@ -18,11 +18,9 @@ values can be edited here. This configuration will override both default values 
 yaml configuration, but will only be used for a single run.
 """
 
-import importlib
 import logging
 
 import mlflow
-import yaml
 from dagster import (
     EnvVar,
     GraphDefinition,
@@ -36,30 +34,16 @@ from dagster import (
     success_hook,
 )
 from mlflow.entities.run_status import RunStatus
+from pydantic import BaseModel
 
-from .experiment_tracking import (
+from ..experiment_tracking import (
     ExperimentTracker,
-    MlflowMetricsIOManager,
-    MlflowPandasArtifactIOManager,
     experiment_tracker_teardown_factory,
+    get_mlflow_io_manager,
 )
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
-MODEL_RESOURCES = {}
-PUDL_MODELS = {}
-
-
-def get_yml_config(experiment_name: str) -> dict:
-    """Load model configuration from yaml file."""
-    config_file = (
-        importlib.resources.files("pudl.package_data.settings") / "pudl_models.yml"
-    )
-    config = yaml.safe_load(config_file.open("r"))
-
-    if not (model_config := config.get(experiment_name)):
-        raise RuntimeError(f"No {experiment_name} entry in {config_file}")
-
-    return {experiment_name: model_config}
+PUDL_PIPELINES = {}
 
 
 def get_default_config(model_graph: GraphDefinition) -> dict:
@@ -86,7 +70,7 @@ def get_default_config(model_graph: GraphDefinition) -> dict:
     return config
 
 
-def get_pudl_model_job_name(experiment_name: str) -> str:
+def get_pudl_pipeline_job_name(experiment_name: str) -> str:
     """Return expected pudl model job name based on experiment_name."""
     return f"{experiment_name}_job"
 
@@ -109,47 +93,51 @@ def _end_mlflow_run_with_failure(context: HookContext):
         mlflow.end_run(status=RunStatus.to_string(RunStatus.FAILED))
 
 
-def pudl_model(
-    experiment_name: str,
-    mlflow_pandas_io_manager_file_type: str = "parquet",
+class PudlPipelineConfig(BaseModel):
+    """Define a config format for `pudl_pipeline`'s."""
+
+    experiment_name: str
+    op_config: dict = {}
+    required_mlflow_io_managers: list[str] = [
+        "mlflow_pandas_artifact_io_manager",
+        "previous_run_mlflow_pandas_artifact_io_manager",
+        "mlflow_metrics_io_manager",
+    ]
+    pandas_io_file_type: str = "parquet"
+
+
+def pudl_pipeline(
+    config: PudlPipelineConfig,
     resources: dict[str, ResourceDefinition] = {},
-    config_from_yaml: bool = False,
 ) -> JobDefinition:
     """Decorator for an ML model that will handle providing configuration to dagster."""
 
     def _decorator(model_graph: GraphDefinition):
-        model_config = get_default_config(model_graph)
-        if config_from_yaml:
-            model_config |= get_yml_config(model_graph.name)
+        model_config = get_default_config(model_graph) | config.op_config
 
         # Add resources to resource dict
         experiment_tracker = ExperimentTracker(
-            experiment_name=experiment_name,
+            experiment_name=config.experiment_name,
             tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
             project=EnvVar("GCS_PROJECT"),
         )
-        model_resources = {
-            "experiment_tracker": experiment_tracker,
-            "mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
-                file_type=mlflow_pandas_io_manager_file_type,
-                experiment_tracker=experiment_tracker,
-            ),
-            "previous_run_mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
-                use_previous_mlflow_run=True,
-                file_type=mlflow_pandas_io_manager_file_type,
-                experiment_tracker=experiment_tracker,
-            ),
-            "mlflow_metrics_io_manager": MlflowMetricsIOManager(
-                experiment_tracker=experiment_tracker,
-            ),
-        } | resources
+        model_resources = (
+            {"experiment_tracker": experiment_tracker}
+            | {
+                key: get_mlflow_io_manager(
+                    key, experiment_tracker, config.pandas_io_file_type
+                )
+                for key in config.required_mlflow_io_managers
+            }
+            | resources
+        )
 
         default_config = RunConfig(
             ops=model_config,
         )
 
         @job(
-            name=get_pudl_model_job_name(experiment_name),
+            name=get_pudl_pipeline_job_name(config.experiment_name),
             config=default_config,
             hooks={_log_config_hook, _end_mlflow_run_with_failure},
             resource_defs=model_resources,
@@ -163,7 +151,7 @@ def pudl_model(
             # Pass output to teardown to create a dependency
             tracker_teardown(graph_output)
 
-        PUDL_MODELS[get_pudl_model_job_name(experiment_name)] = model_job
+        PUDL_PIPELINES[get_pudl_pipeline_job_name(config.experiment_name)] = model_job
         return model_job
 
     return _decorator

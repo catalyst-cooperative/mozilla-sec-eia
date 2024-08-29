@@ -20,7 +20,7 @@ from dagster import (
     op,
 )
 
-from mozilla_sec_eia.library.models import pudl_model
+from mozilla_sec_eia.library.models import PudlPipelineConfig, pudl_pipeline
 
 from . import basic_10k
 from .utils.cloud import GCSArchive, cloud_interface_resource
@@ -246,51 +246,16 @@ def get_starting_data():
 basic_10k_extract_graph = extract_graph_factory("basic_10k", basic_10k.extract)
 
 
-@pudl_model(
-    "basic_10k_extraction", resources={"cloud_interface": cloud_interface_resource}
+basic_10k_extract_config = PudlPipelineConfig(
+    experiment_name="basic_10k_extraction",
+)
+
+
+@pudl_pipeline(
+    basic_10k_extract_config, resources={"cloud_interface": cloud_interface_resource}
 )
 @graph
 def basic_10k_extraction_model():
     """Implement basic 10k extraction pudl_model."""
     previous_extraction_metadata, previous_extracted = get_starting_data()
     return basic_10k_extract_graph(previous_extraction_metadata, previous_extracted)
-
-
-def compute_validation_metrics(
-    computed_set: pd.DataFrame,
-    validation_set: pd.DataFrame,
-    value_col: str,
-) -> dict:
-    """Compute precision and recall for extraction compared to validation set.
-
-    Arg:
-        computed_set: Extracted data.
-        validation_set: Expected extraction results.
-        value_col: Column to compare when computing metrics.
-    """
-    # Get initial length of both sets
-    computed_len = len(computed_set)
-    validation_len = len(validation_set)
-
-    # Get index of rows only in one set and make Null in other set
-    idx_validation_only = validation_set.index.difference(computed_set.index)
-    padded_compute_set = pd.concat(
-        [
-            computed_set[value_col],
-            pd.Series([None] * len(idx_validation_only), index=idx_validation_only),
-        ]
-    ).sort_index()
-    idx_compute_only = computed_set.index.difference(validation_set.index)
-    padded_validation_set = pd.concat(
-        [
-            validation_set[value_col],
-            pd.Series([None] * len(idx_compute_only), index=idx_compute_only),
-        ]
-    ).sort_index()
-
-    true_positives = (padded_compute_set == padded_validation_set).sum()
-
-    return {
-        "precision": true_positives / computed_len,
-        "recall": true_positives / validation_len,
-    }
