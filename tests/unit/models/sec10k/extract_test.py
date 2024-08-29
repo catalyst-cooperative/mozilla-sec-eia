@@ -18,51 +18,6 @@ from mozilla_sec_eia.models.sec10k.utils.cloud import GCSArchive
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-@pytest.fixture
-def filings_metadata() -> pd.DataFrame:
-    """Return fake filing metadata."""
-    return pd.DataFrame(
-        {
-            "filename": [
-                "filing1",
-                "filing2",
-                "filing3",
-                "filing3",
-                "filing4",
-                "filing5",
-            ],
-        }
-    )
-
-
-@pytest.fixture
-def first_run_results():
-    """Metadata and extracted table from first run of extractor."""
-    return (
-        pd.DataFrame(
-            {
-                "filename": ["filing1", "filing2", "filing3"],
-                "success": [True, True, False],
-            }
-        ).set_index("filename"),
-        pd.DataFrame({"column": ["extracted table (not needed for test)"]}),
-    )
-
-
-@pytest.fixture
-def second_run_results():
-    """Metadata and extracted table from first run of extractor."""
-    return (
-        pd.DataFrame(
-            {
-                "filename": ["filing1", "filing2", "filing3", "filing4", "filing5"],
-                "success": [True, True, False, True, True],
-            },
-        ).set_index("filename"),
-        pd.DataFrame({"column": ["extracted table (not needed for test)"]}),
-    )
-
-
 @pytest.mark.parametrize(
     "filings_metadata,previous_extraction_metadata,num_filings,num_failed",
     [
@@ -154,7 +109,7 @@ def test_sec10k_extract_pipeline(
             experiment_tracker=test_tracker
         ),
     }
-    extraction_metadata = (
+    extraction_metadata, extracted = (
         test_graph.to_job()
         .execute_in_process(
             resources=resources,

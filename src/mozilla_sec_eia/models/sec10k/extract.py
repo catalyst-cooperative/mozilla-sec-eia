@@ -75,27 +75,13 @@ class GetMostRecentRunResultsConfig(Config):
     continue_run: bool = False
 
 
-@op(
-    required_resource_keys=["experiment_tracker"],
-    out={
-        "extraction_metadata": Out(io_manager_key="mlflow_pandas_artifact_io_manager"),
-        "extracted": Out(io_manager_key="mlflow_pandas_artifact_io_manager"),
-    },
-)
+@op(required_resource_keys=["experiment_tracker"])
 def log_extraction_data(
     metadata: pd.DataFrame,
-    extraction_metadata: list[pd.DataFrame],
-    extracted: list[pd.DataFrame],
-    previous_run_extraction_metadata: pd.DataFrame,
-    previous_run_extracted_data: pd.DataFrame,
+    extraction_metadata: pd.DataFrame,
+    extracted: pd.DataFrame,
 ):
     """Log results from extraction run."""
-    extraction_metadata = pd.concat(
-        extraction_metadata + [previous_run_extraction_metadata]
-    )
-    extracted = pd.concat(extracted + [previous_run_extracted_data])
-    # Use metadata to log generic metrics
-    extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
     mlflow.log_metrics(
         {
             "num_failed": (~extraction_metadata["success"]).sum(),
@@ -103,7 +89,30 @@ def log_extraction_data(
         }
     )
 
-    # Return metadata and extracted data (they'll be logged as artifacts by io-manager)
+    return extraction_metadata, extracted
+
+
+@op(
+    required_resource_keys=["experiment_tracker"],
+    out={
+        "extraction_metadata": Out(io_manager_key="mlflow_pandas_artifact_io_manager"),
+        "extracted": Out(io_manager_key="mlflow_pandas_artifact_io_manager"),
+    },
+)
+def merge_extracted_data(
+    extraction_metadata: list[pd.DataFrame],
+    extracted: list[pd.DataFrame],
+    previous_run_extraction_metadata: pd.DataFrame,
+    previous_run_extracted_data: pd.DataFrame,
+):
+    """Data is extracted in parallel ops, merge these plus any data from previous run."""
+    extraction_metadata = pd.concat(
+        extraction_metadata + [previous_run_extraction_metadata]
+    )
+    extracted = pd.concat(extracted + [previous_run_extracted_data])
+    # Use metadata to log generic metrics
+    extraction_metadata = ExtractionMetadataSchema.validate(extraction_metadata)
+
     return extraction_metadata, extracted
 
 
@@ -149,13 +158,17 @@ def extract_graph_factory(
 
         filing_chunks = chunk_filings(filings_to_extract)
         extraction_metadata, extracted = filing_chunks.map(extract_op)
-
-        return log_extraction_data(
-            metadata,
+        extraction_metadata, extracted = merge_extracted_data(
             extraction_metadata.collect(),
             extracted.collect(),
             previous_extraction_metadata,
             previous_extracted,
+        )
+
+        return log_extraction_data(
+            metadata,
+            extraction_metadata,
+            extracted,
         )
 
     return extract_filings
@@ -227,6 +240,9 @@ def get_starting_data():
     return merge_branches([previous_data, new_data])
 
 
+basic_10k_extract_graph = extract_graph_factory("basic_10k", basic_10k.extract)
+
+
 @pudl_model(
     "basic_10k_extraction", resources={"cloud_interface": cloud_interface_resource}
 )
@@ -234,9 +250,7 @@ def get_starting_data():
 def basic_10k_extraction_model():
     """Implement basic 10k extraction pudl_model."""
     previous_extraction_metadata, previous_extracted = get_starting_data()
-    return extract_graph_factory("basic_10k", basic_10k.extract)(
-        previous_extraction_metadata, previous_extracted
-    )
+    return basic_10k_extract_graph(previous_extraction_metadata, previous_extracted)
 
 
 def compute_validation_metrics(
