@@ -33,7 +33,6 @@ from dagster import (
     RunConfig,
     failure_hook,
     job,
-    op,
     success_hook,
 )
 from mlflow.entities.run_status import RunStatus
@@ -91,6 +90,24 @@ def get_pudl_model_job_name(experiment_name: str) -> str:
     return f"{experiment_name}_job"
 
 
+@success_hook(required_resource_keys={"experiment_tracker"})
+def _log_config_hook(context: HookContext):
+    if (config := context.op_config) is not None:
+        mlflow.log_params(
+            {f"{context.op.name}.{param}": value for param, value in config.items()}
+        )
+
+
+@failure_hook(required_resource_keys={"experiment_tracker"})
+def _end_mlflow_run_with_failure(context: HookContext):
+    exception = context.op_exception
+
+    if isinstance(exception, KeyboardInterrupt):
+        mlflow.end_run(status=RunStatus.to_string(RunStatus.KILLED))
+    else:
+        mlflow.end_run(status=RunStatus.to_string(RunStatus.FAILED))
+
+
 def pudl_model(
     experiment_name: str,
     mlflow_pandas_io_manager_file_type: str = "parquet",
@@ -126,29 +143,6 @@ def pudl_model(
         default_config = RunConfig(
             ops=model_config,
         )
-
-        @op
-        def _collect_results(model_graph_output, _implicit_dependencies: list):
-            return model_graph_output
-
-        @success_hook(required_resource_keys={"experiment_tracker"})
-        def _log_config_hook(context: HookContext):
-            if (config := context.op_config) is not None:
-                mlflow.log_params(
-                    {
-                        f"{context.op.name}.{param}": value
-                        for param, value in config.items()
-                    }
-                )
-
-        @failure_hook(required_resource_keys={"experiment_tracker"})
-        def _end_mlflow_run_with_failure(context: HookContext):
-            exception = context.op_exception
-
-            if isinstance(exception, KeyboardInterrupt):
-                mlflow.end_run(status=RunStatus.to_string(RunStatus.KILLED))
-            else:
-                mlflow.end_run(status=RunStatus.to_string(RunStatus.FAILED))
 
         @job(
             name=get_pudl_model_job_name(experiment_name),
