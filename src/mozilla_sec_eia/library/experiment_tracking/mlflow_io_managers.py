@@ -95,11 +95,11 @@ class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
 
         if self.file_type == "csv":
             df = self._load_artifact_as_csv(
-                mlflow_run, artifact_name=f"{context.name}.csv"
+                mlflow_run, artifact_name=f"{context.upstream_output.name}.csv"
             )
         else:
             df = self._load_artifact_as_parquet(
-                mlflow_run, artifact_name=f"{context.name}.parquet"
+                mlflow_run, artifact_name=f"{context.upstream_output.name}.parquet"
             )
 
         return df

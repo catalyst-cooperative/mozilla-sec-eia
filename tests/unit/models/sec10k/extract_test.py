@@ -13,7 +13,6 @@ from mozilla_sec_eia.models.sec10k.extract import (
     FilingsToExtractConfig,
     extract_graph_factory,
 )
-from mozilla_sec_eia.models.sec10k.utils.cloud import GCSArchive
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -73,23 +72,8 @@ def test_sec10k_extract_pipeline(
 ):
     """Test high level extraction workflow."""
 
-    class FakeArchive(GCSArchive):
-        filings_bucket_name: str = ""
-        labels_bucket_name: str = ""
-        metadata_db_instance_connection: str = ""
-        user: str = ""
-        metadata_db_name: str = ""
-        project: str = ""
-
-        def setup_for_execution(self, context):
-            pass
-
-        def get_metadata(self):
-            return filings_metadata
-
     @op(out={"extraction_metadata": Out(), "extracted": Out()})
     def test_extract(
-        cloud_interface: GCSArchive,
         filings_to_extract: pd.DataFrame,
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         md = filings_to_extract
@@ -104,7 +88,6 @@ def test_sec10k_extract_pipeline(
     test_graph = extract_graph_factory("test_extract", test_extract)
     resources = {
         "experiment_tracker": test_tracker,
-        "cloud_interface": FakeArchive(),
         "mlflow_pandas_artifact_io_manager": MlflowPandasArtifactIOManager(
             experiment_tracker=test_tracker
         ),
@@ -118,6 +101,7 @@ def test_sec10k_extract_pipeline(
             {"get_filings_to_extract": FilingsToExtractConfig(num_filings=num_filings)}
         ),
         input_values={
+            "metadata": filings_metadata,
             "previous_extraction_metadata": previous_extraction_metadata,
             "previous_extracted": pd.DataFrame(),
         },

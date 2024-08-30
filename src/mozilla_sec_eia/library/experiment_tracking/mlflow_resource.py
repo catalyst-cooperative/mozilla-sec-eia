@@ -78,7 +78,9 @@ class ExperimentTracker(ConfigurableResource):
 
             if (active_run := mlflow.active_run()) is not None:
                 if active_run.info.run_id != mlflow_run_id:
-                    raise RuntimeError("Found conflicting active mlflow run!")
+                    raise RuntimeError(
+                        f"Found conflicting active mlflow run! - {active_run.info.run_id} != {mlflow_run_id}"
+                    )
                 yield self
             else:
                 # Create new run under specified experiment
@@ -154,9 +156,8 @@ class ExperimentTracker(ConfigurableResource):
 
 def experiment_tracker_teardown_factory(
     experiment_name: str,
-) -> ExperimentTracker:
+):
     """Use config to create an experiment tracker."""
-    atexit.unregister(mlflow.end_run)
 
     @op(
         name=f"{experiment_name}_tracker_teardown",

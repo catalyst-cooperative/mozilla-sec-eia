@@ -30,6 +30,7 @@ from dagster import (
     ResourceDefinition,
     RunConfig,
     failure_hook,
+    graph,
     job,
     success_hook,
 )
@@ -112,8 +113,10 @@ def pudl_pipeline(
 ) -> JobDefinition:
     """Decorator for an ML model that will handle providing configuration to dagster."""
 
-    def _decorator(model_graph: GraphDefinition):
-        model_config = get_default_config(model_graph) | config.op_config
+    def _decorator(pipeline_func):
+        model_graph = graph(pipeline_func)
+        model_config = get_default_config(model_graph)
+        model_config[model_graph.name]["ops"] |= config.op_config
 
         # Add resources to resource dict
         experiment_tracker = ExperimentTracker(

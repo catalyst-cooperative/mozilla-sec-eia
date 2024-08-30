@@ -1,13 +1,46 @@
 """Implement common utilities/functions for validating models."""
 
+from importlib import resources
+
 import pandas as pd
-from dagster import OpDefinition, Out, op
+from dagster import Config, Out, op
 
 
-def _pandas_compute_precision_recall(
+class LoadValidationConfig(Config):
+    """Configuration for loading validation data."""
+
+    filename: str
+
+
+@op(
+    required_resource_keys=["experiment_tracker"],
+    out={"validation_set": Out(io_manager_key="mlflow_pandas_artifact_io_manager")},
+)
+def load_validation_data(config: LoadValidationConfig) -> pd.DataFrame:
+    """Load csv with validation data from `package_data` directory."""
+    return pd.read_csv(
+        resources.files("mozilla_sec_eia.package_data.validation_data")
+        / config.filename
+    )
+
+
+class PandasPrecisionRecallConfig(Config):
+    """Configuration for computing precision/recall from pandas dataframe."""
+
+    value_col: str
+
+
+@op(
+    out={
+        "pandas_precision_recall_metrics": Out(
+            io_manager_key="mlflow_metrics_io_manager"
+        )
+    }
+)
+def pandas_compute_precision_recall(
+    config: PandasPrecisionRecallConfig,
     computed_set: pd.DataFrame,
     validation_set: pd.DataFrame,
-    value_col: str,
 ) -> dict:
     """Compute precision and recall for extraction compared to validation set.
 
@@ -24,14 +57,14 @@ def _pandas_compute_precision_recall(
     idx_validation_only = validation_set.index.difference(computed_set.index)
     padded_compute_set = pd.concat(
         [
-            computed_set[value_col],
+            computed_set[config.value_col],
             pd.Series([None] * len(idx_validation_only), index=idx_validation_only),
         ]
     ).sort_index()
     idx_compute_only = computed_set.index.difference(validation_set.index)
     padded_validation_set = pd.concat(
         [
-            validation_set[value_col],
+            validation_set[config.value_col],
             pd.Series([None] * len(idx_compute_only), index=idx_compute_only),
         ]
     ).sort_index()
@@ -42,17 +75,3 @@ def _pandas_compute_precision_recall(
         "precision": true_positives / computed_len,
         "recall": true_positives / validation_len,
     }
-
-
-def pandas_precision_recall_op_factory(value_col: str) -> OpDefinition:
-    """Return an op that will compute precision/recall on `value_col` of dataframe."""
-
-    @op(
-        out={
-            "precision_recall_metrics": Out(io_manager_key="mlflow_metrics_io_manager")
-        }
-    )
-    def _precision_recall_op(computed_set: pd.DataFrame, validation_set: pd.DataFrame):
-        return _pandas_compute_precision_recall(computed_set, validation_set, value_col)
-
-    return _precision_recall_op

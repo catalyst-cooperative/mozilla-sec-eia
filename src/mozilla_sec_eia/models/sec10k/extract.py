@@ -20,6 +20,7 @@ from dagster import (
     op,
 )
 
+from mozilla_sec_eia.library.experiment_tracking import validation
 from mozilla_sec_eia.library.models import PudlPipelineConfig, pudl_pipeline
 
 from . import basic_10k
@@ -42,10 +43,10 @@ class ExtractionMetadataSchema(pa.DataFrameModel):
 
 @op
 def get_filing_metadata(
-    cloud_interface: GCSArchive,
+    cloud_interface: GCSArchive, filenames: list[str] | None = None
 ) -> pd.DataFrame:
     """Return filing metadata."""
-    return cloud_interface.get_metadata()
+    return cloud_interface.get_metadata(filenames=filenames)
 
 
 class ChunkFilingsConfig(Config):
@@ -150,8 +151,7 @@ def extract_graph_factory(
             "extraction_metrics": GraphOut(),
         },
     )
-    def extract_filings(previous_extraction_metadata, previous_extracted):
-        metadata = get_filing_metadata()
+    def extract_filings(metadata, previous_extraction_metadata, previous_extracted):
         filings_to_extract = get_filings_to_extract(
             metadata,
             previous_extraction_metadata,
@@ -254,8 +254,47 @@ basic_10k_extract_config = PudlPipelineConfig(
 @pudl_pipeline(
     basic_10k_extract_config, resources={"cloud_interface": cloud_interface_resource}
 )
-@graph
-def basic_10k_extraction_model():
+def basic_10k_extraction_pipeline():
     """Implement basic 10k extraction pudl_model."""
+    filing_metadata = get_filing_metadata()
     previous_extraction_metadata, previous_extracted = get_starting_data()
-    return basic_10k_extract_graph(previous_extraction_metadata, previous_extracted)
+    return basic_10k_extract_graph(
+        filing_metadata, previous_extraction_metadata, previous_extracted
+    )
+
+
+@op
+def get_validation_filenames(validation_set: pd.DataFrame) -> list[str]:
+    """Return filenames in validation set."""
+    return list(validation_set["filename"])
+
+
+basic_10k_extract_validation_config = PudlPipelineConfig(
+    experiment_name="basic_10k_extraction_validation",
+    pandas_io_file_type="csv",
+    op_config={
+        "load_validation_data": validation.LoadValidationConfig(
+            filename="basic_10k_labels.csv"
+        ),
+        "pandas_compute_precision_recall": validation.PandasPrecisionRecallConfig(
+            value_col="value"
+        ),
+    },
+)
+
+
+@pudl_pipeline(
+    basic_10k_extract_validation_config,
+    resources={"cloud_interface": cloud_interface_resource},
+)
+def basic_10k_extraction_validation_pipeline():
+    """Job to validate basic 10k extraction."""
+    validation_set = validation.load_validation_data()
+    filing_metadata = get_filing_metadata(
+        filenames=get_validation_filenames(validation_set)
+    )
+    empty_metadata, empty_extracted = get_starting_data()
+    _, extracted, _ = basic_10k_extract_graph(
+        filing_metadata, empty_metadata, empty_extracted
+    )
+    return validation.pandas_compute_precision_recall(extracted, validation_set)
