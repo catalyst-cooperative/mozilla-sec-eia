@@ -5,7 +5,7 @@ from pathlib import Path
 
 import mlflow
 import pytest
-from mozilla_sec_eia.library.experiment_tracking import ExperimentTracker
+from mozilla_sec_eia.library.mlflow import MlflowInterface
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ def test_dir() -> Path:
     return Path(__file__).parent
 
 
-class TestTracker(ExperimentTracker):
-    """Create sub-class of `ExperimentTracker` to use in testing context.
+class TestTracker(MlflowInterface):
+    """Create sub-class of `MlflowInterface` to use in testing context.
 
     Test class creates an in-memory sqlite db for tracking, and a temporary directory
     for artifact storage.

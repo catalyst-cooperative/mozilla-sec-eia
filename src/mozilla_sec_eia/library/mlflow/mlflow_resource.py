@@ -9,87 +9,71 @@ to a file named 'experiments.sqlite' in the base directory of your PUDL repo, bu
 this is a configurable value, which can be found in the dagster UI.
 """
 
-import atexit
 import logging
 import os
 from contextlib import contextmanager
 
 import mlflow
-from dagster import ConfigurableResource, In, InitResourceContext, Nothing, op
+from dagster import ConfigurableResource, EnvVar, InitResourceContext
 from google.cloud import secretmanager
 from pydantic import PrivateAttr
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-class ExperimentTracker(ConfigurableResource):
-    """Class to manage tracking a machine learning model using MLflow.
+class MlflowInterface(ConfigurableResource):
+    """Dagster resource to interface with mlflow tracking server.
 
-    The following command will launch the mlflow UI to view model results:
-    `mlflow ui --backend-store-uri {tracking_uri}`. From here, you can compare metrics
-    from multiple runs, and track performance.
+    This resource handles configuring mlflow to interface with a remote tracking server.
+    When `tracking_enabled` is set to True, this resource will also start an mlflow
+    run that can be used to log metrics/paramaters/artifcats which will be associated
+    with a validation or training run. In most cases this resource does not need to
+    be referenced directly, and instead the io-mangers defined in
+    :mod:`.mlflow_io_managers` should be used.
 
-    This class is designed to be created using the `op` :func:`create_experiment_tracker`.
-    This allows the `ExperimentTracker` to be passed around within a Dagster `graph`,
-    and be used for mlflow logging in any of the `op`'s that make up the `graph`. This
-    is useful because Dagster executes `op`'s in separate processes, while mlflow does
-    not maintain state between processes. This design also allows configuration of
-    the ExperimentTracker to be set from the Dagster UI.
-
-    Currently, we are only doing experiment tracking in a local context, but if we were
-    to setup a tracking server, we could point the `tracking_uri` at this remote server
-    without having to modify the models. Experiment tracking can also be done outside
-    of the PUDL context. If doing exploratory work in a notebook, you can use mlflow
-    directly in a notebook with the same experiment name used here, and mlflow will
-    seamlessly integrate the results with those from PUDL runs.
+    Note: `tracking_enabled` SHOULD NOT be set when using a dagster multi-process
+    executor. mlflow will create a new run for every process, which gets very messy.
     """
 
-    tracking_uri: str
+    tracking_uri: str = EnvVar("MLFLOW_TRACKING_URI")
     tracking_enabled: bool = True
     artifact_location: str | None = None
     experiment_name: str
     tags: dict = {}
-    project: str
+    project: str = EnvVar("GCS_PROJECT")
 
-    _run_id: str = PrivateAttr()
+    _mlflow_run_id: str = PrivateAttr()
 
     @contextmanager
     def yield_for_execution(
         self,
         context: InitResourceContext,
-    ) -> "ExperimentTracker":
+    ) -> "MlflowInterface":
         """Create experiment tracker for specified experiment."""
-        self._run_id = context.run_id
+        dagster_run_id = context.run_id
+        self._mlflow_run_id = None
+        self._configure_mlflow()
 
         if self.tracking_enabled:
-            self._configure_mlflow()
-
-            # Hack to stop mlflow from ending run at process barrier
-            # This is borrowed from the official dagster mlflow resource found here:
-            # https://github.com/dagster-io/dagster/blob/master/python_modules/libraries/dagster-mlflow/dagster_mlflow/resources.py
-            atexit.unregister(mlflow.end_run)
-
             # Get run_id associated with current dagster run
             experiment_id = self.get_or_create_experiment(
                 experiment_name=self.experiment_name,
                 artifact_location=self.artifact_location,
             )
-            mlflow_run_id = self._get_mlflow_run_id(context.run_id, experiment_id)
-
-            if (active_run := mlflow.active_run()) is not None:
-                if active_run.info.run_id != mlflow_run_id:
-                    raise RuntimeError(
-                        f"Found conflicting active mlflow run! - {active_run.info.run_id} != {mlflow_run_id}"
-                    )
+            # Create new run under specified experiment
+            with mlflow.start_run(
+                experiment_id=experiment_id,
+                tags=self.tags | {"dagster_run_id": dagster_run_id},
+            ) as run:
+                self._mlflow_run_id = run.info.run_id
                 yield self
-            else:
-                # Create new run under specified experiment
-                with mlflow.start_run(
-                    run_id=mlflow_run_id,
-                    experiment_id=experiment_id,
-                    tags=self.tags | {"dagster_run_id": context.run_id},
-                ):
-                    yield self
+        else:
+            yield self
+
+    @property
+    def mlflow_run_id(self) -> str | None:
+        """Return run id of current run."""
+        return self._mlflow_run_id
 
     def _get_tracking_password(self, version_id: str = "latest"):
         """Get tracking server password from gcloud secrets."""
@@ -115,22 +99,6 @@ class ExperimentTracker(ConfigurableResource):
         os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
         os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
-    def _get_mlflow_run_id(self, dagster_run_id: str, experiment_id: str):
-        """Search for existing run tagged with dagster run id or start new run."""
-        run_df = mlflow.search_runs(
-            experiment_ids=[experiment_id],
-            filter_string=f"tags.dagster_run_id='{dagster_run_id}'",
-        )
-
-        run_id = None
-        if not run_df.empty:
-            run_id = run_df.loc[0, "run_id"]
-        return run_id
-
-    def get_run_id(self):
-        """Return current dagster run_id."""
-        return self._run_id
-
     @staticmethod
     def get_or_create_experiment(
         experiment_name: str, artifact_location: str = ""
@@ -152,22 +120,6 @@ class ExperimentTracker(ConfigurableResource):
             )
 
         return experiment_id
-
-
-def experiment_tracker_teardown_factory(
-    experiment_name: str,
-):
-    """Use config to create an experiment tracker."""
-
-    @op(
-        name=f"{experiment_name}_tracker_teardown",
-        required_resource_keys=["experiment_tracker"],
-        ins={"model_done": In(Nothing)},
-    )
-    def teardown_experiment_tracker():
-        mlflow.end_run()
-
-    return teardown_experiment_tracker
 
 
 def get_most_recent_run(

@@ -170,7 +170,6 @@ class GCSArchive(ConfigurableResource):
     _filings_bucket = PrivateAttr()
     _labels_bucket = PrivateAttr()
     _engine = PrivateAttr()
-    _metadata_df = PrivateAttr(default=None)
 
     def setup_for_execution(self, context):
         """Initialize interface to filings archive on GCS."""
@@ -214,16 +213,13 @@ class GCSArchive(ConfigurableResource):
         with Session(self._engine) as session:
             yield session
 
-    def get_metadata(self, filenames: list[str] | None = None) -> pd:
+    def get_metadata(self, year_quarter: str | None = None) -> pd:
         """Return dataframe of filing metadata."""
-        if self._metadata_df is None:
-            selection = select(Sec10kMetadata)
-            if filenames is not None:
-                selection = selection.where(Sec10kMetadata.filename.in_(filenames))
+        selection = select(Sec10kMetadata)
+        if year_quarter is not None:
+            selection = selection.where(Sec10kMetadata.year_quarter == year_quarter)
 
-            self._metadata_df = pd.read_sql(selection, self._engine)
-
-        return self._metadata_df
+        return pd.read_sql(selection, self._engine)
 
     def get_filing_blob(self, year_quarter: str, path: str) -> storage.Blob:
         """Return Blob pointing to file in GCS bucket."""

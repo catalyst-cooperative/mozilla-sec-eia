@@ -11,7 +11,7 @@ import pandas as pd
 from dagster import ConfigurableIOManager, InputContext, OutputContext
 from mlflow.entities import Run
 
-from .mlflow_resource import ExperimentTracker
+from .mlflow_resource import MlflowInterface
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -19,28 +19,16 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 class MlflowBaseIOManager(ConfigurableIOManager):
     """Specify base config and implement helper functions for mlflow io-managers."""
 
-    experiment_tracker: ExperimentTracker
+    mlflow_interface: MlflowInterface
     #: By default handles artifacts from current run, but can be used with previous run.
-    use_previous_mlflow_run: bool = False
 
     def _get_run_info(self) -> Run:
-        """Use `dagster_run_id` and `use_previous_mlflow_run` to get run info from appropriate mlflow run."""
-        dagster_run_id = self.experiment_tracker.get_run_id()
-        filter_string = f"tags.dagster_run_id='{dagster_run_id}'"
-        if self.use_previous_mlflow_run:
-            filter_string = f"tags.dagster_run_id!='{dagster_run_id}'"
-
-        run_metadata = mlflow.search_runs(
-            experiment_names=[self.experiment_tracker.experiment_name],
-            filter_string=filter_string,
-        )
-
-        # Mlflow returns runs ordered by their runtime, so it's easy to grab the latest run
-        return mlflow.get_run(run_metadata.loc[0, "run_id"])
+        """Get mlflow `Run` object using current run id."""
+        return mlflow.get_run(self.mlflow_interface.mlflow_run_id)
 
 
 class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
-    """Implement IO manager for logging/loading parquet files as mlflow artifacts."""
+    """Implement IO manager for logging/loading dataframes as mlflow artifacts."""
 
     file_type: Literal["parquet", "csv"] = "parquet"
 
@@ -79,11 +67,6 @@ class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
 
     def handle_output(self, context: OutputContext, df: pd.DataFrame):
         """Attach dataframe to run as artifact."""
-        if self.use_previous_mlflow_run:
-            raise NotImplementedError(
-                "MlflowPandasArtifactIOManager can not be used to add artifacts to completed run."
-            )
-
         if self.file_type == "csv":
             self._log_artifact_as_csv(df, artifact_name=f"{context.name}.csv")
         else:
@@ -106,15 +89,13 @@ class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
 
 
 class MlflowMetricsIOManager(MlflowBaseIOManager):
-    """Log/load models from mlflow tracking server."""
-
-    experiment_tracker: ExperimentTracker
+    """Log/load metrics from mlflow tracking server."""
 
     def handle_output(self, context: OutputContext, obj: dict[str, float]):
-        """Log metrics to mlflow run/experiment from `experiment_tracker`."""
+        """Load metrics to mlflow run/experiment created by `MlflowInterface`."""
         mlflow.log_metrics(obj)
 
     def load_input(self, context: OutputContext) -> dict[str, float]:
-        """Log metrics to mlflow run/experiment from `experiment_tracker`."""
+        """Log metrics to mlflow run/experiment created by `MlflowInterface`."""
         run = self._get_run_info()
         return run.data.metrics
