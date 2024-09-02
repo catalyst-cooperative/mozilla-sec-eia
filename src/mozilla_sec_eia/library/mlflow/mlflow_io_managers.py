@@ -20,7 +20,6 @@ class MlflowBaseIOManager(ConfigurableIOManager):
     """Specify base config and implement helper functions for mlflow io-managers."""
 
     mlflow_interface: MlflowInterface
-    #: By default handles artifacts from current run, but can be used with previous run.
 
     def _get_run_info(self) -> Run:
         """Get mlflow `Run` object using current run id."""
