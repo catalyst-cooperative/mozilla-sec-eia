@@ -41,6 +41,8 @@ def test_sec10k_extraction():
 
     # Create fake Sec10kExtractor
     class TestSec10kExtractor(Sec10kExtractor):
+        name: str = "test_extractor"
+
         def extract_filings(self, filing_metadata):
             pd.testing.assert_frame_equal(filing_metadata, fake_filing_metadata)
             return fake_extraction_metadata, fake_extracted

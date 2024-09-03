@@ -2,22 +2,25 @@
 
 import logging
 import os
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import torch
 from datasets import Dataset
+from pydantic import PrivateAttr
 from transformers import (
-    AutoProcessor,
-    LayoutLMv3ForTokenClassification,
     Pipeline,
     pipeline,
 )
 from transformers.tokenization_utils_base import BatchEncoding
 
+from ..extract import Sec10kExtractor
 from ..utils.cloud import get_metadata_filename
 from ..utils.layoutlm import (
+    LayoutlmResource,
     get_id_label_conversions,
     iob_to_label,
     normalize_bboxes,
@@ -184,84 +187,106 @@ def _get_data(dataset):
     yield from dataset
 
 
-def perform_inference(
-    pdfs_dir: Path,
-    model: LayoutLMv3ForTokenClassification,
-    processor: AutoProcessor,
-    extraction_metadata: pd.DataFrame,
-    dataset_ind: list = None,
-    labeled_json_dir: Path = None,
-    has_labels: bool = False,
-    device="cpu",
-):
-    """Predict entities with a fine-tuned model and extract Ex. 21 tables.
+class Exhibit21Extractor(Sec10kExtractor):
+    """Implement `Sec10kExtractor` interface for exhibit 21 data."""
 
-    This function starts by creating a HuggingFace dataset from PDFs in `pdfs_dir`
-    that the model can then perform inference on (`create_inference_dataset`).
-    Then it creates an instance of the custom LayoutLM inference pipeline and
-    runs the dataset through the pipeline. The pipeline outputs logits, predictions,
-    and an output dataframe with extracted Ex. 21 table.
+    layoutlm: LayoutlmResource
+    name: str = "exhibit21_extractor"
+    device: str = "cpu"
+    has_labels: bool = False
+    dataset_ind: list | None = None
+    _pdf_dir: Path = PrivateAttr()
+    _labeled_json_dir: Path | None = PrivateAttr(default=None)
 
-    Arguments:
-        pdfs_dir: Path to the directory with PDFs that are being used for inference.
-        model: A fine-tuned LayoutLM model.
-        processor: The tokenizer and encoder for model inputs.
-        extraction_metadata: A dataframe to track extraction success metrics. Should
-            have columns 'filename' and 'success'.
-        dataset_ind: A list of index numbers of dataset records to be used for inference
-            Default is None, in which the entire dataset created from the PDF directory
-            is used.
-        labeled_json_dir: Path to the directory with labeled JSONs from Label Studio. Cannot
-            be None if has_labels is True.
-        has_labels: Boolean, true if the data has associated labels that can be used in
-            visualizing and validating results.
-        device: String or int, specify what computation device to use for inference
-            i.e. "mps", "cpu", "cuda"
+    @contextmanager
+    def yield_for_execution(self, context):
+        """Setup temp path working directories."""
+        with (
+            tempfile.TemporaryDirectory() as pdf_dir,
+            tempfile.TemporaryDirectory() as labeled_json_dir,
+        ):
+            self._pdf_dir = pdf_dir
+            if self.has_labels:
+                self._labeled_json_dir = labeled_json_dir
+            yield self
 
-    Returns:
-        logits: A list of logits. The list is the length of the number of documents in the
-            dataset (number of PDFs in pdfs_dir). Each logit object in the list is of
-            shape (batch_size, seq_len, num_labels). Seq_len is
-            the same as token length (512 in this case).
-        predictions: A list of predictions. The list is the length of the number of documents
-            in the dataset (number of PDFs in pdfs_dir).
-            From the logits, we take the highest score for each token, using argmax.
-            This serves as the predicted label for each token. It is shape (seq_len) or token
-            length.
-        output_dfs: The extracted Ex. 21 tables. This is one big dataframe with an ID column
-            that is the filename of the extracted Ex. 21. Dataframe contains columns id,
-            subsidiary, loc, own_per.
-    """
-    dataset = create_inference_dataset(
-        pdfs_dir=pdfs_dir, labeled_json_dir=labeled_json_dir, has_labels=has_labels
-    )
-    if dataset_ind:
-        dataset = dataset.select(dataset_ind)
+    def extract_filings(
+        self, filing_metadata: pd.DataFrame
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Predict entities with a fine-tuned model and extract Ex. 21 tables.
 
-    # TODO: figure out device argument
-    pipe = pipeline(
-        "token-classification",
-        model=model,
-        tokenizer=processor,
-        pipeline_class=LayoutLMInferencePipeline,
-        device=device,
-    )
+        This function starts by creating a HuggingFace dataset from PDFs in `pdfs_dir`
+        that the model can then perform inference on (`create_inference_dataset`).
+        Then it creates an instance of the custom LayoutLM inference pipeline and
+        runs the dataset through the pipeline. The pipeline outputs logits, predictions,
+        and an output dataframe with extracted Ex. 21 table.
 
-    logits = []
-    predictions = []
-    all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
-    for logit, pred, output_df in pipe(_get_data(dataset)):
-        logits.append(logit)
-        predictions.append(pred)
-        if not output_df.empty:
-            filename = get_metadata_filename(output_df["id"].iloc[0])
-            extraction_metadata.loc[filename, ["success"]] = True
-        all_output_df = pd.concat([all_output_df, output_df])
-    all_output_df.columns.name = None
-    all_output_df = clean_extracted_df(all_output_df)
-    all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
-    all_output_df = all_output_df.reset_index(drop=True)
-    return logits, predictions, all_output_df, extraction_metadata
+        Arguments:
+            pdfs_dir: Path to the directory with PDFs that are being used for inference.
+            model: A fine-tuned LayoutLM model.
+            processor: The tokenizer and encoder for model inputs.
+            extraction_metadata: A dataframe to track extraction success metrics. Should
+                have columns 'filename' and 'success'.
+            dataset_ind: A list of index numbers of dataset records to be used for inference
+                Default is None, in which the entire dataset created from the PDF directory
+                is used.
+            labeled_json_dir: Path to the directory with labeled JSONs from Label Studio. Cannot
+                be None if has_labels is True.
+            has_labels: Boolean, true if the data has associated labels that can be used in
+                visualizing and validating results.
+            device: String or int, specify what computation device to use for inference
+                i.e. "mps", "cpu", "cuda"
+
+        Returns:
+            logits: A list of logits. The list is the length of the number of documents in the
+                dataset (number of PDFs in pdfs_dir). Each logit object in the list is of
+                shape (batch_size, seq_len, num_labels). Seq_len is
+                the same as token length (512 in this case).
+            predictions: A list of predictions. The list is the length of the number of documents
+                in the dataset (number of PDFs in pdfs_dir).
+                From the logits, we take the highest score for each token, using argmax.
+                This serves as the predicted label for each token. It is shape (seq_len) or token
+                length.
+            output_dfs: The extracted Ex. 21 tables. This is one big dataframe with an ID column
+                that is the filename of the extracted Ex. 21. Dataframe contains columns id,
+                subsidiary, loc, own_per.
+        """
+        dataset = create_inference_dataset(
+            pdfs_dir=self._pdf_dir,
+            labeled_json_dir=self._labeled_json_dir,
+            has_labels=self.has_labels,
+        )
+        if self.dataset_ind:
+            dataset = dataset.select(self.dataset_ind)
+
+        # TODO: figure out device argument
+        model, processor = self.layoutlm.get_model_components()
+        pipe = pipeline(
+            "token-classification",
+            model=model,
+            tokenizer=processor,
+            pipeline_class=LayoutLMInferencePipeline,
+            device=self.device,
+        )
+
+        logits = []
+        predictions = []
+        all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
+        extraction_metadata = pd.DataFrame(
+            {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+        ).set_index("filename")
+        for logit, pred, output_df in pipe(_get_data(dataset)):
+            logits.append(logit)
+            predictions.append(pred)
+            if not output_df.empty:
+                filename = get_metadata_filename(output_df["id"].iloc[0])
+                extraction_metadata.loc[filename, ["success"]] = True
+            all_output_df = pd.concat([all_output_df, output_df])
+        all_output_df.columns.name = None
+        all_output_df = clean_extracted_df(all_output_df)
+        all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
+        all_output_df = all_output_df.reset_index(drop=True)
+        return logits, predictions, all_output_df, extraction_metadata
 
 
 class LayoutLMInferencePipeline(Pipeline):

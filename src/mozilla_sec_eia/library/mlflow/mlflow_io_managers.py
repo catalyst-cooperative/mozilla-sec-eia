@@ -94,7 +94,7 @@ class MlflowMetricsIOManager(MlflowBaseIOManager):
         """Load metrics to mlflow run/experiment created by `MlflowInterface`."""
         mlflow.log_metrics(obj)
 
-    def load_input(self, context: OutputContext) -> dict[str, float]:
+    def load_input(self, context: InputContext) -> dict[str, float]:
         """Log metrics to mlflow run/experiment created by `MlflowInterface`."""
         run = self._get_run_info()
         return run.data.metrics

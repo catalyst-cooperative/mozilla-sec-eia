@@ -13,6 +13,8 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 class Basic10kExtractor(Sec10kExtractor):
     """Implement Sec10kExtractor for basic 10k company info data."""
 
+    name: str = "basic_10k_extractor"
+
     def _extract_10k(self, filing: Sec10K):
         """Extract basic company data from filing."""
         logger.info(f"Extracting 10K company data from filing: {filing.filename}")

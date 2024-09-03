@@ -27,7 +27,7 @@ from transformers import (
 )
 from transformers.data.data_collator import default_data_collator
 
-from ..utils.layoutlm import get_id_label_conversions, log_model
+from ..utils.layoutlm import get_id_label_conversions
 from .create_labeled_dataset import format_as_ner_annotations
 
 LABELS = [
@@ -191,4 +191,4 @@ def train_model(
     # Train inside mlflow run. Mlflow will automatically handle logging training metrcis
     with mlflow.start_run():
         trainer.train()
-        log_model(trainer)
+        # log_model(trainer)

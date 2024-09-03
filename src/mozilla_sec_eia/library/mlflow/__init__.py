@@ -1,5 +1,7 @@
 """Implement tooling to interface with mlflow experiment tracking."""
 
+from dagster import EnvVar
+
 from .mlflow_io_managers import (
     MlflowBaseIOManager,
     MlflowMetricsIOManager,
@@ -9,6 +11,14 @@ from .mlflow_resource import (
     MlflowInterface,
     get_most_recent_run,
 )
+
+mlflow_production_interface = MlflowInterface(
+    experiment_name="",
+    tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
+    project=EnvVar("GCS_PROJECT"),
+    tracking_enabled=False,
+)
+mlflow_train_test_interface = MlflowInterface.configure_at_launch()
 
 
 def get_mlflow_io_manager(

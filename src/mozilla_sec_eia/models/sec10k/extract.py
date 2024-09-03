@@ -10,6 +10,7 @@ class Sec10kExtractor(ConfigurableResource):
     """Base class for extracting SEC 10k data."""
 
     cloud_interface: GCSArchive
+    name: str
 
     def extract_filings(
         self, filing_metadata: pd.DataFrame
