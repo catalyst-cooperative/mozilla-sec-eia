@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 import pandas as pd
 from dagster import asset, build_asset_context, materialize
-from mozilla_sec_eia.models.sec10k.extract import Sec10kExtractor
-from mozilla_sec_eia.models.sec10k.pipeline import (
+from mozilla_sec_eia.models.sec10k.extract import (
+    Sec10kExtractor,
     sec10k_extraction_asset_factory,
     sec10k_filing_metadata,
 )
@@ -71,6 +71,7 @@ def test_sec10k_extraction():
         filing_metadata_asset_name="fake_filing_metadata_asset",
         extracted_asset_name="test_sec10k_extraction",
         extraction_metadata_asset_name="test_sec10k_extraction_metadata",
+        partitions_def=None,
     )
 
     # Run assets and review results

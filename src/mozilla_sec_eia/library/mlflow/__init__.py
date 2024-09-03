@@ -1,7 +1,5 @@
 """Implement tooling to interface with mlflow experiment tracking."""
 
-from dagster import EnvVar
-
 from .mlflow_io_managers import (
     MlflowBaseIOManager,
     MlflowMetricsIOManager,
@@ -11,14 +9,6 @@ from .mlflow_resource import (
     MlflowInterface,
     get_most_recent_run,
 )
-
-mlflow_production_interface = MlflowInterface(
-    experiment_name="",
-    tracking_uri=EnvVar("MLFLOW_TRACKING_URI"),
-    project=EnvVar("GCS_PROJECT"),
-    tracking_enabled=False,
-)
-mlflow_train_test_interface = MlflowInterface.configure_at_launch()
 
 
 def get_mlflow_io_manager(
@@ -40,3 +30,17 @@ def get_mlflow_io_manager(
         raise RuntimeError(f"MlFlow IO-manager, {key}, does not exist.")
 
     return io_manager
+
+
+mlflow_interface_resource = MlflowInterface.configure_at_launch()
+mlflow_validation_io_managers = {
+    "mlflow_metrics_io_manager": get_mlflow_io_manager(
+        "mlflow_metrics_io_manager",
+        mlflow_interface=mlflow_interface_resource,
+    ),
+    "mlflow_pandas_artifact_io_manager": get_mlflow_io_manager(
+        "mlflow_pandas_artifact_io_manager",
+        mlflow_interface=mlflow_interface_resource,
+        pandas_file_type="csv",
+    ),
+}

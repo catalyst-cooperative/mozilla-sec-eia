@@ -3,9 +3,16 @@
 import logging
 
 import pandas as pd
+from dagster import AssetIn, asset
 
-from .extract import Sec10kExtractor
-from .utils.cloud import Sec10K
+from mozilla_sec_eia.library import validation_helpers
+
+from .extract import (
+    Sec10kExtractor,
+    sec10k_extraction_asset_factory,
+    sec10k_filing_metadata,
+)
+from .utils.cloud import GCSArchive, Sec10K, cloud_interface_resource
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -99,3 +106,77 @@ class Basic10kExtractor(Sec10kExtractor):
                 ["filename", "filer_count", "block", "block_count", "key"]
             ),
         )
+
+
+@asset
+def basic_10k_validation_set() -> pd.DataFrame:
+    """Return dataframe containing basic 10k validation data."""
+    return validation_helpers.load_validation_data(
+        "basic_10k_labels.csv",
+        index_cols=["filename", "filer_count", "block", "block_count", "key"],
+    )
+
+
+basic_10k_extracted_validation_asset_name = "basic_10k_company_info_validation"
+
+
+@asset(
+    ins={
+        basic_10k_extracted_validation_asset_name: AssetIn(
+            basic_10k_extracted_validation_asset_name
+        ),
+        "basic_10k_validation_set": AssetIn(),
+    },
+    io_manager_key="mlflow_metrics_io_manager",
+)
+def basic_10k_extraction_validation_metrics(**kwargs):
+    """Compute basic 10k extraction validation metrics."""
+    computed = kwargs[basic_10k_extracted_validation_asset_name]
+    validation = kwargs["basic_10k_validation_set"]
+
+    return validation_helpers.pandas_compute_precision_recall(
+        computed, validation, value_col="value"
+    )
+
+
+@asset
+def basic_10k_validation_filing_metadata(
+    cloud_interface: GCSArchive,
+    basic_10k_validation_set: pd.DataFrame,
+) -> pd.DataFrame:
+    """Get sec 10k filing metadata from validation set."""
+    filing_metadata = cloud_interface.get_metadata()
+    return filing_metadata[
+        filing_metadata["filename"].isin(
+            basic_10k_validation_set.index.get_level_values("filename").unique()
+        )
+    ]
+
+
+basic_10k_extractor_resource = Basic10kExtractor(
+    cloud_interface=cloud_interface_resource
+)
+basic_10k_production_extraction = sec10k_extraction_asset_factory(
+    "basic_10k",
+    basic_10k_extractor_resource,
+    extraction_metadata_asset_name="basic_10k_extraction_metadata",
+    extracted_asset_name="basic_10k_company_info",
+)
+
+
+basic_10k_validation_extraction = sec10k_extraction_asset_factory(
+    "basic_10k_validation",
+    basic_10k_extractor_resource,
+    filing_metadata_asset_name="basic_10k_validation_filing_metadata",
+    extraction_metadata_asset_name="basic_10k_extraction_validation_metadata",
+    extracted_asset_name=basic_10k_extracted_validation_asset_name,
+)
+
+production_assets = [basic_10k_production_extraction, sec10k_filing_metadata]
+
+validation_assets = [
+    basic_10k_validation_extraction,
+    basic_10k_validation_set,
+    basic_10k_validation_filing_metadata,
+    basic_10k_extraction_validation_metrics,
+]
