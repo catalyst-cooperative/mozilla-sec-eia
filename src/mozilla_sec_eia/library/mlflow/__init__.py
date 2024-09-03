@@ -41,6 +41,5 @@ mlflow_train_test_io_managers = {
     "mlflow_pandas_artifact_io_manager": get_mlflow_io_manager(
         "mlflow_pandas_artifact_io_manager",
         mlflow_interface=mlflow_interface_resource,
-        pandas_file_type="csv",
     ),
 }
