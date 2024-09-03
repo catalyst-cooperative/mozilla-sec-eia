@@ -170,6 +170,8 @@ basic_10k_validation_extraction = sec10k_extraction_asset_factory(
     filing_metadata_asset_name="basic_10k_validation_filing_metadata",
     extraction_metadata_asset_name="basic_10k_extraction_validation_metadata",
     extracted_asset_name=basic_10k_extracted_validation_asset_name,
+    partitions_def=None,
+    io_manager_key="mlflow_pandas_artifact_io_manager",
 )
 
 production_assets = [basic_10k_production_extraction, sec10k_filing_metadata]

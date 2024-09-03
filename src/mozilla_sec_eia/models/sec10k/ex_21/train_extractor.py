@@ -7,9 +7,8 @@ from SEC 10K filings.
 
 from pathlib import Path
 
-import mlflow
 import numpy as np
-from dagster import Config
+from dagster import Config, asset
 from datasets import (
     Array2D,
     Array3D,
@@ -137,15 +136,15 @@ def load_test_train_set(
 class FineTuneConfig(Config):
     """Configuration to supply to `train_model`."""
 
-    labeled_json_path: str
+    labeled_json_path: str = "sec10k_filings/labeled_jsons/"
     gcs_training_data_dir: str = "labeled"
     output_dir: str = "layoutlm_trainer"
     test_size: float = 0.2
 
 
-def train_model(
+@asset(io_manager_key="layoutlm_io_manager")
+def layoutlm(
     config: FineTuneConfig,
-    layoutlm_mlflow_interface,
 ):
     """Train LayoutLM model with labeled data."""
     # Prepare model
@@ -189,6 +188,5 @@ def train_model(
     )
 
     # Train inside mlflow run. Mlflow will automatically handle logging training metrcis
-    with mlflow.start_run():
-        trainer.train()
-        # log_model(trainer)
+    trainer.train()
+    return trainer

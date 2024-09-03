@@ -33,7 +33,7 @@ def get_mlflow_io_manager(
 
 
 mlflow_interface_resource = MlflowInterface.configure_at_launch()
-mlflow_validation_io_managers = {
+mlflow_train_test_io_managers = {
     "mlflow_metrics_io_manager": get_mlflow_io_manager(
         "mlflow_metrics_io_manager",
         mlflow_interface=mlflow_interface_resource,

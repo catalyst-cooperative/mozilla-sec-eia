@@ -148,7 +148,7 @@ ex21_production_extraction = sec10k_extraction_asset_factory(
     "ex21",
     exhibit_21_extractor_resource,
     extraction_metadata_asset_name="ex21_extraction_metadata",
-    extracted_asset_name="ex21_company_info",
+    extracted_asset_name="ex21_company_ownership_info",
 )
 
 
@@ -158,6 +158,7 @@ ex21_validation_extraction = sec10k_extraction_asset_factory(
     filing_metadata_asset_name="ex21_validation_filing_metadata",
     extraction_metadata_asset_name="ex21_extraction_validation_metadata",
     extracted_asset_name=ex21_extracted_validation_asset_name,
+    partitions_def=None,
 )
 
 production_assets = [

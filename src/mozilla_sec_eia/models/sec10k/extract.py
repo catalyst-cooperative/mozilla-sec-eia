@@ -9,10 +9,11 @@ from dagster import (
     StaticPartitionsDefinition,
     asset,
     multi_asset,
-    with_resources,
 )
 
 from .utils.cloud import GCSArchive
+
+SEC10k_EXTRACTOR_RESOURCES = {}
 
 
 class Sec10kExtractor(ConfigurableResource):
@@ -54,6 +55,7 @@ def sec10k_extraction_asset_factory(
     filing_metadata_asset_name: str = "sec10k_filing_metadata",
     extraction_metadata_asset_name: str = "extraction_metadata",
     extracted_asset_name: str = "extraction_metadata",
+    io_manager_key: str | None = None,
 ):
     """Create asset to extract data from sec10k data.
 
@@ -72,8 +74,8 @@ def sec10k_extraction_asset_factory(
     @multi_asset(
         name=name,
         outs={
-            extraction_metadata_asset_name: AssetOut(),
-            extracted_asset_name: AssetOut(),
+            extraction_metadata_asset_name: AssetOut(io_manager_key=io_manager_key),
+            extracted_asset_name: AssetOut(io_manager_key=io_manager_key),
         },
         ins={"sec10k_filing_metadata": AssetIn(filing_metadata_asset_name)},
         partitions_def=partitions_def,
@@ -89,6 +91,5 @@ def sec10k_extraction_asset_factory(
         )
         return extraction_metadata, extracted
 
-    return with_resources([extract_filings], {sec10k_extractor.name: sec10k_extractor})[
-        0
-    ]
+    SEC10k_EXTRACTOR_RESOURCES[sec10k_extractor.name] = sec10k_extractor
+    return extract_filings

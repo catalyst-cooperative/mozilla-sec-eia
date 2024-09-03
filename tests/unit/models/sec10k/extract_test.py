@@ -65,9 +65,10 @@ def test_sec10k_extraction():
         return fake_filing_metadata
 
     # Create fake extraction asset with configured inputs
+    test_extractor = TestSec10kExtractor(cloud_interface=FakeArchive())
     extraction_multi_asset = sec10k_extraction_asset_factory(
         name="test_sec10k_extraction",
-        sec10k_extractor=TestSec10kExtractor(cloud_interface=FakeArchive()),
+        sec10k_extractor=test_extractor,
         filing_metadata_asset_name="fake_filing_metadata_asset",
         extracted_asset_name="test_sec10k_extraction",
         extraction_metadata_asset_name="test_sec10k_extraction_metadata",
@@ -75,7 +76,10 @@ def test_sec10k_extraction():
     )
 
     # Run assets and review results
-    result = materialize([fake_filing_metadata_asset, extraction_multi_asset])
+    result = materialize(
+        [fake_filing_metadata_asset, extraction_multi_asset],
+        resources={test_extractor.name: test_extractor},
+    )
     pd.testing.assert_frame_equal(
         result.asset_value("test_sec10k_extraction_metadata"), fake_extraction_metadata
     )

@@ -86,3 +86,13 @@ def create_validation_model_job(
         },
         **kwargs,
     )
+
+
+def create_training_job(
+    job_name: str,
+    assets: list[AssetsDefinition],
+    **kwargs,
+):
+    """Construct a dagster job meant to train a model and log with mlflow."""
+    # For now training job config is the same as validation
+    return create_validation_model_job(job_name, assets, **kwargs)
