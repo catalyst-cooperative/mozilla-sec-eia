@@ -89,6 +89,12 @@ seamless interface to the server.
 
 .. TODO: Add mlflow resource/io-manager examples
 
+Development
+-----------
+To launch the dagster UI to load all ``pudl-models``, run the command ``dagster dev``
+in the top-level of this repo. This will load the file ``worspace.yaml``, which points
+to each model. You can also work on a single model in isolation by running the command:
+``dagster dev -m mozilla_sec_eia.models.{your_cool_model}``.
 
 About Catalyst Cooperative
 ---------------------------------------------------------------------------------------
