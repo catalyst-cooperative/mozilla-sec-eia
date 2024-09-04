@@ -251,8 +251,14 @@ class Exhibit21Extractor(Sec10kExtractor):
                 that is the filename of the extracted Ex. 21. Dataframe contains columns id,
                 subsidiary, loc, own_per.
         """
+        filings_with_ex21 = filing_metadata[
+            ~filing_metadata["exhibit_21_version"].isna()
+        ]
+        self.cloud_interface.get_filings(
+            filings_with_ex21, cache_directory=self._pdf_dir, cache_pdf=True
+        )
         dataset = create_inference_dataset(
-            pdfs_dir=self._pdf_dir,
+            pdfs_dir=Path(self._pdf_dir),
             labeled_json_dir=self._labeled_json_dir,
             has_labels=self.has_labels,
         )
@@ -286,7 +292,7 @@ class Exhibit21Extractor(Sec10kExtractor):
         all_output_df = clean_extracted_df(all_output_df)
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
         all_output_df = all_output_df.reset_index(drop=True)
-        return logits, predictions, all_output_df, extraction_metadata
+        return extraction_metadata, all_output_df
 
 
 class LayoutLMInferencePipeline(Pipeline):
