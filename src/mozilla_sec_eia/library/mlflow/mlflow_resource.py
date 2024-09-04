@@ -77,17 +77,20 @@ class MlflowInterface(ConfigurableResource):
 
     def _get_tracking_password(self, version_id: str = "latest"):
         """Get tracking server password from gcloud secrets."""
-        # Create the Secret Manager client.
-        client = secretmanager.SecretManagerServiceClient()
+        # Password not required for local use
+        if "sqlite" not in self.tracking_uri:
+            # Create the Secret Manager client.
+            client = secretmanager.SecretManagerServiceClient()
 
-        # Build the resource name of the secret version.
-        name = f"projects/{self.project}/secrets/mlflow_admin_password/versions/{version_id}"
+            # Build the resource name of the secret version.
+            name = f"projects/{self.project}/secrets/mlflow_admin_password/versions/{version_id}"
 
-        # Access the secret version.
-        response = client.access_secret_version(name=name)
+            # Access the secret version.
+            response = client.access_secret_version(name=name)
 
-        # Return the decoded payload.
-        return response.payload.data.decode("UTF-8")
+            # Return the decoded payload.
+            return response.payload.data.decode("UTF-8")
+        return ""
 
     def _configure_mlflow(self):
         """Do runtime configuration of mlflow."""

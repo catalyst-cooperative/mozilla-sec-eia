@@ -28,9 +28,7 @@ def ex21_validation_filing_metadata(
     """Get sec 10k filing metadata from validation set."""
     filing_metadata = cloud_interface.get_metadata()
     return filing_metadata[
-        filing_metadata["filename"].isin(
-            ex21_validation_set.index.get_level_values("filename").unique()
-        )
+        filing_metadata["filename"].isin(ex21_validation_set["filename"].unique())
     ]
 
 
