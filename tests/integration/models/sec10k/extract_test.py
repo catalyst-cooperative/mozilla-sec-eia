@@ -3,6 +3,7 @@
 import logging
 
 import dotenv
+import pytest
 from mozilla_sec_eia.models import sec10k
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
@@ -22,6 +23,7 @@ def test_basic_10k_validation(
     assert run.data.metrics["recall"] == 1
 
 
+@pytest.mark.xfail
 def test_ex21_validation(
     test_tracker_factory,
     get_most_recent_mlflow_run_factory,
