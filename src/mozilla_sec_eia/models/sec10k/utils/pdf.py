@@ -122,7 +122,9 @@ def combine_doc_pages(doc):
         combined_height += pg_txt_height
 
     output_pdf = fitz.open()
-    combined_page = output_pdf.new_page(width=combined_width, height=combined_height)
+    combined_page = output_pdf.new_page(
+        width=float(combined_width), height=float(combined_height)
+    )
 
     for i in range(len(doc)):
         if i in blank_page_nums:
