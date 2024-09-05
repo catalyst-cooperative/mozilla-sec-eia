@@ -5,8 +5,10 @@ from dagster import (
     load_assets_from_modules,
     load_assets_from_package_module,
 )
+from upath import UPath
 
 from mozilla_sec_eia.library import model_jobs
+from mozilla_sec_eia.library.generic_io_managers import PandasParquetIOManager
 from mozilla_sec_eia.library.mlflow import (
     MlflowInterface,
     mlflow_interface_resource,
@@ -63,6 +65,9 @@ defs = Definitions(
         "mlflow_interface": mlflow_interface_resource,
         "layoutlm_io_manager": LayoutlmIOManager(
             mlflow_interface=mlflow_interface_resource
+        ),
+        "pandas_parquet_io_manager": PandasParquetIOManager(
+            base_path=UPath("gs://sec10k-outputs")
         ),
     }
     | mlflow_train_test_io_managers

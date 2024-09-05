@@ -161,6 +161,7 @@ basic_10k_production_extraction = sec10k_extraction_asset_factory(
     basic_10k_extractor_resource,
     extraction_metadata_asset_name="basic_10k_extraction_metadata",
     extracted_asset_name="basic_10k_company_info",
+    io_manager_key="pandas_parquet_io_manager",
 )
 
 

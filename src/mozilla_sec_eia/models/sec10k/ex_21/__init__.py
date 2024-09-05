@@ -147,6 +147,7 @@ ex21_production_extraction = sec10k_extraction_asset_factory(
     exhibit_21_extractor_resource,
     extraction_metadata_asset_name="ex21_extraction_metadata",
     extracted_asset_name="ex21_company_ownership_info",
+    io_manager_key="pandas_parquet_io_manager",
 )
 
 
