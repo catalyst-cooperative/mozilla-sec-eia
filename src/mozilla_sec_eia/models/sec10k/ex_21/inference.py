@@ -1,7 +1,6 @@
 """Module for formatting inputs and performing inference with a fine-tuned LayoutLM model."""
 
 import logging
-import math
 import os
 import tempfile
 from contextlib import contextmanager
@@ -197,7 +196,6 @@ class Exhibit21Extractor(ConfigurableResource):
     device: str = "cpu"
     has_labels: bool = False
     dataset_ind: list | None = None
-    filing_chunk_size: int = 8
     _pdf_dir: Path = PrivateAttr()
     _labeled_json_dir: Path | None = PrivateAttr(default=None)
 
@@ -258,55 +256,45 @@ class Exhibit21Extractor(ConfigurableResource):
             ~filing_metadata["exhibit_21_version"].isna()
         ]
 
-        filing_chunks = np.array_split(
-            filings_with_ex21,
-            math.ceil(len(filings_with_ex21) / self.filing_chunk_size),
+        self.cloud_interface.get_filings(
+            filings_with_ex21, cache_directory=self._pdf_dir, cache_pdf=True
+        )
+        dataset = create_inference_dataset(
+            pdfs_dir=Path(self._pdf_dir),
+            labeled_json_dir=self._labeled_json_dir,
+            has_labels=self.has_labels,
+        )
+        if self.dataset_ind:
+            dataset = dataset.select(self.dataset_ind)
+
+        # TODO: figure out device argument
+        model, processor = self.layoutlm.get_model_components()
+        pipe = pipeline(
+            "token-classification",
+            model=model,
+            tokenizer=processor,
+            pipeline_class=LayoutLMInferencePipeline,
+            device=self.device,
         )
 
-        all_outputs_dfs = []
-        extraction_metadata_dfs = []
-        for filings in filing_chunks:
-            self.cloud_interface.get_filings(
-                filings_with_ex21, cache_directory=self._pdf_dir, cache_pdf=True
-            )
-            dataset = create_inference_dataset(
-                pdfs_dir=Path(self._pdf_dir),
-                labeled_json_dir=self._labeled_json_dir,
-                has_labels=self.has_labels,
-            )
-            if self.dataset_ind:
-                dataset = dataset.select(self.dataset_ind)
-
-            # TODO: figure out device argument
-            model, processor = self.layoutlm.get_model_components()
-            pipe = pipeline(
-                "token-classification",
-                model=model,
-                tokenizer=processor,
-                pipeline_class=LayoutLMInferencePipeline,
-                device=self.device,
-            )
-
-            logits = []
-            predictions = []
-            all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
-            extraction_metadata = pd.DataFrame(
-                {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
-            ).set_index("filename")
-            for logit, pred, output_df in pipe(_get_data(dataset)):
-                logits.append(logit)
-                predictions.append(pred)
-                if not output_df.empty:
-                    filename = get_metadata_filename(output_df["id"].iloc[0])
-                    extraction_metadata.loc[filename, ["success"]] = True
-                all_output_df = pd.concat([all_output_df, output_df])
-            all_output_df.columns.name = None
-            all_output_df = clean_extracted_df(all_output_df)
-            all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
-            all_output_df = all_output_df.reset_index(drop=True)
-            all_outputs_dfs.append(all_output_df)
-            extraction_metadata_dfs.append(extraction_metadata)
-        return pd.concat(extraction_metadata_dfs), pd.concat(all_output_df)
+        logits = []
+        predictions = []
+        all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
+        extraction_metadata = pd.DataFrame(
+            {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+        ).set_index("filename")
+        for logit, pred, output_df in pipe(_get_data(dataset)):
+            logits.append(logit)
+            predictions.append(pred)
+            if not output_df.empty:
+                filename = get_metadata_filename(output_df["id"].iloc[0])
+                extraction_metadata.loc[filename, ["success"]] = True
+            all_output_df = pd.concat([all_output_df, output_df])
+        all_output_df.columns.name = None
+        all_output_df = clean_extracted_df(all_output_df)
+        all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
+        all_output_df = all_output_df.reset_index(drop=True)
+        return extraction_metadata, all_output_df
 
 
 class LayoutLMInferencePipeline(Pipeline):
