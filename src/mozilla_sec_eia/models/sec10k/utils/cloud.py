@@ -226,11 +226,15 @@ class GCSArchive(ConfigurableResource):
         return self._filings_bucket.blob(f"sec10k/sec10k-{year_quarter}/{path}")
 
     def get_local_filename(
-        self, cache_directory: Path, filing: pd.Series, extension=".html"
+        self, cache_directory: Path, filing: pd.Series | Sec10K, extension=".html"
     ) -> Path:
         """Return path to a filing in local cache based on metadata."""
+        if isinstance(filing, pd.Series):
+            filename = filing["filename"]
+        else:
+            filename = filing.filename
         return cache_directory / Path(
-            f"{filing['filename'].replace('edgar/data/', '').replace('/', '-')}".replace(
+            f"{filename.replace('edgar/data/', '').replace('/', '-')}".replace(
                 ".txt", extension
             )
         )

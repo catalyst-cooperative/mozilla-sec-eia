@@ -66,7 +66,6 @@ class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
 
     def handle_output(self, context: OutputContext, df: pd.DataFrame):
         """Attach dataframe to run as artifact."""
-        print("HERE")
         if self.file_type == "csv":
             self._log_artifact_as_csv(df, artifact_name=f"{context.name}.csv")
         else:

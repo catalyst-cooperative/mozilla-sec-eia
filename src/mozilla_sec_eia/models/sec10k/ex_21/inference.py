@@ -183,6 +183,34 @@ def get_flattened_mode_predictions(token_boxes_tensor, predictions_tensor):
     return flattened_modes
 
 
+def _cache_pdfs(
+    filings: pd.DataFrame, cloud_interface: GCSArchive, pdf_dir: Path
+) -> pd.DataFrame:
+    """Iterate filings and cache pdfs."""
+    extraction_metadata = pd.DataFrame(
+        {
+            "filename": pd.Series(dtype=str),
+            "success": pd.Series(dtype=bool),
+            "notes": pd.Series(dtype=str),
+        }
+    ).set_index("filename")
+
+    for filing in cloud_interface.iterate_filings(filings):
+        pdf_path = cloud_interface.get_local_filename(
+            cache_directory=pdf_dir, filing=filing, extension=".pdf"
+        )
+
+        # Some filings are poorly formatted and fail in `save_as_pdf`
+        # We want a record of these but don't want to stop run
+        try:
+            with pdf_path.open("wb") as f:
+                filing.ex_21.save_as_pdf(f)
+        except Exception as e:
+            extraction_metadata.loc[filing.filename, ["success"]] = False
+            extraction_metadata.loc[filing.filename, ["note"]] = str(e)
+    return extraction_metadata
+
+
 def _get_data(dataset):
     yield from dataset
 
@@ -202,6 +230,9 @@ class Exhibit21Extractor(ConfigurableResource):
     @contextmanager
     def yield_for_execution(self, context):
         """Setup temp path working directories."""
+        # Set env variable to improve GPU memory access
+        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
         with (
             tempfile.TemporaryDirectory() as pdf_dir,
             tempfile.TemporaryDirectory() as labeled_json_dir,
@@ -256,8 +287,10 @@ class Exhibit21Extractor(ConfigurableResource):
             ~filing_metadata["exhibit_21_version"].isna()
         ]
 
-        self.cloud_interface.get_filings(
-            filings_with_ex21, cache_directory=self._pdf_dir, cache_pdf=True
+        extraction_metadata = _cache_pdfs(
+            filings_with_ex21,
+            cloud_interface=self.cloud_interface,
+            pdf_dir=self._pdf_dir,
         )
         dataset = create_inference_dataset(
             pdfs_dir=Path(self._pdf_dir),
@@ -280,9 +313,6 @@ class Exhibit21Extractor(ConfigurableResource):
         logits = []
         predictions = []
         all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
-        extraction_metadata = pd.DataFrame(
-            {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
-        ).set_index("filename")
         for logit, pred, output_df in pipe(_get_data(dataset)):
             logits.append(logit)
             predictions.append(pred)
