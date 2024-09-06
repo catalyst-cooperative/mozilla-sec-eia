@@ -10,7 +10,6 @@ from upath import UPath
 from mozilla_sec_eia.library import model_jobs
 from mozilla_sec_eia.library.generic_io_managers import PandasParquetIOManager
 from mozilla_sec_eia.library.mlflow import (
-    MlflowInterface,
     mlflow_interface_resource,
     mlflow_train_test_io_managers,
 )
@@ -74,7 +73,7 @@ defs = Definitions(
         "pandas_parquet_io_manager": PandasParquetIOManager(
             base_path=UPath("gs://sec10k-outputs")
         ),
+        "exhibit21_extractor": ex_21.exhibit_21_extractor_resource,
     }
-    | mlflow_train_test_io_managers
-    | extract.SEC10k_EXTRACTOR_RESOURCES,
+    | mlflow_train_test_io_managers,
 )

@@ -7,7 +7,7 @@ from dagster import AssetIn, AssetOut, asset, multi_asset
 from mozilla_sec_eia.library import validation_helpers
 from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
 
-from ..extract import sec10k_extraction_asset_factory, sec10k_filing_metadata
+from ..extract import sec10k_filing_metadata
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
 from ..utils.layoutlm import LayoutlmResource
 from .inference import Exhibit21Extractor, clean_extracted_df
@@ -15,7 +15,7 @@ from .inference import Exhibit21Extractor, clean_extracted_df
 
 @asset
 def ex21_validation_set() -> pd.DataFrame:
-    """Return dataframe containing basic 10k validation data."""
+    """Return dataframe containing exhibit 21 validation data."""
     return clean_ex21_validation_set(
         validation_helpers.load_validation_data("ex21_labels.csv")
     )
@@ -33,12 +33,9 @@ def ex21_validation_filing_metadata(
     ]
 
 
-ex21_extracted_validation_asset_name = "ex21_validation"
-
-
 @multi_asset(
     ins={
-        "computed_df": AssetIn(ex21_extracted_validation_asset_name),
+        "computed_df": AssetIn("ex21_company_ownership_info_validation"),
         "validation_df": AssetIn("ex21_validation_set"),
     },
     outs={
@@ -158,36 +155,59 @@ def test_extraction_metrics(
             exhibit21_extractor.extract_filings(filings.sample(num_filings))
 
 
+@multi_asset(
+    outs={
+        "ex21_extraction_metadata": AssetOut(
+            io_manager_key="pandas_parquet_io_manager"
+        ),
+        "ex21_company_ownership_info": AssetOut(
+            io_manager_key="pandas_parquet_io_manager"
+        ),
+    }
+)
+def ex21_extract(
+    sec10k_filing_metadata: pd.DataFrame,
+    exhibit21_extractor: Exhibit21Extractor,
+):
+    """Extract ownership info from exhibit 21 docs."""
+    metadata, extracted = exhibit21_extractor.extract_filings(sec10k_filing_metadata)
+    return metadata, extracted
+
+
+@multi_asset(
+    outs={
+        "ex21_extraction_metadata_validation": AssetOut(
+            io_manager_key="mlflow_pandas_artifact_io_manager"
+        ),
+        "ex21_company_ownership_info_validation": AssetOut(
+            io_manager_key="mlflow_pandas_artifact_io_manager"
+        ),
+    }
+)
+def ex21_extract_validation(
+    ex21_validation_filing_metadata: pd.DataFrame,
+    exhibit21_extractor: Exhibit21Extractor,
+):
+    """Extract ownership info from exhibit 21 docs."""
+    metadata, extracted = exhibit21_extractor.extract_filings(
+        ex21_validation_filing_metadata
+    )
+    return metadata, extracted
+
+
 exhibit_21_extractor_resource = Exhibit21Extractor(
     cloud_interface=cloud_interface_resource,
     layoutlm=LayoutlmResource(mlflow_interface=mlflow_interface_resource),
 )
-ex21_production_extraction = sec10k_extraction_asset_factory(
-    "ex21",
-    exhibit_21_extractor_resource,
-    extraction_metadata_asset_name="ex21_extraction_metadata",
-    extracted_asset_name="ex21_company_ownership_info",
-    io_manager_key="pandas_parquet_io_manager",
-)
-
-
-ex21_validation_extraction = sec10k_extraction_asset_factory(
-    "ex21_validation",
-    exhibit_21_extractor_resource,
-    filing_metadata_asset_name="ex21_validation_filing_metadata",
-    extraction_metadata_asset_name="ex21_extraction_validation_metadata",
-    extracted_asset_name=ex21_extracted_validation_asset_name,
-    partitions_def=None,
-)
 
 production_assets = [
     sec10k_filing_metadata,
-    ex21_production_extraction,
+    ex21_extract,
 ]
 
 validation_assets = [
     ex21_validation_set,
     ex21_validation_filing_metadata,
-    ex21_validation_extraction,
+    ex21_extract_validation,
     ex21_validation_metrics,
 ]

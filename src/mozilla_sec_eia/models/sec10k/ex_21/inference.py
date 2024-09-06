@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
+from dagster import ConfigurableResource
 from datasets import Dataset
 from pydantic import PrivateAttr
 from transformers import (
@@ -18,8 +19,7 @@ from transformers import (
 )
 from transformers.tokenization_utils_base import BatchEncoding
 
-from ..extract import Sec10kExtractor
-from ..utils.cloud import get_metadata_filename
+from ..utils.cloud import GCSArchive, get_metadata_filename
 from ..utils.layoutlm import (
     LayoutlmResource,
     get_id_label_conversions,
@@ -188,9 +188,10 @@ def _get_data(dataset):
     yield from dataset
 
 
-class Exhibit21Extractor(Sec10kExtractor):
+class Exhibit21Extractor(ConfigurableResource):
     """Implement `Sec10kExtractor` interface for exhibit 21 data."""
 
+    cloud_interface: GCSArchive
     layoutlm: LayoutlmResource
     name: str = "exhibit21_extractor"
     device: str = "cpu"
