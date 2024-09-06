@@ -24,23 +24,30 @@ from mlflow.entities import RunStatus
 def create_production_model_job(
     job_name: str,
     assets: list[AssetsDefinition],
+    concurrency_limit: int | None = None,
     **kwargs,
 ) -> JobDefinition:
     """Construct a dagster job and supply Definitions with assets and resources."""
+    config = {
+        "ops": {},
+        "resources": {
+            "mlflow_interface": {
+                "config": {
+                    "experiment_name": job_name,
+                    "tracking_enabled": False,
+                }
+            }
+        },
+    }
+    if concurrency_limit is not None:
+        config["execution"] = {
+            "config": {"multiprocess": {"max_concurrent": concurrency_limit}}
+        }
+
     return define_asset_job(
         job_name,
         selection=assets,
-        config={
-            "ops": {},
-            "resources": {
-                "mlflow_interface": {
-                    "config": {
-                        "experiment_name": job_name,
-                        "tracking_enabled": False,
-                    }
-                }
-            },
-        },
+        config=config,
         **kwargs,
     )
 

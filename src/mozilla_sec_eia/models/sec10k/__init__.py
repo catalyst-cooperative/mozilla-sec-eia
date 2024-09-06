@@ -37,6 +37,7 @@ basic_10k_validation_job = model_jobs.create_validation_model_job(
 ex21_production_job = model_jobs.create_production_model_job(
     "ex21_extraction",
     ex_21.production_assets,
+    concurrency_limit=4,
 )
 
 ex21_validation_job = model_jobs.create_validation_model_job(

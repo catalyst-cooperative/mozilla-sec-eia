@@ -2,12 +2,12 @@
 
 import mlflow
 import pandas as pd
-from dagster import AssetIn, AssetOut, asset, multi_asset
+from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asset, op
 
 from mozilla_sec_eia.library import validation_helpers
 from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
 
-from ..extract import sec10k_filing_metadata
+from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
 from ..utils.layoutlm import LayoutlmResource
 from .inference import Exhibit21Extractor, clean_extracted_df
@@ -155,7 +155,25 @@ def test_extraction_metrics(
             exhibit21_extractor.extract_filings(filings.sample(num_filings))
 
 
-@multi_asset(
+@op(out={"metadata": Out(), "extracted": Out()})
+def extract_filing_chunk(
+    exhibit21_extractor: Exhibit21Extractor, filings: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Extract a set of filings and return results."""
+    metadata, extracted = exhibit21_extractor.extract_filings(filings)
+    return metadata, extracted
+
+
+@op(out={"metadata": Out(), "extracted": Out()})
+def collect_extracted_chunks(
+    metadata_dfs: list[pd.DataFrame],
+    extracted_dfs: list[pd.DataFrame],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Collect chunks of extracted filings."""
+    return pd.concat(metadata_dfs), pd.concat(extracted_dfs)
+
+
+@graph_multi_asset(
     outs={
         "ex21_extraction_metadata": AssetOut(
             io_manager_key="pandas_parquet_io_manager"
@@ -163,14 +181,19 @@ def test_extraction_metrics(
         "ex21_company_ownership_info": AssetOut(
             io_manager_key="pandas_parquet_io_manager"
         ),
-    }
+    },
+    partitions_def=year_quarter_partitions,
 )
 def ex21_extract(
     sec10k_filing_metadata: pd.DataFrame,
-    exhibit21_extractor: Exhibit21Extractor,
 ):
     """Extract ownership info from exhibit 21 docs."""
-    metadata, extracted = exhibit21_extractor.extract_filings(sec10k_filing_metadata)
+    filing_chunks = chunk_filings(sec10k_filing_metadata)
+    metadata_chunks, extracted_chunks = filing_chunks.map(extract_filing_chunk)
+    metadata, extracted = collect_extracted_chunks(
+        metadata_chunks.collect(), extracted_chunks.collect()
+    )
+
     return metadata, extracted
 
 

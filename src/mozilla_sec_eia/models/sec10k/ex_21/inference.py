@@ -428,7 +428,7 @@ class LayoutLMInferencePipeline(Pipeline):
             (df["pred"].ne(df["pred"].shift())) & (df["pred"] != "other")
         ]
         first_in_group_df.loc[:, "iob_pred"] = (
-            "B" + first_in_group_df[:, "iob_pred"].str[1:]
+            "B" + first_in_group_df["iob_pred"].str[1:]
         )
         df.update(first_in_group_df)
         # filter for just words that were labeled with non "other" entities

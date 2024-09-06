@@ -1,10 +1,17 @@
 """Implement base class for an SEC10k extractor."""
 
+import math
+
+import numpy as np
 import pandas as pd
 from dagster import (
     AssetExecutionContext,
+    Config,
+    DynamicOut,
+    DynamicOutput,
     StaticPartitionsDefinition,
     asset,
+    op,
 )
 
 from .utils.cloud import GCSArchive
@@ -24,3 +31,18 @@ def sec10k_filing_metadata(
     year_quarter = context.partition_key
     df = cloud_interface.get_metadata(year_quarter=year_quarter)
     return df
+
+
+class ChunkFilingsConfig(Config):
+    """Set chunk size for chunk_filings."""
+
+    chunk_size: int = 128
+
+
+@op(out=DynamicOut())
+def chunk_filings(config: ChunkFilingsConfig, filings: pd.DataFrame) -> pd.DataFrame:
+    """Split filings into chunks for parallel processing."""
+    for i, filing_chunk in enumerate(
+        np.array_split(filings, math.ceil(len(filings) / config.chunk_size))
+    ):
+        yield DynamicOutput(filing_chunk, mapping_key=str(i))
