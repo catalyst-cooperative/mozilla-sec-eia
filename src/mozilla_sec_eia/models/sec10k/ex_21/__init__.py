@@ -1,10 +1,11 @@
 """Module for working with exhibit 21 data."""
 
+import mlflow
 import pandas as pd
 from dagster import AssetIn, AssetOut, asset, multi_asset
 
 from mozilla_sec_eia.library import validation_helpers
-from mozilla_sec_eia.library.mlflow import mlflow_interface_resource
+from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
 
 from ..extract import sec10k_extraction_asset_factory, sec10k_filing_metadata
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
@@ -136,6 +137,25 @@ def clean_ex21_validation_set(validation_df: pd.DataFrame):
     validation_df["filename"] = validation_df["id"].apply(get_metadata_filename)
     validation_df = clean_extracted_df(validation_df)
     return validation_df
+
+
+@asset
+def test_extraction_metrics(
+    cloud_interface: GCSArchive,
+    exhibit21_extractor: Exhibit21Extractor,
+    mlflow_interface: MlflowInterface,
+):
+    """Run extraction with various numbers of filings to view resource usage."""
+    filings = cloud_interface.get_metadata()
+    for num_filings in [8, 16, 32, 64, 128]:
+        with mlflow.start_run(
+            run_name=f"extract_{num_filings}_filings",
+            nested=True,
+            parent_run_id=mlflow_interface.mlflow_run_id,
+            experiment_id=MlflowInterface.get_or_create_experiment("ex21_test"),
+        ):
+            mlflow.log_param("num_filings", num_filings)
+            exhibit21_extractor.extract_filings(filings.sample(num_filings))
 
 
 exhibit_21_extractor_resource = Exhibit21Extractor(
