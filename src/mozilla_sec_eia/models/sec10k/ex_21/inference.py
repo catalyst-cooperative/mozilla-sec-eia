@@ -11,7 +11,6 @@ import pandas as pd
 import torch
 from dagster import ConfigurableResource
 from datasets import Dataset
-from pydantic import PrivateAttr
 from transformers import (
     Pipeline,
     pipeline,
@@ -224,23 +223,11 @@ class Exhibit21Extractor(ConfigurableResource):
     device: str = "cpu"
     has_labels: bool = False
     dataset_ind: list | None = None
-    _pdf_dir: Path = PrivateAttr()
-    _labeled_json_dir: Path | None = PrivateAttr(default=None)
 
     @contextmanager
-    def yield_for_execution(self, context):
-        """Setup temp path working directories."""
-        # Set env variable to improve GPU memory access
+    def setup_for_execution(self, context):
+        """Set env variable to improve GPU memory access."""
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-
-        with (
-            tempfile.TemporaryDirectory() as pdf_dir,
-            tempfile.TemporaryDirectory() as labeled_json_dir,
-        ):
-            self._pdf_dir = pdf_dir
-            if self.has_labels:
-                self._labeled_json_dir = labeled_json_dir
-            yield self
 
     def extract_filings(
         self, filing_metadata: pd.DataFrame
@@ -287,16 +274,20 @@ class Exhibit21Extractor(ConfigurableResource):
             ~filing_metadata["exhibit_21_version"].isna()
         ]
 
-        extraction_metadata = _cache_pdfs(
-            filings_with_ex21,
-            cloud_interface=self.cloud_interface,
-            pdf_dir=self._pdf_dir,
-        )
-        dataset = create_inference_dataset(
-            pdfs_dir=Path(self._pdf_dir),
-            labeled_json_dir=self._labeled_json_dir,
-            has_labels=self.has_labels,
-        )
+        with (
+            tempfile.TemporaryDirectory() as pdf_dir,
+            tempfile.TemporaryDirectory() as labeled_json_dir,
+        ):
+            extraction_metadata = _cache_pdfs(
+                filings_with_ex21,
+                cloud_interface=self.cloud_interface,
+                pdf_dir=pdf_dir,
+            )
+            dataset = create_inference_dataset(
+                pdfs_dir=Path(pdf_dir),
+                labeled_json_dir=labeled_json_dir,
+                has_labels=self.has_labels,
+            )
         if self.dataset_ind:
             dataset = dataset.select(self.dataset_ind)
 
