@@ -9,6 +9,7 @@ from dagster import (
     Config,
     DynamicOut,
     DynamicOutput,
+    OpExecutionContext,
     StaticPartitionsDefinition,
     asset,
     op,
@@ -40,9 +41,12 @@ class ChunkFilingsConfig(Config):
 
 
 @op(out=DynamicOut())
-def chunk_filings(config: ChunkFilingsConfig, filings: pd.DataFrame) -> pd.DataFrame:
+def chunk_filings(
+    context: OpExecutionContext, config: ChunkFilingsConfig, filings: pd.DataFrame
+) -> pd.DataFrame:
     """Split filings into chunks for parallel processing."""
     for i, filing_chunk in enumerate(
         np.array_split(filings, math.ceil(len(filings) / config.chunk_size))
     ):
+        context.add_output_metadata(metadata={"filings": list(filing_chunk.filename)})
         yield DynamicOutput(filing_chunk, mapping_key=str(i))
