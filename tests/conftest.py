@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 import pytest
+
 from mozilla_sec_eia.utils.cloud import GoogleCloudSettings, initialize_mlflow
 
 logger = logging.getLogger(__name__)

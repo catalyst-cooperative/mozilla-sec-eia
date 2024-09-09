@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import pytest
+
 from mozilla_sec_eia.utils.cloud import (
     Exhibit21,
     GCSArchive,

@@ -6,6 +6,8 @@ import unittest
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
+
 from mozilla_sec_eia.ex_21.inference import (
     clean_extracted_df,
     create_inference_dataset,
@@ -17,7 +19,6 @@ from mozilla_sec_eia.extract import (
     validate_extraction,
 )
 from mozilla_sec_eia.utils.layoutlm import load_model
-from pandas.testing import assert_frame_equal
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 

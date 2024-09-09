@@ -5,6 +5,7 @@ import unittest
 import mlflow
 import pandas as pd
 import pytest
+
 from mozilla_sec_eia.extract import (
     _get_most_recent_run,
     compute_validation_metrics,

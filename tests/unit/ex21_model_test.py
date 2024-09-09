@@ -1,6 +1,7 @@
 """Unit tests for the LayoutLM model and table extractor."""
 
 import torch
+
 from mozilla_sec_eia.ex_21.inference import get_flattened_mode_predictions
 from mozilla_sec_eia.ex_21.train_extractor import LABELS
 from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions
