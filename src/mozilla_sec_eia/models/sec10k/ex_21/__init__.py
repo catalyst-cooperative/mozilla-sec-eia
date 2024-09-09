@@ -182,7 +182,12 @@ def extract_filing_chunk(
     return metadata, extracted
 
 
-@op(out={"metadata": Out(), "extracted": Out()})
+@op(
+    out={
+        "metadata": Out(io_manager_key="pandas_parquet_io_manager"),
+        "extracted": Out(io_manager_key="pandas_parquet_io_manager"),
+    }
+)
 def collect_extracted_chunks(
     metadata_dfs: list[pd.DataFrame],
     extracted_dfs: list[pd.DataFrame],
