@@ -9,6 +9,7 @@ from mozilla_sec_eia.library import validation_helpers
 
 from .extract import (
     sec10k_filing_metadata,
+    year_quarter_partitions,
 )
 from .utils.cloud import GCSArchive, Sec10K
 
@@ -145,6 +146,7 @@ def basic_10k_validation_filing_metadata(
         ),
         "basic_10k_company_info": AssetOut(io_manager_key="pandas_parquet_io_manager"),
     },
+    partitions_def=year_quarter_partitions,
 )
 def basic_10k_extract(
     cloud_interface: GCSArchive,
