@@ -290,7 +290,6 @@ class Exhibit21Extractor(ConfigurableResource):
             dataset = dataset.select(self.dataset_ind)
 
         # TODO: figure out device argument
-        model, processor = self.layoutlm.get_model_components()
         pipe = pipeline(
             "token-classification",
             model=model,
