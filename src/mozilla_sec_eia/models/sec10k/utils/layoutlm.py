@@ -15,7 +15,7 @@ def _load_pretrained_layoutlm(version: str = "latest") -> dict:
     """Function to load layoutlm from mlflow."""
     path = f"models:/layoutlm_extractor/{version}"
 
-    return mlflow.transformers.load_model(path, return_type="components")
+    return mlflow.transformers.load_model(path, return_type="pipeline")
 
 
 class LayoutlmIOManager(MlflowBaseIOManager):
@@ -40,10 +40,10 @@ class LayoutlmLocalIOManager(MlflowBaseIOManager):
 
     local_path: str = "./layoutlm"
 
-    def handle_output(self, context: OutputContext, components: dict):
+    def handle_output(self, context: OutputContext, pipeline):
         """Load metrics to mlflow run/experiment created by `MlflowInterface`."""
         mlflow.transformers.save_model(
-            components, path=self.local_path, task="token-classification"
+            pipeline, path=self.local_path, task="token-classification"
         )
 
     def load_input(self, context: InputContext) -> dict:

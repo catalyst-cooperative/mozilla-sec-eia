@@ -170,7 +170,7 @@ def extract_filing_chunk(
         metadata, extracted = exhibit21_extractor.extract_filings(
             filings,
             model=layoutlm["model"],
-            processor=layoutlm["processor"],
+            processor=layoutlm["tokenizer"],
         )
     except (torch.OutOfMemoryError, RuntimeError) as e:
         logging.warning(
@@ -258,7 +258,7 @@ def ex21_extract_validation(
     metadata, extracted = exhibit21_extractor.extract_filings(
         ex21_validation_filing_metadata,
         model=layoutlm_local_cache["model"],
-        processor=layoutlm_local_cache["processor"],
+        processor=layoutlm_local_cache["tokenizer"],
     )
     return metadata, extracted
 
