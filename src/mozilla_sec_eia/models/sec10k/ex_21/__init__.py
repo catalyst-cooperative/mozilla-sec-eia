@@ -1,7 +1,10 @@
 """Module for working with exhibit 21 data."""
 
+import logging
+
 import mlflow
 import pandas as pd
+import torch
 from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asset, op
 
 from mozilla_sec_eia.library import validation_helpers
@@ -11,6 +14,8 @@ from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partit
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
 from ..utils.layoutlm import LayoutlmResource
 from .inference import Exhibit21Extractor, clean_extracted_df
+
+logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 @asset
@@ -160,7 +165,20 @@ def extract_filing_chunk(
     exhibit21_extractor: Exhibit21Extractor, filings: pd.DataFrame
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract a set of filings and return results."""
-    metadata, extracted = exhibit21_extractor.extract_filings(filings)
+    try:
+        metadata, extracted = exhibit21_extractor.extract_filings(filings)
+    except torch.OutOfMemoryError:
+        logging.warning(
+            f"Ran out of memory while extracting filings: {filings['filename']}"
+        )
+        metadata = pd.DataFrame(
+            {
+                "filename": filings["filename"],
+                "success": [False] * len(filings),
+                "notes": ["Out of memory error"] * len(filings),
+            }
+        ).set_index("filename")
+        extracted = pd.DataFrame()
     return metadata, extracted
 
 
@@ -170,6 +188,8 @@ def collect_extracted_chunks(
     extracted_dfs: list[pd.DataFrame],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Collect chunks of extracted filings."""
+    metadata_dfs = [df for df in metadata_dfs if not df.empty]
+    extracted_dfs = [df for df in extracted_dfs if not df.empty]
     return pd.concat(metadata_dfs), pd.concat(extracted_dfs)
 
 
