@@ -19,7 +19,6 @@ from transformers.tokenization_utils_base import BatchEncoding
 
 from ..utils.cloud import GCSArchive, get_metadata_filename
 from ..utils.layoutlm import (
-    LayoutlmResource,
     get_id_label_conversions,
     iob_to_label,
     normalize_bboxes,
@@ -218,7 +217,6 @@ class Exhibit21Extractor(ConfigurableResource):
     """Implement `Sec10kExtractor` interface for exhibit 21 data."""
 
     cloud_interface: GCSArchive
-    layoutlm: LayoutlmResource
     name: str = "exhibit21_extractor"
     device: str = "cpu"
     has_labels: bool = False
@@ -230,7 +228,7 @@ class Exhibit21Extractor(ConfigurableResource):
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
     def extract_filings(
-        self, filing_metadata: pd.DataFrame
+        self, filing_metadata: pd.DataFrame, model, processor
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Predict entities with a fine-tuned model and extract Ex. 21 tables.
 

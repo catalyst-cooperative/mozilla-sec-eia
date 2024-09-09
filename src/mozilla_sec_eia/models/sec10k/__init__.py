@@ -16,7 +16,7 @@ from mozilla_sec_eia.library.mlflow import (
 
 from . import basic_10k, ex_21, extract
 from .utils.cloud import cloud_interface_resource
-from .utils.layoutlm import LayoutlmIOManager
+from .utils.layoutlm import LayoutlmIOManager, LayoutlmLocalIOManager
 
 basic_10k_assets = load_assets_from_modules([basic_10k])
 ex21_assets = load_assets_from_package_module(ex_21)
@@ -46,7 +46,7 @@ ex21_validation_job = model_jobs.create_validation_model_job(
 )
 
 ex21_test_job = model_jobs.create_validation_model_job(
-    "ex21_test", [ex_21.test_extraction_metrics]
+    "ex21_test", [ex_21.test_extraction_metrics, ex_21.layoutlm_local_cache]
 )
 
 layoutlm_finetune_job = model_jobs.create_training_job(
@@ -75,6 +75,9 @@ defs = Definitions(
             base_path=UPath("gs://sec10k-outputs")
         ),
         "exhibit21_extractor": ex_21.exhibit_21_extractor_resource,
+        "layoutlm_local_io_manager": LayoutlmLocalIOManager(
+            mlflow_interface=mlflow_interface_resource
+        ),
     }
     | mlflow_train_test_io_managers,
 )

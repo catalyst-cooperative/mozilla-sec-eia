@@ -12,7 +12,6 @@ from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_res
 
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
-from ..utils.layoutlm import LayoutlmResource
 from .inference import Exhibit21Extractor, clean_extracted_df
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
@@ -162,14 +161,20 @@ def test_extraction_metrics(
 
 @op(out={"metadata": Out(), "extracted": Out()})
 def extract_filing_chunk(
-    exhibit21_extractor: Exhibit21Extractor, filings: pd.DataFrame
+    exhibit21_extractor: Exhibit21Extractor,
+    filings: pd.DataFrame,
+    layoutlm,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract a set of filings and return results."""
     try:
-        metadata, extracted = exhibit21_extractor.extract_filings(filings)
-    except torch.OutOfMemoryError:
+        metadata, extracted = exhibit21_extractor.extract_filings(
+            filings,
+            model=layoutlm["model"],
+            processor=layoutlm["processor"],
+        )
+    except (torch.OutOfMemoryError, RuntimeError) as e:
         logging.warning(
-            f"Ran out of memory while extracting filings: {filings['filename']}"
+            f"Error {str(e)} while extracting filings: {filings['filename']}"
         )
         metadata = pd.DataFrame(
             {
@@ -198,6 +203,15 @@ def collect_extracted_chunks(
     return pd.concat(metadata_dfs), pd.concat(extracted_dfs)
 
 
+@asset(
+    io_manager_key="layoutlm_local_io_manager",
+    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
+)
+def layoutlm_local_cache(layoutlm):
+    """Load pretrained layoutlm from mlflow and save to local path."""
+    return layoutlm
+
+
 @graph_multi_asset(
     outs={
         "ex21_extraction_metadata": AssetOut(
@@ -211,10 +225,13 @@ def collect_extracted_chunks(
 )
 def ex21_extract(
     sec10k_filing_metadata: pd.DataFrame,
+    layoutlm_local_cache,
 ):
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)
-    metadata_chunks, extracted_chunks = filing_chunks.map(extract_filing_chunk)
+    metadata_chunks, extracted_chunks = filing_chunks.map(
+        lambda filings: extract_filing_chunk(filings, layoutlm_local_cache)
+    )
     metadata, extracted = collect_extracted_chunks(
         metadata_chunks.collect(), extracted_chunks.collect()
     )
@@ -235,27 +252,27 @@ def ex21_extract(
 def ex21_extract_validation(
     ex21_validation_filing_metadata: pd.DataFrame,
     exhibit21_extractor: Exhibit21Extractor,
+    layoutlm_local_cache,
 ):
     """Extract ownership info from exhibit 21 docs."""
     metadata, extracted = exhibit21_extractor.extract_filings(
-        ex21_validation_filing_metadata
+        ex21_validation_filing_metadata,
+        model=layoutlm_local_cache["model"],
+        processor=layoutlm_local_cache["processor"],
     )
     return metadata, extracted
 
 
 exhibit_21_extractor_resource = Exhibit21Extractor(
     cloud_interface=cloud_interface_resource,
-    layoutlm=LayoutlmResource(mlflow_interface=mlflow_interface_resource),
 )
 
-production_assets = [
-    sec10k_filing_metadata,
-    ex21_extract,
-]
+production_assets = [sec10k_filing_metadata, ex21_extract, layoutlm_local_cache]
 
 validation_assets = [
     ex21_validation_set,
     ex21_validation_filing_metadata,
     ex21_extract_validation,
     ex21_validation_metrics,
+    layoutlm_local_cache,
 ]
