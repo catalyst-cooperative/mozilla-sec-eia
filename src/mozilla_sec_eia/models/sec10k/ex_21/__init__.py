@@ -200,7 +200,10 @@ def collect_extracted_chunks(
     """Collect chunks of extracted filings."""
     metadata_dfs = [df for df in metadata_dfs if not df.empty]
     extracted_dfs = [df for df in extracted_dfs if not df.empty]
-    return pd.concat(metadata_dfs), pd.concat(extracted_dfs)
+    metadata_df = pd.concat(metadata_dfs)
+    extracted_df = pd.concat(extracted_dfs)
+    extracted_df["own_per"] = extracted_df["own_per"].astype("float64", errors="ignore")
+    return metadata_df, extracted_df
 
 
 @asset(
