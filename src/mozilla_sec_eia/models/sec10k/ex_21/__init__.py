@@ -194,7 +194,6 @@ def extract_filing_chunk(
             }
         ).set_index("filename")
         extracted = Ex21CompanyOwnership.example(size=0)
-    extracted.own_per = extracted.own_per.astype("float64")
     return metadata, extracted
 
 
