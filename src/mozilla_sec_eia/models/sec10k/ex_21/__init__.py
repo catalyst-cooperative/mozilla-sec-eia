@@ -12,6 +12,7 @@ from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_res
 
 from ..entities import (
     Ex21CompanyOwnership,
+    Sec10kExtractionMetadata,
     ex21_extract_type,
     sec10k_extract_metadata_type,
 )
@@ -218,7 +219,10 @@ def collect_extracted_chunks(
     extracted_dfs = [df for df in extracted_dfs if not df.empty]
     metadata_df = pd.concat(metadata_dfs)
     extracted_df = pd.concat(extracted_dfs)
-    return metadata_df, extracted_df
+    return (
+        Sec10kExtractionMetadata.validate(metadata_df),
+        Ex21CompanyOwnership.validate(extracted_df),
+    )
 
 
 @graph_multi_asset(
