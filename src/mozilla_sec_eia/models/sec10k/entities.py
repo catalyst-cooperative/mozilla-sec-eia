@@ -13,7 +13,8 @@ class Ex21CompanyOwnership(pa.DataFrameModel):
     loc: Series[str] = pa.Field(
         description="Location of subsidiary company.", nullable=True
     )
-    own_per: Series[float] = pa.Field(
+    #: Use str to avoid conversion errors
+    own_per: Series[str] = pa.Field(
         description="Percent ownership of subsidiary company.",
         nullable=True,
         coerce=True,
