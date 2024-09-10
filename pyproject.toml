@@ -28,6 +28,7 @@ dependencies = [
     "seqeval>=1.2,<2", # Sequence labeling evaluation
     "google-cloud-secret-manager>=2,<3",
     "google-cloud-storage>=2,<3",
+    "hypothesis",
     "matplotlib>=3.8,<4",
     "mlflow>=2.12",
     "opencv-python",
