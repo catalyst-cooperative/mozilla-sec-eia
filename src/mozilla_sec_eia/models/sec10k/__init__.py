@@ -46,7 +46,7 @@ ex21_validation_job = model_jobs.create_validation_model_job(
 )
 
 ex21_test_job = model_jobs.create_validation_model_job(
-    "ex21_test", [ex_21.test_extraction_metrics, ex_21.layoutlm_local_cache]
+    "ex21_test", [ex_21.test_extraction_metrics]
 )
 
 layoutlm_finetune_job = model_jobs.create_training_job(

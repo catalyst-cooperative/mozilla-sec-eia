@@ -223,15 +223,6 @@ def collect_extracted_chunks(
     return metadata_df, extracted_df
 
 
-@asset(
-    io_manager_key="layoutlm_local_io_manager",
-    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
-)
-def layoutlm_local_cache(layoutlm):
-    """Load pretrained layoutlm from mlflow and save to local path."""
-    return layoutlm
-
-
 @graph_multi_asset(
     outs={
         "ex21_extraction_metadata": AssetOut(
@@ -241,16 +232,17 @@ def layoutlm_local_cache(layoutlm):
             io_manager_key="pandas_parquet_io_manager"
         ),
     },
+    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
     partitions_def=year_quarter_partitions,
 )
 def ex21_extract(
     sec10k_filing_metadata: pd.DataFrame,
-    layoutlm_local_cache,
+    layoutlm,
 ):
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)
     metadata_chunks, extracted_chunks = filing_chunks.map(
-        lambda filings: extract_filing_chunk(filings, layoutlm_local_cache)
+        lambda filings: extract_filing_chunk(filings, layoutlm)
     )
     metadata, extracted = collect_extracted_chunks(
         metadata_chunks.collect(), extracted_chunks.collect()
@@ -269,18 +261,19 @@ def ex21_extract(
             io_manager_key="mlflow_pandas_artifact_io_manager",
             dagster_type=ex21_extract_type,
         ),
-    }
+    },
+    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
 )
 def ex21_extract_validation(
     ex21_validation_filing_metadata: pd.DataFrame,
     exhibit21_extractor: Exhibit21Extractor,
-    layoutlm_local_cache,
+    layoutlm,
 ):
     """Extract ownership info from exhibit 21 docs."""
     metadata, extracted = exhibit21_extractor.extract_filings(
         ex21_validation_filing_metadata,
-        model=layoutlm_local_cache["model"],
-        processor=layoutlm_local_cache["tokenizer"],
+        model=layoutlm["model"],
+        processor=layoutlm["tokenizer"],
     )
     return metadata, extracted
 
@@ -289,12 +282,11 @@ exhibit_21_extractor_resource = Exhibit21Extractor(
     cloud_interface=cloud_interface_resource,
 )
 
-production_assets = [sec10k_filing_metadata, ex21_extract, layoutlm_local_cache]
+production_assets = [sec10k_filing_metadata, ex21_extract]
 
 validation_assets = [
     ex21_validation_set,
     ex21_validation_filing_metadata,
     ex21_extract_validation,
     ex21_validation_metrics,
-    layoutlm_local_cache,
 ]
