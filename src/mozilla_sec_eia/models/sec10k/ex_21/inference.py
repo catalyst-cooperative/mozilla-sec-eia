@@ -120,6 +120,10 @@ def clean_extracted_df(extracted_df):
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
             r"[^\d.]", "", regex=True
         )
+        # Find values with multiple decimal points
+        extracted_df["own_per"] = extracted_df["own_per"].str.replace(
+            r"(\d*\.\d+)\..*", r"\1", regex=True
+        )
         extracted_df["own_per"] = extracted_df["own_per"].replace("", np.nan)
         extracted_df["own_per"] = extracted_df["own_per"].astype(
             "float64", errors="ignore"

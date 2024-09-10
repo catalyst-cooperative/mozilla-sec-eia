@@ -10,6 +10,11 @@ from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asse
 from mozilla_sec_eia.library import validation_helpers
 from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
 
+from ..entities import (
+    Ex21CompanyOwnership,
+    ex21_extract_type,
+    sec10k_extract_metadata_type,
+)
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
 from .inference import Exhibit21Extractor, clean_extracted_df
@@ -17,7 +22,7 @@ from .inference import Exhibit21Extractor, clean_extracted_df
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-@asset
+@asset(dagster_type=ex21_extract_type)
 def ex21_validation_set() -> pd.DataFrame:
     """Return dataframe containing exhibit 21 validation data."""
     return clean_ex21_validation_set(
@@ -159,7 +164,12 @@ def test_extraction_metrics(
             exhibit21_extractor.extract_filings(filings.sample(num_filings))
 
 
-@op(out={"metadata": Out(), "extracted": Out()})
+@op(
+    out={
+        "metadata": Out(dagster_type=sec10k_extract_metadata_type),
+        "extracted": Out(dagster_type=ex21_extract_type),
+    }
+)
 def extract_filing_chunk(
     exhibit21_extractor: Exhibit21Extractor,
     filings: pd.DataFrame,
@@ -183,14 +193,21 @@ def extract_filing_chunk(
                 "notes": ["Out of memory error"] * len(filings),
             }
         ).set_index("filename")
-        extracted = pd.DataFrame()
+        extracted = Ex21CompanyOwnership.example(size=0)
+    extracted.own_per = extracted.own_per.astype("float64")
     return metadata, extracted
 
 
 @op(
     out={
-        "metadata": Out(io_manager_key="pandas_parquet_io_manager"),
-        "extracted": Out(io_manager_key="pandas_parquet_io_manager"),
+        "metadata": Out(
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=sec10k_extract_metadata_type,
+        ),
+        "extracted": Out(
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=ex21_extract_type,
+        ),
     }
 )
 def collect_extracted_chunks(
@@ -245,10 +262,12 @@ def ex21_extract(
 @multi_asset(
     outs={
         "ex21_extraction_metadata_validation": AssetOut(
-            io_manager_key="mlflow_pandas_artifact_io_manager"
+            io_manager_key="mlflow_pandas_artifact_io_manager",
+            dagster_type=sec10k_extract_metadata_type,
         ),
         "ex21_company_ownership_info_validation": AssetOut(
-            io_manager_key="mlflow_pandas_artifact_io_manager"
+            io_manager_key="mlflow_pandas_artifact_io_manager",
+            dagster_type=ex21_extract_type,
         ),
     }
 )
