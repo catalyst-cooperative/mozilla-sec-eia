@@ -19,7 +19,7 @@ def _load_pretrained_layoutlm(version: str = "latest") -> dict:
 
     with tempfile.TemporaryDirectory() as dst_path:
         return mlflow.transformers.load_model(
-            path, dst_path=dst_path, return_type="pipeline"
+            path, dst_path=dst_path, return_type="components"
         )
 
 
