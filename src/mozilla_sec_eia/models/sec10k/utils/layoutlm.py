@@ -1,5 +1,7 @@
 """Util functions for training and predicting with LayoutLM on Ex. 21 tables."""
 
+import tempfile
+
 import mlflow
 from dagster import ConfigurableResource, InputContext, OutputContext
 from PIL import ImageDraw, ImageFont
@@ -15,7 +17,10 @@ def _load_pretrained_layoutlm(version: str = "latest") -> dict:
     """Function to load layoutlm from mlflow."""
     path = f"models:/layoutlm_extractor/{version}"
 
-    return mlflow.transformers.load_model(path, return_type="pipeline")
+    with tempfile.TemporaryDirectory() as dst_path:
+        return mlflow.transformers.load_model(
+            path, dst_path=dst_path, return_type="pipeline"
+        )
 
 
 class LayoutlmIOManager(MlflowBaseIOManager):
