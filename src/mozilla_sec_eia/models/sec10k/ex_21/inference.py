@@ -295,7 +295,7 @@ class Exhibit21Extractor(ConfigurableResource):
             # TODO: Investigate failures in creating dataset
             except KeyError:
                 logger.warning("Failed to create inference dataset!")
-                extraction_metadata.loc[:, "filename"] = False
+                extraction_metadata.loc[:, "success"] = False
                 extraction_metadata.loc[:, "notes"] = (
                     "Failed to create inference dataset."
                 )
