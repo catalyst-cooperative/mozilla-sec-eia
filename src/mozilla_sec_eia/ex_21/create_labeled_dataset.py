@@ -46,6 +46,7 @@ def create_inputs_for_label_studio(
     image_dir.mkdir(parents=True, exist_ok=True)
     json_dir = cache_dir / "jsons"
     json_dir.mkdir(parents=True, exist_ok=True)
+    pdfs_dir = Path(pdfs_dir)
 
     for pdf_filename in os.listdir(pdfs_dir):
         if pdf_filename.split(".")[-1] != "pdf":
@@ -183,6 +184,9 @@ def format_label_studio_output(
             # combine the bounding boxes for each word
             doc_df = doc_df.groupby(level=0).first()
             txt.loc[:, "id"] = filename
+            # the doc might not have any labels in it if it was an empty Ex. 21
+            if "labels" not in doc_df:
+                doc_df.loc[:, "labels"] = pd.Series()
             output_df = pd.concat([txt, doc_df[["labels"]]], axis=1)
             labeled_df = pd.concat([labeled_df, output_df])
 

@@ -10,7 +10,7 @@ from mozilla_sec_eia.utils.cloud import GCSArchive
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-def rename_filings():
+def rename_filings(labeled_bucket_name="labeledv0.1"):
     """Rename labeled filings in GCS after importing from Label Studio.
 
     After importing labeled documents from Label Studio into GCS the
@@ -24,7 +24,7 @@ def rename_filings():
     archive = GCSArchive()
     bucket = archive._labels_bucket
 
-    labeled_bucket_name = "labeledv0.1"
+    labeled_bucket_name = labeled_bucket_name
 
     for blob in bucket.list_blobs(prefix=labeled_bucket_name):
         name = blob.name.replace("/", "")

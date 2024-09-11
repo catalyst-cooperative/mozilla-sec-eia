@@ -64,6 +64,12 @@ class Exhibit21(BaseModel):
 
     def save_as_pdf(self, file: BinaryIO):
         """Save Exhibit 21 as a PDF in `file`, which can be in memory or on disk."""
+        # TODO: probably should make a "corrections" file that has CSS/HTML replacements
+        # to make PDF render
+        if "border-bottom: black thin solid;" in self.ex_21_text:
+            self.ex_21_text = self.ex_21_text.replace(
+                "border-bottom: black thin solid;", "border-bottom: 1px solid black;"
+            )
         res = pisa.CreatePDF(self.ex_21_text, file)
         if res.err:
             logger.warning(

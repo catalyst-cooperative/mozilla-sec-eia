@@ -58,6 +58,7 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
 
     # Add command to rename labeled filings on GCS
     validate_parser = subparsers.add_parser("rename_filings")
+    validate_parser.add_argument("--labeled-bucket-name", default="labeled")
     validate_parser.set_defaults(func=rename_filings)
 
     # Add command to extract basic 10k data
@@ -75,6 +76,7 @@ def parse_command_line(argv: list[str]) -> argparse.Namespace:
     validate_parser = subparsers.add_parser("create_ls_inputs")
     validate_parser.add_argument("--pdfs-dir", default=ROOT_DIR / "sec10k_filings/pdfs")
     validate_parser.add_argument("--cache-dir", default=ROOT_DIR / "sec10k_filings")
+    validate_parser.add_argument("--model-version", default="v1.0")
     validate_parser.set_defaults(func=create_inputs_for_label_studio)
 
     arguments = parser.parse_args(argv[1:])
