@@ -17,6 +17,7 @@ from transformers import (
 )
 from transformers.tokenization_utils_base import BatchEncoding
 
+from ..entities import Ex21CompanyOwnership
 from ..utils.cloud import GCSArchive, get_metadata_filename
 from ..utils.layoutlm import (
     get_id_label_conversions,
@@ -285,11 +286,20 @@ class Exhibit21Extractor(ConfigurableResource):
                 cloud_interface=self.cloud_interface,
                 pdf_dir=pdf_dir,
             )
-            dataset = create_inference_dataset(
-                pdfs_dir=Path(pdf_dir),
-                labeled_json_dir=labeled_json_dir,
-                has_labels=self.has_labels,
-            )
+            try:
+                dataset = create_inference_dataset(
+                    pdfs_dir=Path(pdf_dir),
+                    labeled_json_dir=labeled_json_dir,
+                    has_labels=self.has_labels,
+                )
+            # TODO: Investigate failures in creating dataset
+            except KeyError:
+                logger.warning("Failed to create inference dataset!")
+                extraction_metadata.loc[:, "filename"] = False
+                extraction_metadata.loc[:, "notes"] = (
+                    "Failed to create inference dataset."
+                )
+                return extraction_metadata, Ex21CompanyOwnership.example(size=0)
         if self.dataset_ind:
             dataset = dataset.select(self.dataset_ind)
 
