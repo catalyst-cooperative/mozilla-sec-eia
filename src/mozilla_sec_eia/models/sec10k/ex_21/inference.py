@@ -210,6 +210,13 @@ def _cache_pdfs(
         except Exception as e:
             extraction_metadata.loc[filing.filename, ["success"]] = False
             extraction_metadata.loc[filing.filename, ["note"]] = str(e)
+
+        # Some pdfs are empty. Check for these and remove from dir
+        if pdf_path.stat().st_size == 0:
+            extraction_metadata.loc[filing.filename, ["success"]] = False
+            extraction_metadata.loc[filing.filename, ["note"]] = "PDF empty"
+            pdf_path.unlink()
+
     return extraction_metadata
 
 
