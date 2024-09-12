@@ -1,6 +1,7 @@
 """Module for working with exhibit 21 data."""
 
 import logging
+import traceback
 
 import mlflow
 import pandas as pd
@@ -183,10 +184,9 @@ def extract_filing_chunk(
             model=layoutlm["model"],
             processor=layoutlm["tokenizer"],
         )
-    except (torch.OutOfMemoryError, RuntimeError) as e:
-        logging.warning(
-            f"Error {str(e)} while extracting filings: {filings['filename']}"
-        )
+    except (torch.OutOfMemoryError, RuntimeError):
+        logger.warning(traceback.format_exc())
+        logger.warning(f"Error while extracting filings: {filings['filename']}")
         metadata = pd.DataFrame(
             {
                 "filename": filings["filename"],
