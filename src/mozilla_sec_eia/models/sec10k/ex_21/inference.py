@@ -60,7 +60,10 @@ def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
             continue
         src_path = pdfs_dir / pdf_filename
         filename = Path(pdf_filename).stem
-        extracted, pg = get_pdf_data_from_path(src_path)
+        try:
+            extracted, pg = get_pdf_data_from_path(src_path)
+        except RuntimeError:
+            continue
         txt = extracted["pdf_text"]
         pg_meta = extracted["page"]
         # normalize bboxes between 0 and 1000 for Hugging Face
