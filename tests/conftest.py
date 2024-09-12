@@ -39,6 +39,8 @@ def test_dir() -> Path:
 @pytest.fixture
 def set_test_mlflow_env_vars_factory():
     def factory():
-        os.environ["MLFLOW_TRACKING_URI"] = "sqlite:///:memory:"
+        # Use in memory tracking backend unless USE_TRACKING_SERVER is set
+        if not os.getenv("USE_TRACKING_SERVER"):
+            os.environ["MLFLOW_TRACKING_URI"] = "sqlite:///:memory:"
 
     return factory
