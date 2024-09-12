@@ -134,7 +134,9 @@ class MlflowInterface(ConfigurableResource):
         return experiment_id
 
 
-def get_most_recent_run(experiment_name: str) -> mlflow.entities.Run:
+def get_most_recent_run(
+    experiment_name: str, dagster_run_id: str
+) -> mlflow.entities.Run:
     """Search mlflow for most recent extraction run with specified experiment name."""
     run_metadata = mlflow.search_runs(
         experiment_names=[experiment_name],

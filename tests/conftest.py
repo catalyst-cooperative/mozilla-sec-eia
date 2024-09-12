@@ -1,10 +1,10 @@
 """PyTest configuration module. Defines useful fixtures, command line args."""
 
 import logging
+import os
 from pathlib import Path
 
 import pytest
-from mozilla_sec_eia.library.mlflow import MlflowInterface
 
 logger = logging.getLogger(__name__)
 
@@ -36,25 +36,9 @@ def test_dir() -> Path:
     return Path(__file__).parent
 
 
-class TestTracker(MlflowInterface):
-    """Create sub-class of `MlflowInterface` to use in testing context.
-
-    Test class creates an in-memory sqlite db for tracking, and a temporary directory
-    for artifact storage.
-    """
-
-    artifact_location: str
-    tracking_uri: str = "sqlite:///:memory:"
-    experiment_name: str
-    project: str = "local_project"
-
-
 @pytest.fixture
-def test_tracker_factory(tmp_path):
-    def factory(experiment_name: str) -> TestTracker:
-        return TestTracker(
-            artifact_location=str(tmp_path),
-            experiment_name=experiment_name,
-        )
+def set_test_mlflow_env_vars_factory():
+    def factory():
+        os.environ["MLFLOW_TRACKING_URI"] = "sqlite:///:memory:"
 
     return factory
