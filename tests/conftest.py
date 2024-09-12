@@ -44,8 +44,10 @@ class TestTracker(MlflowInterface):
     for artifact storage.
     """
 
-    def _get_tracking_password(self):
-        return "password"
+    artifact_location: str
+    tracking_uri: str = "sqlite:///:memory:"
+    experiment_name: str
+    project: str = "local_project"
 
 
 @pytest.fixture
@@ -53,9 +55,7 @@ def test_tracker_factory(tmp_path):
     def factory(experiment_name: str) -> TestTracker:
         return TestTracker(
             artifact_location=str(tmp_path),
-            tracking_uri="sqlite:///:memory:",
             experiment_name=experiment_name,
-            project="",
         )
 
     return factory

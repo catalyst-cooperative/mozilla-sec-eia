@@ -1,20 +1,34 @@
 """Validate basic 10k and exhibit 21 extraction."""
 
 import logging
+import os
+import unittest
 
 import dotenv
+from dagster import RunConfig
+from mozilla_sec_eia.library.mlflow.mlflow_resource import _configure_mlflow
 from mozilla_sec_eia.models import sec10k
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
+# TODO: Make validation tests log to tracking server on merge to main
+
 
 def test_basic_10k_validation(
-    test_tracker_factory,
     get_most_recent_mlflow_run_factory,
+    test_tracker_factory,
 ):
     """Test basic_10k_validation_job."""
     dotenv.load_dotenv()
-    sec10k.defs.get_job_def("basic_10k_extraction_validation").execute_in_process()
+    sec10k.defs.get_job_def("basic_10k_extraction_validation").execute_in_process(
+        run_config=RunConfig(
+            resources={
+                "mlflow_interface": test_tracker_factory(
+                    "basic_10k_extraction_validation"
+                )
+            }
+        ),
+    )
 
     run = get_most_recent_mlflow_run_factory("basic_10k_extraction_validation")
 
@@ -23,12 +37,30 @@ def test_basic_10k_validation(
 
 
 def test_ex21_validation(
-    test_tracker_factory,
     get_most_recent_mlflow_run_factory,
+    test_tracker_factory,
 ):
     """Test ex21_validation_job."""
     dotenv.load_dotenv()
-    sec10k.defs.get_job_def("ex21_extraction_validation").execute_in_process()
+    _configure_mlflow(
+        os.getenv("MLFLOW_TRACKING_URI"),
+        os.getenv("GCS_PROJECT"),
+    )
+    pretrained_model = sec10k.utils.layoutlm._load_pretrained_layoutlm()
+
+    with unittest.mock.patch(
+        "mozilla_sec_eia.models.sec10k.utils.layoutlm._load_pretrained_layoutlm",
+        new=lambda _: pretrained_model,
+    ):
+        sec10k.defs.get_job_def("ex21_extraction_validation").execute_in_process(
+            run_config=RunConfig(
+                resources={
+                    "mlflow_interface": test_tracker_factory(
+                        "ex21_extraction_validation"
+                    )
+                }
+            )
+        )
 
     run = get_most_recent_mlflow_run_factory("ex21_extraction_validation")
 
