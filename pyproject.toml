@@ -23,7 +23,7 @@ dependencies = [
     "dagster>=1.7.15", # 1.7.13 & 1.7.14 were both breaking things
     "dagster-mlflow",
     "dagster-webserver",
-    "datasets>=2.1,<3", # Access Hugging Face datasets
+    "datasets>=2.1,<4", # Access Hugging Face datasets
     "seqeval>=1.2,<2", # Sequence labeling evaluation
     "google-cloud-secret-manager>=2,<3",
     "google-cloud-storage>=2,<3",
