@@ -202,6 +202,11 @@ def get_image_dict(pdfs_dir):
         if pdf_filename.split(".")[-1] != "pdf":
             continue
         pdf_file_path = pdfs_dir / pdf_filename
+
+        # Check for empty file
+        if pdf_file_path.stat().st_size == 0:
+            continue
+
         _, pg = get_pdf_data_from_path(pdf_file_path)
         full_pg_img = render_page(pg)
         filename = pdf_filename.split(".")[0]

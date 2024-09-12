@@ -60,10 +60,7 @@ def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
             continue
         src_path = pdfs_dir / pdf_filename
         filename = Path(pdf_filename).stem
-        try:
-            extracted, pg = get_pdf_data_from_path(src_path)
-        except RuntimeError:
-            continue
+        extracted, pg = get_pdf_data_from_path(src_path)
         txt = extracted["pdf_text"]
         pg_meta = extracted["page"]
         # normalize bboxes between 0 and 1000 for Hugging Face
@@ -82,9 +79,8 @@ def create_inference_dataset(pdfs_dir: Path, labeled_json_dir=None, has_labels=F
     else:
         inference_df = format_unlabeled_pdf_dataframe(pdfs_dir=pdfs_dir)
     image_dict = get_image_dict(pdfs_dir)
-    doc_filenames = inference_df["id"].unique()
     annotations = []
-    for filename in doc_filenames:
+    for filename in image_dict:
         annotation = {
             "id": filename,
             "tokens": inference_df.groupby("id")["text"].apply(list).loc[filename],
