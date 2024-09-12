@@ -75,7 +75,7 @@ use the appropriate executor and supply the job with necessary resources.
 Library
 ^^^^^^^
 There's generic shared tooling for ``pudl-models`` defined in
-``src/mozilla_sec_eia/library/``. This includes the helper fucntions for
+``src/mozilla_sec_eia/library/``. This includes the helper functions for
 constructing dagster jobs discussed above, as well as useful methods for computing
 validation metrics, and an interface to our mlflow tracking server integrated with
 our tracking server.
