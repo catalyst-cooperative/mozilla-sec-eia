@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 
-import mlflow
 import pytest
 from mozilla_sec_eia.library.mlflow import MlflowInterface
 
@@ -59,19 +58,3 @@ def test_tracker_factory(tmp_path):
         )
 
     return factory
-
-
-@pytest.fixture
-def get_most_recent_mlflow_run_factory():
-    def _get_run(experiment_name: str):
-        """Search mlflow for most recent run with specified experiment name."""
-        run_metadata = mlflow.search_runs(
-            experiment_names=[experiment_name],
-        )
-
-        # Mlflow returns runs ordered by their runtime, so it's easy to grab the latest run
-        # This assert will ensure this doesn't silently break if the ordering changes
-        assert run_metadata.loc[0, "end_time"] == run_metadata["end_time"].max()
-        return mlflow.get_run(run_metadata.loc[0, "run_id"])
-
-    return _get_run

@@ -6,7 +6,10 @@ import unittest
 
 import dotenv
 from dagster import RunConfig
-from mozilla_sec_eia.library.mlflow.mlflow_resource import _configure_mlflow
+from mozilla_sec_eia.library.mlflow.mlflow_resource import (
+    _configure_mlflow,
+    get_most_recent_run,
+)
 from mozilla_sec_eia.models import sec10k
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
@@ -15,7 +18,6 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
 def test_basic_10k_validation(
-    get_most_recent_mlflow_run_factory,
     test_tracker_factory,
 ):
     """Test basic_10k_validation_job."""
@@ -30,14 +32,13 @@ def test_basic_10k_validation(
         ),
     )
 
-    run = get_most_recent_mlflow_run_factory("basic_10k_extraction_validation")
+    run = get_most_recent_run("basic_10k_extraction_validation")
 
     assert run.data.metrics["precision"] == 1
     assert run.data.metrics["recall"] == 1
 
 
 def test_ex21_validation(
-    get_most_recent_mlflow_run_factory,
     test_tracker_factory,
 ):
     """Test ex21_validation_job."""
@@ -62,7 +63,7 @@ def test_ex21_validation(
             )
         )
 
-    run = get_most_recent_mlflow_run_factory("ex21_extraction_validation")
+    run = get_most_recent_run("ex21_extraction_validation")
 
     assert run.data.metrics["avg_subsidiary_jaccard_sim"] > 0.85
     assert run.data.metrics["avg_location_jaccard_sim"] > 0.9
