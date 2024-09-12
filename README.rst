@@ -1,4 +1,4 @@
-mozilla-sec-eia: Developing a linkage between SEC and EIA
+pudl-models: ML models developed for PUDL
 =======================================================================================
 
 .. readme-intro
@@ -27,101 +27,74 @@ mozilla-sec-eia: Developing a linkage between SEC and EIA
    :target: https://github.com/psf/black>
    :alt: Any color you want, so long as it's black.
 
-This repo contains exploratory development for an SEC-EIA linkage.
-
-Usage
+About
 -----
+The `PUDL <https://github.com/catalyst-cooperative/pudl>`__ project makes US energy data free and open
+for all. For more information, see the PUDL repo and `website <https://catalyst.coop/pudl/>`__.
 
-CLI
-^^^
-The CLI uses a sub-command structure, so new commands and workflows can easily be
-added during development. It's usage is as following:
+This repo implements machine learning models which support PUDL. The types of
+modelling performed here include record linkage between datasets, and extracting
+structured data from unstructured documents. The outputs of these models then feed
+into PUDL tables, and are distributed in the PUDL data warehouse.
 
-``mozilla_dev {COMMAND} {OPTIONS}``
+Project Structure
+-----------------
+This repo is split into two main sections, with shared tooling being implemented in
+``src/mozilla_sec_eia/library`` and actual models implemented in
+``src/mozilla_sec_eia/models``.
 
-The available commands are ``validate_archive``, which validates that all filings on
-the GCS archive align with those described in the metadata DB, ``finetune_ex21``,
-which will finetune the exhibit 21 extractor and log the model using mlflow, and
-``rename_filings``, which will rename labeled filings on GCS.
+Models
+^^^^^^
+Each model is contained in its own Dagster
+`code location <https://docs.dagster.io/concepts/code-locations>`__. This keeps models
+isolated from each other, allowing finetuned dependency management, and provides useful
+organization in the Dagster UI. To add a new model, you must create a new python module
+in the ``src/mozilla_sec_eia/models/`` directory. This module should define a single
+Dagster ``Definitions`` object which can be imported from the top-level of the module.
+For reference on how to structure a code location, see
+``src/mozilla_sec_eia/models/sec10k/`` for an example. After creating a new model,
+it must be added to
+`workspace.yaml <https://docs.dagster.io/concepts/code-locations/workspace-files>`__.
 
-Experiment/Model Tracking
-^^^^^^^^^^^^^^^^^^^^^^^^^
-We've setup a remote tracking server using `mlflow <https://mlflow.org/docs/latest/tracking.html>`_
-to manage tracking, caching, and versioning models developed as a part of this project.
-To interact with the server through the UI, go `here <https://mlflow-ned2up6sra-uc.a.run.app>`_
-and login using the username and password stored in gcloud secret manager.
-There is currently a finetuned layoutlm model for extracting exhibit 21 data stored
-on the server. This model can be accessed using the method
-``src/mozilla_sec_eia/utils/cloud.py:load_model``. This will return a dictionary
-containing ``model`` and ``tokenizer`` fields.
+There are three types of dagster `jobs <https://docs.dagster.io/concepts/assets/asset-jobs>`__
+expected in a model code location:
 
-Helper Tools
-^^^^^^^^^^^^
-Utility functions for accessing and working with 10k filings as well as their exhibit
-21 attachments can be found in 'src/mozilla_sec_eia/utils/cloud.py'. The base class is
-the ``GCSArchive`` which provides an interface to archived filings on GCS. To
-instantiate this class, the following environment variables need to be set, or defined
-in a ``.env`` file:
+* **Production Jobs**: Production jobs define a pipeline to execute a model and produce
+  outputs which typicall feed into PUDL.
+* **Validation Jobs**: Validation jobs are used to test/validate models. They will be
+  run in a single process with an
+  `mlflow <https://mlflow.org/docs/latest/tracking.html>`__ run backing
+  them to allow logging results to a tracking server.
+* **Training Jobs**: Training jobs are meant to train models and log results with
+  mlflow for use in production jobs.
 
-``GCS_BUCKET_NAME``
-``GCS_METADATA_DB_INSTANCE_CONNECTION``
-``GCS_IAM_USER``
-``GCS_METADATA_DB_NAME``
-``GCS_PROJECT``
-``MLFLOW_TRACKING_URI``
+There are helper functions in ``src/mozilla_sec_eia/library/model_jobs.py`` for
+constructing each of these jobs. These functions help to ensure each job will
+use the appropriate executor and supply the job with necessary resources.
 
-This code sample shows how to use the class to fetch filings from the archive:
+Library
+^^^^^^^
+There's generic shared tooling for ``pudl-models`` defined in
+``src/mozilla_sec_eia/library/``. This includes the helper functions for
+constructing dagster jobs discussed above, as well as useful methods for computing
+validation metrics, and an interface to our mlflow tracking server integrated with
+our tracking server.
 
-.. code-block:: python
+MlFlow
+""""""
+We use a remote `mlflow tracking <https://mlflow.org/docs/latest/tracking.html>`__ to aid in the
+development and management of ``pudl-models``. In the ``mlflow`` module, there are
+several dagster resources and IO-managers that can be used in any models to allow simple
+seamless interface to the server.
 
-   from mozilla_sec_eia.utils.cloud import GCSArchive
-   archive = GCSArchive()
+.. TODO: Add mlflow resource/io-manager examples
 
-   # Get metadata from postgres instance
-   metadata_df = archive.get_metadata()
-
-   # Do some filtering to get filings of interest
-   filings = metadata_df.loc[...  # Get rows from original df
-
-   # This will download and cache filings locally for later use
-   # Successive calls to get_filings will not re-download filings which are already cahced
-   downloaded_filings = archive.get_filings(filings)
-
-   # Get exhibit 21's and extract subsidiary data
-   for filing in downloaded_filings:
-           cool_extraction_model(filing.get_ex_21().as_image())
-
-Labeling
---------
-We are using `Label Studio <https://labelstud.io/>`_ to create training data
-for fine-tuning the Ex. 21 extraction model. The very preliminary workflow
-for labeling data is as follows:
-
-* For each filing that you want to label, follow notebook 7 to create the
-  inputs for Label Studio. This notebook first creates a PDF of the filing.
-  Then, it extracts the bounding boxes around each word and create a "task"
-  JSON and image for each Ex. 21 table that will be used in Label Studio.
-* Upload these JSONs and images to the same bucket in GCS (the "unlabeled"
-  bucket by default).
-* `Install Label Studio <https://labelstud.io/guide/install>`_
-* Start Label Studio locally and create a project.
-* Under Settings, set the template/config for the project with the config
-  found in ``labeling-configs/labeling-config.xml``. This should create the
-  correct entity labels and UI setup.
-* Connect GCS to Label Studio by following `these directions
-  <https://labelstud.io/guide/storage#Google-Cloud-Storage>`_
-* Specific Label Studio settings: Filter files for only JSONs
-  (these are your tasks). Leave "Treat every bucket object as a source file"
-  disabled. Add the service account authentication JSON for your bucket.
-* Additionally add a Target Storage bucket (the "labeled" bucket by
-  default).
-* Import data and label Ex. 21 tables.
-* Sync with target storage.
-* Update the ``labeled_data_tracking.csv`` with the new filings you've
-  labeled.
-* Run the ``rename_labeled_filings.py`` script to update labeled file
-  names in the GCS bucket with their SEC filename.
-
+Development
+-----------
+To launch the dagster UI to load all ``pudl-models``, run the command ``dagster dev``
+in the top-level of this repo. This will load the file ``workspace.yaml``, which points
+to each model. You can also work on a single model in isolation by running the command:
+``dagster dev -m mozilla_sec_eia.models.{your_cool_model}``.
 
 About Catalyst Cooperative
 ---------------------------------------------------------------------------------------

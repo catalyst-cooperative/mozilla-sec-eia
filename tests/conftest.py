@@ -1,11 +1,10 @@
 """PyTest configuration module. Defines useful fixtures, command line args."""
 
 import logging
-import unittest
+import os
 from pathlib import Path
 
 import pytest
-from mozilla_sec_eia.utils.cloud import GoogleCloudSettings, initialize_mlflow
 
 logger = logging.getLogger(__name__)
 
@@ -38,20 +37,10 @@ def test_dir() -> Path:
 
 
 @pytest.fixture
-def test_settings(test_dir):
-    """Return test GoogleCloudSettings object."""
-    return GoogleCloudSettings(_env_file=test_dir / "test.env")
+def set_test_mlflow_env_vars_factory():
+    def factory():
+        # Use in memory tracking backend unless USE_TRACKING_SERVER is set
+        if not os.getenv("USE_TRACKING_SERVER"):
+            os.environ["MLFLOW_TRACKING_URI"] = "sqlite:///:memory:"
 
-
-@pytest.fixture
-def test_mlflow_init_func(test_settings):
-    """Return a function that can replace ``initialize_mlflow`` with no external calls."""
-
-    def _test_init():
-        with unittest.mock.patch(
-            "mozilla_sec_eia.utils.cloud._access_secret_version",
-            new=lambda *args: "password",
-        ):
-            return initialize_mlflow(test_settings)
-
-    return _test_init
+    return factory

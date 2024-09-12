@@ -1,33 +1,54 @@
 """Util functions for training and predicting with LayoutLM on Ex. 21 tables."""
 
 import mlflow
+from dagster import ConfigurableResource, InputContext, OutputContext
 from PIL import ImageDraw, ImageFont
+from pydantic import PrivateAttr
 from transformers import (
     Trainer,
 )
 
-from mozilla_sec_eia.utils.cloud import initialize_mlflow
+from mozilla_sec_eia.library.mlflow import MlflowBaseIOManager, MlflowInterface
 
 
-def log_model(finetuned_model: Trainer):
-    """Log fine-tuned model to mlflow artifacts."""
-    model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
-    mlflow.transformers.log_model(
-        model, artifact_path="layoutlm_extractor", task="token-classification"
-    )
+def _load_pretrained_layoutlm(version: str = "latest") -> dict:
+    """Function to load layoutlm from mlflow."""
+    path = f"models:/layoutlm_extractor/{version}"
+
+    return mlflow.transformers.load_model(path, return_type="components")
 
 
-def load_model(version=1):
-    """Load fine-tuned model checkpoint from mlflow artifacts.
+class LayoutlmIOManager(MlflowBaseIOManager):
+    """Load and log models with mlflow tracking server."""
 
-    Returns: A dictionary of the saved individual components of
-        either the Pipeline or the pre-trained model.
-    """
-    # TODO: want more ability to give load_model a model path?
-    initialize_mlflow()
-    return mlflow.transformers.load_model(
-        f"models:/layoutlm_extractor/{version}", return_type="components"
-    )
+    version: int | None = None
+
+    def handle_output(self, context: OutputContext, finetuned_model: Trainer):
+        """Load metrics to mlflow run/experiment created by `MlflowInterface`."""
+        model = {"model": finetuned_model.model, "tokenizer": finetuned_model.tokenizer}
+        mlflow.transformers.log_model(
+            model, artifact_path="layoutlm_extractor", task="token-classification"
+        )
+
+    def load_input(self, context: InputContext) -> dict:
+        """Log metrics to mlflow run/experiment created by `MlflowInterface`."""
+        return _load_pretrained_layoutlm(self.version)
+
+
+class LayoutlmResource(ConfigurableResource):
+    """Dagster resource for loading/using pretrained layoutlm model as a resource."""
+
+    mlflow_interface: MlflowInterface
+    version: str | None = None
+    _model_components: dict = PrivateAttr()
+
+    def setup_for_execution(self, context):
+        """Load layoutlm from mlflow."""
+        self._model_components = _load_pretrained_layoutlm(self.version)
+
+    def get_model_components(self):
+        """Return model components from loaded model."""
+        return self._model_components["model"], self._model_components["tokenizer"]
 
 
 def normalize_bboxes(txt_df, pg_meta_df):

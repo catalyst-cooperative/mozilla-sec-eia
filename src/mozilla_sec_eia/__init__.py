@@ -1,14 +1,13 @@
 """A template repository for a Python package created by Catalyst Cooperative."""
 
 import logging
-from pathlib import Path
 
 import pkg_resources
 
 # In order for the package modules to be available when you import the package,
 # they need to be imported here somehow. Not sure if this is best practice though.
-import mozilla_sec_eia.cli
-import mozilla_sec_eia.utils  # noqa: F401
+import mozilla_sec_eia.library
+import mozilla_sec_eia.models
 
 __author__ = "Catalyst Cooperative"
 __contact__ = "pudl@catalyst.coop"
