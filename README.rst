@@ -82,7 +82,7 @@ our tracking server.
 
 MlFlow
 """"""
-We use a remote `mlflow tracking <https://mlflow.org/docs/latest/tracking.html>`__ to aide in the
+We use a remote `mlflow tracking <https://mlflow.org/docs/latest/tracking.html>`__ to aid in the
 development and management of ``pudl-models``. In the ``mlflow`` module, there are
 several dagster resources and IO-managers that can be used in any models to allow simple
 seamless interface to the server.
