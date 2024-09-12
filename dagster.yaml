@@ -4,4 +4,4 @@ run_coordinator:
   config:
     tag_concurrency_limits:
       - key: "dagster/backfill"
-        limit: 4
+        limit: 2
