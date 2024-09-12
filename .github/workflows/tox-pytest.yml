@@ -54,6 +54,7 @@ jobs:
         run: |
           if [[ $GITHUB_REF == 'main' && $GITHUB_EVENT_NAME == 'push' ]]; then
               echo "USE_TRACKING_SERVER=true" >> "$GITHUB_ENV"
+          fi
 
       - name: Create env file
         run: |
