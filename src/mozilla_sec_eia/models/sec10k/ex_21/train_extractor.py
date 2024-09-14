@@ -7,8 +7,8 @@ from SEC 10K filings.
 
 from pathlib import Path
 
-import mlflow
 import numpy as np
+from dagster import Config, asset
 from datasets import (
     Array2D,
     Array3D,
@@ -26,9 +26,8 @@ from transformers import (
 )
 from transformers.data.data_collator import default_data_collator
 
-from mozilla_sec_eia.ex_21.create_labeled_dataset import format_as_ner_annotations
-from mozilla_sec_eia.utils.cloud import initialize_mlflow
-from mozilla_sec_eia.utils.layoutlm import get_id_label_conversions, log_model
+from ..utils.layoutlm import get_id_label_conversions
+from .create_labeled_dataset import format_as_ner_annotations
 
 LABELS = [
     "O",
@@ -134,23 +133,20 @@ def load_test_train_set(
     return split_dataset["train"], split_dataset["test"]
 
 
-def train_model(
-    labeled_json_path: str,
-    gcs_training_data_dir: str = "labeled",
-    model_output_dir="layoutlm_trainer",
-    test_size=0.2,
+class FineTuneConfig(Config):
+    """Configuration to supply to `train_model`."""
+
+    labeled_json_path: str = "sec10k_filings/labeled_jsons/"
+    gcs_training_data_dir: str = "labeled"
+    output_dir: str = "layoutlm_trainer"
+    test_size: float = 0.2
+
+
+@asset(io_manager_key="layoutlm_io_manager")
+def layoutlm(
+    config: FineTuneConfig,
 ):
-    """Train LayoutLM model with labeled data.
-
-    Arguments:
-        model_output_dir: Path to directory where model
-            checkpoints are saved.
-        test_size: Proportion of labeled dataset to use for test set.
-    """
-    # Prepare mlflow for tracking/logging model
-    initialize_mlflow()
-    mlflow.set_experiment("/finetune-layoutlmv3")
-
+    """Train LayoutLM model with labeled data."""
     # Prepare model
     id2label, label2id = get_id_label_conversions(LABELS)
     model = LayoutLMv3ForTokenClassification.from_pretrained(
@@ -160,18 +156,18 @@ def train_model(
         "microsoft/layoutlmv3-base", apply_ocr=False
     )
     ner_annotations = format_as_ner_annotations(
-        labeled_json_path=Path(labeled_json_path),
-        gcs_folder_name=gcs_training_data_dir,
+        labeled_json_path=Path(config.labeled_json_path),
+        gcs_folder_name=config.gcs_training_data_dir,
     )
     # Get training/test data using pre-trained processor to prepare data
     train_dataset, eval_dataset = load_test_train_set(
-        processor=processor, test_size=test_size, ner_annotations=ner_annotations
+        processor=processor, test_size=config.test_size, ner_annotations=ner_annotations
     )
 
     # Initialize our Trainer
     metric = load_metric("seqeval")
     training_args = TrainingArguments(
-        output_dir=model_output_dir,
+        output_dir=config.output_dir,
         max_steps=1000,
         per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
@@ -193,6 +189,5 @@ def train_model(
     )
 
     # Train inside mlflow run. Mlflow will automatically handle logging training metrcis
-    with mlflow.start_run():
-        trainer.train()
-        log_model(trainer)
+    trainer.train()
+    return trainer

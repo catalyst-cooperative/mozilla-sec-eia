@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from mozilla_sec_eia.utils.cloud import GCSArchive
-from mozilla_sec_eia.utils.layoutlm import normalize_bboxes
-from mozilla_sec_eia.utils.pdf import (
+from ..utils.cloud import GCSArchive
+from ..utils.layoutlm import normalize_bboxes
+from ..utils.pdf import (
     get_pdf_data_from_path,
     pil_to_cv2,
     render_page,
