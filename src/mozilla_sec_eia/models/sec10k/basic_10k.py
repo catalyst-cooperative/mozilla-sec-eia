@@ -82,15 +82,19 @@ def extract_filings(
     logger.info(f"Extracting {len(filings_to_extract)} filings.")
 
     extraction_metadata = pd.DataFrame(
-        {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+        {
+            "filename": pd.Series(dtype=str),
+            "success": pd.Series(dtype=bool),
+            "notes": pd.Series(dtype=str),
+        }
     ).set_index("filename")
     extracted = pd.DataFrame()
 
     for filing in cloud_interface.iterate_filings(filings_to_extract):
         ext, filename, unmatched_keys = _extract_10k(filing)
-        extraction_metadata.loc[filename, ["success", "unmatched_keys"]] = [
+        extraction_metadata.loc[filename, ["success", "notes"]] = [
             len(ext) > 0,
-            ",".join(unmatched_keys),
+            "Unmatched Keys: " + ",".join(unmatched_keys),
         ]
         extracted = pd.concat([extracted, ext])
 
@@ -134,7 +138,7 @@ def basic_10k_validation_filing_metadata(
     """Get sec 10k filing metadata from validation set."""
     filing_metadata = cloud_interface.get_metadata()
     return filing_metadata[
-        filing_metadata["filename"].isin(
+        filing_metadata.index.isin(
             basic_10k_validation_set.index.get_level_values("filename").unique()
         )
     ]
