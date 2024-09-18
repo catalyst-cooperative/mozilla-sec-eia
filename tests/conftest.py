@@ -5,6 +5,7 @@ from pathlib import Path
 
 import mlflow
 import pytest
+
 from mozilla_sec_eia.library.mlflow import MlflowInterface
 
 logger = logging.getLogger(__name__)

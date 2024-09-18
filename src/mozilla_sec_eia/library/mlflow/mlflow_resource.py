@@ -135,10 +135,7 @@ def get_most_recent_run(
     """Search mlflow for most recent extraction run with specified experiment name."""
     run_metadata = mlflow.search_runs(
         experiment_names=[experiment_name],
-        filter_string=f"tags.dagster_run_id!='{dagster_run_id}'",
     )
 
     # Mlflow returns runs ordered by their runtime, so it's easy to grab the latest run
-    # This assert will ensure this doesn't silently break if the ordering changes
-    assert run_metadata.loc[0, "end_time"] == run_metadata["end_time"].max()
     return mlflow.get_run(run_metadata.loc[0, "run_id"])

@@ -40,22 +40,6 @@ class LayoutlmIOManager(MlflowBaseIOManager):
         return _load_pretrained_layoutlm(self.version)
 
 
-class LayoutlmLocalIOManager(MlflowBaseIOManager):
-    """Load and log mlflow models to local path."""
-
-    local_path: str = "./layoutlm"
-
-    def handle_output(self, context: OutputContext, pipeline):
-        """Load metrics to mlflow run/experiment created by `MlflowInterface`."""
-        mlflow.transformers.save_model(
-            pipeline, path=self.local_path, task="token-classification"
-        )
-
-    def load_input(self, context: InputContext) -> dict:
-        """Log metrics to mlflow run/experiment created by `MlflowInterface`."""
-        return mlflow.transformers.load_model(self.local_path, return_type="components")
-
-
 class LayoutlmResource(ConfigurableResource):
     """Dagster resource for loading/using pretrained layoutlm model as a resource."""
 

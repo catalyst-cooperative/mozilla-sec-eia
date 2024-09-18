@@ -50,6 +50,12 @@ jobs:
           conda config --show
           printenv | sort
 
+      - name: Set USE_TRACKING_SERVER on main
+        run: |
+          if [[ $GITHUB_REF == 'main' && $GITHUB_EVENT_NAME == 'push' ]]; then
+              echo "USE_TRACKING_SERVER=true" >> "$GITHUB_ENV"
+          fi
+
       - name: Create env file
         run: |
           touch .env

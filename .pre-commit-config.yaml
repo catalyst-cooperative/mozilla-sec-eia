@@ -25,7 +25,7 @@ repos:
   # Formatters: hooks that re-write Python and RST files
   ########################################################################################
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.7
+    rev: v0.6.5
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -48,7 +48,7 @@ repos:
   ########################################################################################
   # Check for errors in restructuredtext (.rst) files under the doc hierarchy
   - repo: https://github.com/PyCQA/doc8
-    rev: v1.1.1
+    rev: v1.1.2
     hooks:
       - id: doc8
         args: ["--config", "pyproject.toml"]
@@ -84,5 +84,5 @@ ci:
   autoupdate_branch: main
   autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
-  skip: [unit-tests, nb-output-clear]
+  skip: [unit-tests]
   submodules: false

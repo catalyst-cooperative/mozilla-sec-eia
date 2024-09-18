@@ -4,6 +4,7 @@ import logging
 
 import dotenv
 import pytest
+
 from mozilla_sec_eia.models import sec10k
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")

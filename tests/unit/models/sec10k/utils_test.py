@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+
 from mozilla_sec_eia.models.sec10k.utils.cloud import (
     Exhibit21,
     GCSArchive,
