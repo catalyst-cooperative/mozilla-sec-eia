@@ -155,6 +155,7 @@ doctest_optionflags = [
 ]
 
 [tool.ruff]
+exclude = ["notebooks/*"]
 select = [
     "A", # flake8-builtins
     # "ARG", # unused arguments
