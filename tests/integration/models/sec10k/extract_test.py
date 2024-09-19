@@ -34,6 +34,7 @@ def test_basic_10k_validation(
 
 
 def test_ex21_validation(
+    tmp_path,
     set_test_mlflow_env_vars_factory,
 ):
     """Test ex21_validation_job."""
@@ -42,7 +43,9 @@ def test_ex21_validation(
         os.getenv("MLFLOW_TRACKING_URI"),
         os.getenv("GCS_PROJECT"),
     )
-    pretrained_model = sec10k.utils.layoutlm._load_pretrained_layoutlm()
+    pretrained_model = sec10k.utils.layoutlm._load_pretrained_layoutlm(
+        cache_path=tmp_path
+    )
 
     with unittest.mock.patch(
         "mozilla_sec_eia.models.sec10k.utils.layoutlm._load_pretrained_layoutlm",
