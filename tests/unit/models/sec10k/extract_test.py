@@ -7,6 +7,7 @@ import dagster
 import pandas as pd
 import pytest
 from dagster import materialize
+
 from mozilla_sec_eia.models.sec10k.extract import sec10k_filing_metadata
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
