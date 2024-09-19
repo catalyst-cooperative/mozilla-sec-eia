@@ -5,6 +5,7 @@ import os
 import unittest
 
 import dotenv
+
 from mozilla_sec_eia.library.mlflow.mlflow_resource import (
     _configure_mlflow,
     get_most_recent_run,
