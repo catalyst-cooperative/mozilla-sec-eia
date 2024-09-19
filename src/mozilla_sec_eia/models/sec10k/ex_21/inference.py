@@ -230,7 +230,8 @@ class Exhibit21Extractor(ConfigurableResource):
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
     def extract_filings(
-        self, filing_metadata: pd.DataFrame, debug: bool = False
+        self,
+        filing_metadata: pd.DataFrame,
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Predict entities with a fine-tuned model and extract Ex. 21 tables.
 
@@ -244,8 +245,6 @@ class Exhibit21Extractor(ConfigurableResource):
         Arguments:
             filing_metadata: Metadata dataframe for the filings that will be run through
                 the extraction pipeline.
-            debug: If True, return logits and predictions as well as the extracted
-                table and metadata.
 
         Returns:
             logits: A list of logits. The list is the length of the number of documents in the
