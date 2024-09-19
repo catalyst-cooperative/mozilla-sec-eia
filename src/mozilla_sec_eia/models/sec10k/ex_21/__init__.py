@@ -241,17 +241,6 @@ def ex21_extract_validation(
     return metadata, extracted
 
 
-def ex21_extract_debug(
-    ex21_validation_filing_metadata: pd.DataFrame,
-    exhibit21_extractor: Exhibit21Extractor,
-):
-    """See the predictions, logits, and extracted table from Ex. 21 docs."""
-    metadata, extracted = exhibit21_extractor.extract_filings(
-        ex21_validation_filing_metadata
-    )
-    return metadata, extracted
-
-
 exhibit_21_extractor_resource = Exhibit21Extractor(
     cloud_interface=cloud_interface_resource,
     layoutlm=LayoutlmResource(mlflow_interface=mlflow_interface_resource),
