@@ -75,14 +75,14 @@ use the appropriate executor and supply the job with necessary resources.
 Library
 ^^^^^^^
 There's generic shared tooling for ``pudl-models`` defined in
-``src/mozilla_sec_eia/library/``. This includes the helper fucntions for
+``src/mozilla_sec_eia/library/``. This includes the helper functions for
 constructing dagster jobs discussed above, as well as useful methods for computing
 validation metrics, and an interface to our mlflow tracking server integrated with
 our tracking server.
 
 MlFlow
 """"""
-We use a remote `mlflow tracking <https://mlflow.org/docs/latest/tracking.html>`__ to aide in the
+We use a remote `mlflow tracking <https://mlflow.org/docs/latest/tracking.html>`__ to aid in the
 development and management of ``pudl-models``. In the ``mlflow`` module, there are
 several dagster resources and IO-managers that can be used in any models to allow simple
 seamless interface to the server.
