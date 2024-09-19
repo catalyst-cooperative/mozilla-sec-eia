@@ -82,7 +82,9 @@ def ex21_validation_metrics(computed_df: pd.DataFrame, validation_df: pd.DataFra
             validation_df["id"] == filename
         ].reset_index(drop=True)
         # check if the tables are exactly equal
-        if extracted_table_df.equals(validation_table_df):
+        if extracted_table_df[["subsidiary", "loc", "own_per"]].equals(
+            validation_table_df[["subsidiary", "loc", "own_per"]]
+        ):
             n_equal += 1
         else:
             incorrect_files.append(filename)
@@ -233,6 +235,17 @@ def ex21_extract_validation(
     exhibit21_extractor: Exhibit21Extractor,
 ):
     """Extract ownership info from exhibit 21 docs."""
+    metadata, extracted = exhibit21_extractor.extract_filings(
+        ex21_validation_filing_metadata
+    )
+    return metadata, extracted
+
+
+def ex21_extract_debug(
+    ex21_validation_filing_metadata: pd.DataFrame,
+    exhibit21_extractor: Exhibit21Extractor,
+):
+    """See the predictions, logits, and extracted table from Ex. 21 docs."""
     metadata, extracted = exhibit21_extractor.extract_filings(
         ex21_validation_filing_metadata
     )
