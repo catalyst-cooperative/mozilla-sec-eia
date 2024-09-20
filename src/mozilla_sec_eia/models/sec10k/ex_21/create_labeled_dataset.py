@@ -16,7 +16,7 @@ from ..utils.pdf import (
 )
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
-ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
+ROOT_DIR = Path(__file__).parent.parent.parent.parent.parent.parent.resolve()
 
 
 BBOX_COLS_PDF = [
