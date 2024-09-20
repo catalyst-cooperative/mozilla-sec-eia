@@ -283,7 +283,6 @@ class GCSArchive(ConfigurableResource):
         # Cache filings and labels
         filenames = []
         direc = self.labels_bucket_path / gcs_folder_name
-        logger.info(direc.is_dir())
         for file in direc.iterdir():
             if file.name == gcs_folder_name:
                 continue
