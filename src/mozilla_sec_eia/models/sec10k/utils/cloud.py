@@ -144,17 +144,23 @@ class GCSArchive(ConfigurableResource):
     @property
     def filings_bucket_path(self):
         """Return UPath of filings bucket."""
-        return UPath(self.filings_bucket)
+        path = UPath(self.filings_bucket)
+        assert path.exists(), "Filings bucket path does not exist"
+        return path
 
     @property
     def labels_bucket_path(self):
         """Return UPath of filings bucket."""
-        return UPath(self.labels_bucket)
+        path = UPath(self.labels_bucket)
+        assert path.exists(), "Labels bucket path does not exist"
+        return path
 
     @property
     def outputs_bucket_path(self):
         """Return UPath of filings bucket."""
-        return UPath(self.outputs_bucket)
+        path = UPath(self.outputs_bucket)
+        assert path.exists(), "Outputs bucket path does not exist"
+        return path
 
     def get_metadata(self, year_quarter: str | None = None) -> pd:
         """Return dataframe of filing metadata."""
