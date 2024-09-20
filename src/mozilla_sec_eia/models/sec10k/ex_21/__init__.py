@@ -9,6 +9,9 @@ from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asse
 
 from mozilla_sec_eia.library import validation_helpers
 from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
+from mozilla_sec_eia.models.sec10k.ex_21.validation_helpers import (
+    clean_ex21_validation_set,
+)
 
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
 from ..utils.cloud import GCSArchive, cloud_interface_resource
@@ -21,7 +24,7 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 @asset
 def ex21_validation_set() -> pd.DataFrame:
     """Return dataframe containing exhibit 21 validation data."""
-    return validation_helpers.clean_ex21_validation_set(
+    return clean_ex21_validation_set(
         validation_helpers.load_validation_data("ex21_labels.csv")
     )
 

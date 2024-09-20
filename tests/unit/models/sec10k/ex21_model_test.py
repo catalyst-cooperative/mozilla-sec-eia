@@ -6,7 +6,6 @@ import pytest
 import torch
 
 from mozilla_sec_eia.library.validation_helpers import (
-    clean_ex21_validation_set,
     fill_nulls_for_comparison,
     jaccard_similarity,
     pandas_compute_precision_recall,
@@ -14,6 +13,9 @@ from mozilla_sec_eia.library.validation_helpers import (
 )
 from mozilla_sec_eia.models.sec10k.ex_21.inference import get_flattened_mode_predictions
 from mozilla_sec_eia.models.sec10k.ex_21.train_extractor import LABELS
+from mozilla_sec_eia.models.sec10k.ex_21.validation_helpers import (
+    clean_ex21_validation_set,
+)
 from mozilla_sec_eia.models.sec10k.utils.layoutlm import get_id_label_conversions
 
 

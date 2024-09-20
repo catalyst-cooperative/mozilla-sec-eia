@@ -24,8 +24,6 @@ def rename_filings(labeled_bucket_name="labeledv0.1"):
     archive = GCSArchive()
     bucket = archive._labels_bucket
 
-    labeled_bucket_name = labeled_bucket_name
-
     for blob in bucket.list_blobs(prefix=labeled_bucket_name):
         name = blob.name.replace("/", "")
         if name != labeled_bucket_name:
