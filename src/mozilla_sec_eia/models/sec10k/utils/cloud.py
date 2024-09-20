@@ -55,6 +55,13 @@ class Exhibit21(BaseModel):
 
     def save_as_pdf(self, file: BinaryIO):
         """Save Exhibit 21 as a PDF in `file`, which can be in memory or on disk."""
+        # TODO: probably should make a "corrections" file that has CSS/HTML replacements
+        # to make PDF render
+        # TODO: should probably also catch errors and not fail
+        if "border-bottom: black thin solid;" in self.ex_21_text:
+            self.ex_21_text = self.ex_21_text.replace(
+                "border-bottom: black thin solid;", "border-bottom: 1px solid black;"
+            )
         res = pisa.CreatePDF(self.ex_21_text, file)
         if res.err:
             logger.warning(
@@ -197,9 +204,17 @@ class GCSArchive(ConfigurableResource):
         filings = []
         for _, filing in filing_selection.iterrows():
             local_path = self.get_local_filename(cache_directory, filing)
+            year_quarter = filing["year_quarter"]
             if not local_path.exists():
                 with local_path.open("w") as f:
-                    f.write((self.filings_bucket_path / filing.filename).read_text())
+                    f.write(
+                        (
+                            self.filings_bucket_path
+                            / "sec10k"
+                            / f"sec10k-{year_quarter}"
+                            / filing.filename
+                        ).read_text()
+                    )
 
             with local_path.open() as f:
                 sec10k_filing = Sec10K.from_file(
@@ -257,11 +272,12 @@ class GCSArchive(ConfigurableResource):
         json_cache_path.mkdir(parents=True, exist_ok=True)
         pdf_cache_path.mkdir(parents=True, exist_ok=True)
         metadata_df = self.get_metadata()
-        label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
-
+        # label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
+        label_name_pattern = re.compile(r"(\d+)-(.+)")
         # Cache filings and labels
         filenames = []
         direc = self.labels_bucket_path / gcs_folder_name
+        logger.info(direc.is_dir())
         for file in direc.iterdir():
             if file.name == gcs_folder_name:
                 continue
@@ -273,10 +289,11 @@ class GCSArchive(ConfigurableResource):
             match = label_name_pattern.search(file.name)
             filenames.append(f"edgar/data/{match.group(1)}/{match.group(2)}.txt")
 
+        metadata_df = metadata_df.reset_index()
         filings = metadata_df[metadata_df["filename"].isin(filenames)]
         self.get_filings(
-            filings,
-            cache_path=pdf_cache_path,
+            filing_selection=filings,
+            cache_directory=pdf_cache_path,
             cache_pdf=True,
         )
 
