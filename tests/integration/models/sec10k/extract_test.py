@@ -49,7 +49,7 @@ def test_ex21_validation(
 
     with unittest.mock.patch(
         "mozilla_sec_eia.models.sec10k.utils.layoutlm._load_pretrained_layoutlm",
-        new=lambda _: pretrained_model,
+        new=lambda cache_path, version: pretrained_model,
     ):
         set_test_mlflow_env_vars_factory()
         result = sec10k.defs.get_job_def(
