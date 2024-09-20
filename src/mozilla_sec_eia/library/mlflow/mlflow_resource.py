@@ -12,6 +12,7 @@ this is a configurable value, which can be found in the dagster UI.
 import logging
 import os
 from contextlib import contextmanager
+from pathlib import Path
 
 import mlflow
 from dagster import ConfigurableResource, EnvVar, InitResourceContext
@@ -72,8 +73,14 @@ class MlflowInterface(ConfigurableResource):
     experiment_name: str
     tags: dict = {}
     project: str = EnvVar("GCS_PROJECT")
+    dagster_home: str = EnvVar("DAGSTER_HOME")
 
     _mlflow_run_id: str = PrivateAttr()
+
+    @property
+    def dagster_home_path(self):
+        """Return `dagster_home` as a Path."""
+        return Path(self.dagster_home)
 
     @contextmanager
     def yield_for_execution(

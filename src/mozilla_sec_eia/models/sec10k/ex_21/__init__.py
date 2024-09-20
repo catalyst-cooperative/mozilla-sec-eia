@@ -1,11 +1,9 @@
 """Module for working with exhibit 21 data."""
 
 import logging
-import traceback
 
 import mlflow
 import pandas as pd
-import torch
 from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asset, op
 
 from mozilla_sec_eia.library import validation_helpers
@@ -19,7 +17,7 @@ from ..entities import (
 )
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
 from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
-from .inference import Exhibit21Extractor, clean_extracted_df
+from .inference import Exhibit21Extractor, clean_extracted_df, extract_filings
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -147,25 +145,6 @@ def clean_ex21_validation_set(validation_df: pd.DataFrame):
     return validation_df
 
 
-@asset
-def test_extraction_metrics(
-    cloud_interface: GCSArchive,
-    exhibit21_extractor: Exhibit21Extractor,
-    mlflow_interface: MlflowInterface,
-):
-    """Run extraction with various numbers of filings to view resource usage."""
-    filings = cloud_interface.get_metadata()
-    for num_filings in [8, 16, 32, 64, 128]:
-        with mlflow.start_run(
-            run_name=f"extract_{num_filings}_filings",
-            nested=True,
-            parent_run_id=mlflow_interface.mlflow_run_id,
-            experiment_id=MlflowInterface.get_or_create_experiment("ex21_test"),
-        ):
-            mlflow.log_param("num_filings", num_filings)
-            exhibit21_extractor.extract_filings(filings.sample(num_filings))
-
-
 @op(
     out={
         "metadata": Out(dagster_type=sec10k_extract_metadata_type),
@@ -178,24 +157,7 @@ def extract_filing_chunk(
     layoutlm,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract a set of filings and return results."""
-    try:
-        metadata, extracted = exhibit21_extractor.extract_filings(
-            filings,
-            model=layoutlm["model"],
-            processor=layoutlm["tokenizer"],
-        )
-    except (torch.OutOfMemoryError, RuntimeError):
-        logger.warning(traceback.format_exc())
-        logger.warning(f"Error while extracting filings: {filings['filename']}")
-        metadata = pd.DataFrame(
-            {
-                "filename": filings["filename"],
-                "success": [False] * len(filings),
-                "notes": ["Out of memory error"] * len(filings),
-            }
-        ).set_index("filename")
-        extracted = Ex21CompanyOwnership.example(size=0)
-    return metadata, extracted
+    return extract_filings(exhibit21_extractor, filings, layoutlm)
 
 
 @op(
@@ -272,12 +234,9 @@ def ex21_extract_validation(
     layoutlm,
 ):
     """Extract ownership info from exhibit 21 docs."""
-    metadata, extracted = exhibit21_extractor.extract_filings(
-        ex21_validation_filing_metadata,
-        model=layoutlm["model"],
-        processor=layoutlm["tokenizer"],
+    return extract_filings(
+        exhibit21_extractor, ex21_validation_filing_metadata, layoutlm
     )
-    return metadata, extracted
 
 
 exhibit_21_extractor_resource = Exhibit21Extractor(
