@@ -9,7 +9,7 @@ from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asse
 
 from mozilla_sec_eia.library import validation_helpers
 from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
-from mozilla_sec_eia.models.sec10k.ex_21.validation_helpers import (
+from mozilla_sec_eia.models.sec10k.ex_21.ex21_validation_helpers import (
     clean_ex21_validation_set,
 )
 
