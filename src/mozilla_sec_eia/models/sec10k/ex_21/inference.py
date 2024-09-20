@@ -100,7 +100,7 @@ def create_inference_dataset(pdfs_dir: Path, labeled_json_dir=None, has_labels=F
     return dataset
 
 
-def clean_extracted_df(extracted_df):
+def clean_extracted_df(extracted_df: pd.DataFrame) -> pd.DataFrame:
     """Perform basic cleaning on a dataframe extracted from an Ex. 21."""
     if extracted_df.empty:
         return extracted_df
@@ -230,31 +230,21 @@ class Exhibit21Extractor(ConfigurableResource):
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
     def extract_filings(
-        self, filing_metadata: pd.DataFrame
+        self,
+        filing_metadata: pd.DataFrame,
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """Predict entities with a fine-tuned model and extract Ex. 21 tables.
 
-        This function starts by creating a HuggingFace dataset from PDFs in `pdfs_dir`
-        that the model can then perform inference on (`create_inference_dataset`).
+        This function starts by creating a HuggingFace dataset from PDFs
+        that the fine-tuned LayoutLM model can then perform inference on
+        (`create_inference_dataset`).
         Then it creates an instance of the custom LayoutLM inference pipeline and
         runs the dataset through the pipeline. The pipeline outputs logits, predictions,
         and an output dataframe with extracted Ex. 21 table.
 
         Arguments:
-            pdfs_dir: Path to the directory with PDFs that are being used for inference.
-            model: A fine-tuned LayoutLM model.
-            processor: The tokenizer and encoder for model inputs.
-            extraction_metadata: A dataframe to track extraction success metrics. Should
-                have columns 'filename' and 'success'.
-            dataset_ind: A list of index numbers of dataset records to be used for inference
-                Default is None, in which the entire dataset created from the PDF directory
-                is used.
-            labeled_json_dir: Path to the directory with labeled JSONs from Label Studio. Cannot
-                be None if has_labels is True.
-            has_labels: Boolean, true if the data has associated labels that can be used in
-                visualizing and validating results.
-            device: String or int, specify what computation device to use for inference
-                i.e. "mps", "cpu", "cuda"
+            filing_metadata: Metadata dataframe for the filings that will be run through
+                the extraction pipeline.
 
         Returns:
             logits: A list of logits. The list is the length of the number of documents in the
@@ -305,6 +295,7 @@ class Exhibit21Extractor(ConfigurableResource):
         predictions = []
         all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
         for logit, pred, output_df in pipe(_get_data(dataset)):
+            # TODO: logits and predictions are useful for debugging, do something with them?
             logits.append(logit)
             predictions.append(pred)
             if not output_df.empty:
@@ -382,10 +373,10 @@ class LayoutLMInferencePipeline(Pipeline):
         """Return logits, model predictions, and the extracted dataframe."""
         logits = all_outputs["logits"]
         predictions = all_outputs["logits"].argmax(-1).squeeze().tolist()
-        output_df = self.extract_table(all_outputs)
+        output_df = self._extract_table(all_outputs)
         return logits, predictions, output_df
 
-    def extract_table(self, all_outputs):
+    def _extract_table(self, all_outputs):
         """Extract a structured table from a set of inference predictions.
 
         This function essentially works by stacking bounding boxes and predictions

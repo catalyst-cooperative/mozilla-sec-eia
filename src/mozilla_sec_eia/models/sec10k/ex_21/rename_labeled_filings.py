@@ -10,7 +10,7 @@ from ..utils.cloud import GCSArchive
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-def rename_filings():
+def rename_filings(labeled_bucket_name="labeledv0.1"):
     """Rename labeled filings in GCS after importing from Label Studio.
 
     After importing labeled documents from Label Studio into GCS the
@@ -24,13 +24,15 @@ def rename_filings():
     archive = GCSArchive()
     bucket = archive._labels_bucket
 
-    labeled_bucket_name = "labeled/"
-
     for blob in bucket.list_blobs(prefix=labeled_bucket_name):
-        if blob.name != labeled_bucket_name:
+        name = blob.name.replace("/", "")
+        if name != labeled_bucket_name:
             logger.info(blob.name)
             file_dict = json.loads(blob.download_as_text())
             archive_name = file_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
+            # check if name uses the old local filing naming schema
+            if len(archive_name.split("-")) == 6:
+                archive_name = "-".join(archive_name.split("-")[2:])
             archive_filepath = f"{labeled_bucket_name}/{archive_name}"
             logger.info(archive_filepath)
             bucket.rename_blob(blob, archive_filepath)

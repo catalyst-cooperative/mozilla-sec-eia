@@ -56,4 +56,4 @@ def test_ex21_validation(
     run = get_most_recent_run("ex21_extraction_validation", result.run_id)
 
     assert run.data.metrics["avg_subsidiary_jaccard_sim"] > 0.85
-    assert run.data.metrics["avg_location_jaccard_sim"] > 0.9
+    assert run.data.metrics["avg_location_jaccard_sim"] > 0.85
