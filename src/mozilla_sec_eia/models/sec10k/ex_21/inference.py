@@ -277,9 +277,11 @@ class Exhibit21Extractor(ConfigurableResource):
         predictions = []
         all_output_df = Ex21CompanyOwnership.example(size=0)
         extraction_metadata = Sec10kExtractionMetadata.example(size=0)
-        for logit, pred, output_df in pipe(_get_data(dataset)):
-            logits.append(logit)
-            predictions.append(pred)
+        for output_dict in pipe(_get_data(dataset)):
+            # TODO: logits and predictions are useful for debugging, do something with them?
+            logits.append(output_dict["logits"])
+            predictions.append(output_dict["predictions"])
+            output_df = output_dict["output_df"]
             if not output_df.empty:
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
@@ -288,7 +290,7 @@ class Exhibit21Extractor(ConfigurableResource):
         all_output_df = clean_extracted_df(all_output_df)
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
         all_output_df = all_output_df.reset_index(drop=True)
-        return extraction_metadata, all_output_df
+        return extraction_metadata, all_output_df, logits, predictions
 
 
 def extract_filings(
@@ -375,22 +377,37 @@ class LayoutLMInferencePipeline(Pipeline):
             self.model.to("cuda")
         # since we're doing inference, we don't need gradient computation
         with torch.no_grad():
-            output = self.model(**encoding)
+            # TODO: if hidden states aren't needed, don't return in output
+            outputs = self.model(**encoding, output_hidden_states=True)
             return {
-                "logits": output.logits,
-                "predictions": output.logits.argmax(-1).squeeze().tolist(),
+                "logits": outputs.logits,
+                "predictions": outputs.logits.argmax(-1).squeeze().tolist(),
+                "final_hidden_state_embeddings": self._get_hidden_state_embeddings(
+                    outputs
+                ),
                 "raw_encoding": model_inputs["raw_encoding"],
                 "doc_dict": model_inputs["doc_dict"],
             }
 
-    def postprocess(self, all_outputs):
+    def postprocess(self, output_dict):
         """Return logits, model predictions, and the extracted dataframe."""
-        logits = all_outputs["logits"]
-        predictions = all_outputs["logits"].argmax(-1).squeeze().tolist()
-        output_df = self.extract_table(all_outputs)
-        return logits, predictions, output_df
+        output_df = self._extract_table(output_dict)
+        output_dict["output_df"] = output_df
+        return output_dict
 
-    def extract_table(self, all_outputs):
+    def _get_hidden_state_embeddings(self, outputs):
+        # This is a tuple with one tensor per model layer
+        hidden_states = outputs.hidden_states
+        # Final layer hidden state (batch_size, seq_length, hidden_size)
+        final_hidden_state = hidden_states[-1]
+        token_embeddings = final_hidden_state.squeeze(0)  # Remove batch dimension
+        # just get embeddings for actual tokens
+        # (ignore [CLS], [SEP] which are special tokens)
+        attention_mask = outputs.attention_mask.squeeze(0)
+        valid_token_embeddings = token_embeddings[attention_mask == 1]
+        return valid_token_embeddings
+
+    def _extract_table(self, output_dict):
         """Extract a structured table from a set of inference predictions.
 
         This function essentially works by stacking bounding boxes and predictions
@@ -403,9 +420,9 @@ class LayoutLMInferencePipeline(Pipeline):
         """
         # TODO: when model more mature, break this into sub functions to make it
         # clearer what's going on
-        predictions = all_outputs["predictions"]
-        encoding = all_outputs["raw_encoding"]
-        doc_dict = all_outputs["doc_dict"]
+        predictions = output_dict["predictions"]
+        encoding = output_dict["raw_encoding"]
+        doc_dict = output_dict["doc_dict"]
 
         token_boxes_tensor = encoding["bbox"].flatten(start_dim=0, end_dim=1)
         predictions_tensor = torch.tensor(predictions)
