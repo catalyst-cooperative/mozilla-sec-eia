@@ -275,12 +275,14 @@ class Exhibit21Extractor(ConfigurableResource):
 
         logits = []
         predictions = []
+        hidden_states = []
         all_output_df = Ex21CompanyOwnership.example(size=0)
         extraction_metadata = Sec10kExtractionMetadata.example(size=0)
         for output_dict in pipe(_get_data(dataset)):
             # TODO: logits and predictions are useful for debugging, do something with them?
             logits.append(output_dict["logits"])
             predictions.append(output_dict["predictions"])
+            hidden_states.append(output_dict["final_hidden_state_embeddings"])
             output_df = output_dict["output_df"]
             if not output_df.empty:
                 filename = get_metadata_filename(output_df["id"].iloc[0])
@@ -290,7 +292,13 @@ class Exhibit21Extractor(ConfigurableResource):
         all_output_df = clean_extracted_df(all_output_df)
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
         all_output_df = all_output_df.reset_index(drop=True)
-        return extraction_metadata, all_output_df, logits, predictions
+        outputs_dict = {
+            "all_output_df": all_output_df,
+            "logits": logits,
+            "predictions": predictions,
+            "final_hidden_state_embeddings": hidden_states,
+        }
+        return extraction_metadata, outputs_dict
 
 
 def extract_filings(
@@ -305,11 +313,12 @@ def extract_filings(
             cloud_interface=exhibit21_extractor.cloud_interface,
             has_labels=exhibit21_extractor.has_labels,
         )
-        metadata, extracted = exhibit21_extractor.extract_filings(
+        metadata, outputs_dict = exhibit21_extractor.extract_filings(
             dataset,
             model=layoutlm["model"],
             processor=layoutlm["tokenizer"],
         )
+        extracted = outputs_dict["all_output_df"]
         metadata = pd.concat([failed_metadata, metadata])
     except Exception as e:
         logger.warning(traceback.format_exc())
