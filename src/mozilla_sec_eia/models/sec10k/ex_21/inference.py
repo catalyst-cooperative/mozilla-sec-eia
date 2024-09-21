@@ -284,10 +284,12 @@ class Exhibit21Extractor(ConfigurableResource):
             predictions.append(output_dict["predictions"])
             hidden_states.append(output_dict["final_hidden_state_embeddings"])
             output_df = output_dict["output_df"]
+            logger.warning(f"OUTPUT DF LEN: {len(output_df)}")
             if not output_df.empty:
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
             all_output_df = pd.concat([all_output_df, output_df])
+        logger.warning(f"ALL OUTPUT DF LENGTH: {len(all_output_df)}")
         all_output_df.columns.name = None
         all_output_df = clean_extracted_df(all_output_df)
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
@@ -392,7 +394,7 @@ class LayoutLMInferencePipeline(Pipeline):
                 "logits": outputs.logits,
                 "predictions": outputs.logits.argmax(-1).squeeze().tolist(),
                 "final_hidden_state_embeddings": self._get_hidden_state_embeddings(
-                    outputs
+                    outputs=outputs, attention_mask=encoding["attention_mask"]
                 ),
                 "raw_encoding": model_inputs["raw_encoding"],
                 "doc_dict": model_inputs["doc_dict"],
@@ -404,7 +406,7 @@ class LayoutLMInferencePipeline(Pipeline):
         output_dict["output_df"] = output_df
         return output_dict
 
-    def _get_hidden_state_embeddings(self, outputs):
+    def _get_hidden_state_embeddings(self, outputs, attention_mask):
         # This is a tuple with one tensor per model layer
         hidden_states = outputs.hidden_states
         # Final layer hidden state (batch_size, seq_length, hidden_size)
@@ -412,7 +414,7 @@ class LayoutLMInferencePipeline(Pipeline):
         token_embeddings = final_hidden_state.squeeze(0)  # Remove batch dimension
         # just get embeddings for actual tokens
         # (ignore [CLS], [SEP] which are special tokens)
-        attention_mask = outputs.attention_mask.squeeze(0)
+        attention_mask = attention_mask.squeeze(0)
         valid_token_embeddings = token_embeddings[attention_mask == 1]
         return valid_token_embeddings
 
