@@ -31,7 +31,7 @@ def _configure_mlflow(tracking_uri: str, project: str):
     os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
     os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
     os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
-    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
+    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "2000"
     os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 

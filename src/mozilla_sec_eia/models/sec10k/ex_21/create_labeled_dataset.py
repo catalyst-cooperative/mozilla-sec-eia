@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..utils.cloud import GCSArchive
 from ..utils.layoutlm import normalize_bboxes
 from ..utils.pdf import (
     get_pdf_data_from_path,
@@ -135,8 +134,7 @@ def get_bbox_dicts(
 
 
 def _is_cik_in_training_data(labeled_json_filename, tracking_df):
-    # TODO: for now CIK is stored as an int, update when fixed
-    cik = int(labeled_json_filename.split("/")[-1].split("-")[0])
+    cik = labeled_json_filename.split("/")[-1].split("-")[0]
     return cik in tracking_df.CIK.unique()
 
 
@@ -147,7 +145,9 @@ def format_label_studio_output(
     """Format Label Studio output JSONs into dataframe."""
     labeled_df = pd.DataFrame()
     # TODO: make this path stuff less janky?
-    tracking_df = pd.read_csv(ROOT_DIR / "labeled_data_tracking.csv")
+    tracking_df = pd.read_csv(
+        ROOT_DIR / "labeled_data_tracking.csv", dtype={"CIK": str}, comment="#"
+    )
     for json_filename in os.listdir(labeled_json_dir):
         if not json_filename[0].isdigit() or json_filename.endswith(".json"):
             continue
@@ -227,7 +227,7 @@ def format_as_ner_annotations(
     Returns:
         ner_annotations: a list of dicts, with one dict for each doc.
     """
-    GCSArchive().cache_training_data(labeled_json_path, pdfs_path, gcs_folder_name)
+    # GCSArchive().cache_training_data(labeled_json_path, pdfs_path, gcs_folder_name)
 
     labeled_df = format_label_studio_output(
         labeled_json_dir=labeled_json_path, pdfs_dir=pdfs_path
