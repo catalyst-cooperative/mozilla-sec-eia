@@ -89,7 +89,9 @@ def test_validate_archive(test_archive, archive_files, metadata_files, valid, mo
         new=archive_files,
     ):
         metadata_mock = mocker.MagicMock(
-            return_value=pd.DataFrame({"filename": metadata_files})
+            return_value=pd.DataFrame({"filename": metadata_files}).set_index(
+                "filename"
+            )
         )
         mocker.patch(
             "mozilla_sec_eia.models.sec10k.utils.cloud.GCSArchive.get_metadata",

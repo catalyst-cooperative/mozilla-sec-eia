@@ -22,8 +22,11 @@ from pydantic import PrivateAttr
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-def _configure_mlflow(tracking_uri: str, project: str):
+def configure_mlflow(tracking_uri: str | None = None, project: str | None = None):
     """Do runtime configuration of mlflow."""
+    tracking_uri = tracking_uri if tracking_uri else os.getenv("MLFLOW_TRACKING_URI")
+    project = project if project else os.getenv("GCS_PROJECT")
+
     os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
     os.environ["MLFLOW_TRACKING_PASSWORD"] = _get_tracking_password(
         tracking_uri, project
@@ -90,7 +93,7 @@ class MlflowInterface(ConfigurableResource):
         """Create experiment tracker for specified experiment."""
         dagster_run_id = context.run_id
         self._mlflow_run_id = None
-        _configure_mlflow(self.tracking_uri, self.project)
+        configure_mlflow(self.tracking_uri, self.project)
 
         if self.tracking_enabled:
             # Get run_id associated with current dagster run
