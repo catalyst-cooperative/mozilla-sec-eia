@@ -55,6 +55,13 @@ class Exhibit21(BaseModel):
 
     def save_as_pdf(self, file: BinaryIO):
         """Save Exhibit 21 as a PDF in `file`, which can be in memory or on disk."""
+        # TODO: probably should make a "corrections" file that has CSS/HTML replacements
+        # to make PDF render
+        # TODO: should probably also catch errors and not fail
+        if "border-bottom: black thin solid;" in self.ex_21_text:
+            self.ex_21_text = self.ex_21_text.replace(
+                "border-bottom: black thin solid;", "border-bottom: 1px solid black;"
+            )
         res = pisa.CreatePDF(self.ex_21_text, file)
         if res.err:
             logger.warning(
@@ -266,6 +273,7 @@ class GCSArchive(ConfigurableResource):
         # Cache filings and labels
         filenames = []
         direc = self.labels_bucket_path / gcs_folder_name
+        logger.info(direc.is_dir())
         for file in direc.iterdir():
             if file.name in gcs_folder_name:
                 continue
