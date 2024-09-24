@@ -108,7 +108,8 @@ def create_inference_dataset(
             .tolist(),
             "image": image.tobytes(),
             "mode": image.mode,
-            "size": image.size,
+            "width": image.size[0],
+            "height": image.size[1],
         }
         if has_labels:
             annotation["ner_tags"] = (
