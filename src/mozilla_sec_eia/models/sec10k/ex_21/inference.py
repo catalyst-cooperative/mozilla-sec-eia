@@ -99,14 +99,16 @@ def create_inference_dataset(
         image_dict = get_image_dict(pdfs_dir)
 
     annotations = []
-    for filename in image_dict:
+    for filename, image in image_dict.items():
         annotation = {
             "id": filename,
             "tokens": inference_df.groupby("id")["text"].apply(list).loc[filename],
             "bboxes": inference_df.loc[inference_df["id"] == filename, :][BBOX_COLS_PDF]
             .to_numpy()
             .tolist(),
-            "image": image_dict[filename],
+            "image": image.tobytes(),
+            "mode": image.mode,
+            "size": image.size,
         }
         if has_labels:
             annotation["ner_tags"] = (
