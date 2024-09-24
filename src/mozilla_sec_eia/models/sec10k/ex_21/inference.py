@@ -73,7 +73,7 @@ def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
 
 def create_inference_dataset(
     filing_metadata: pd.DataFrame, cloud_interface: GCSArchive, has_labels: bool = False
-) -> tuple[pd.DataFrame, Dataset]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Create a Hugging Face Dataset from PDFs for inference."""
     filings_with_ex21 = filing_metadata[~filing_metadata["exhibit_21_version"].isna()]
 
@@ -114,8 +114,7 @@ def create_inference_dataset(
             )
         annotations.append(annotation)
 
-    dataset = Dataset.from_list(annotations)
-    return extraction_metadata, dataset
+    return extraction_metadata, pd.DataFrame(annotations)
 
 
 def clean_extracted_df(extracted_df):
