@@ -173,7 +173,7 @@ class GCSArchive(ConfigurableResource):
         """Return dataframe of filing metadata."""
         selection = None
         if year_quarter is not None:
-            selection = ["year_quarter", "==", year_quarter]
+            selection = [("year_quarter", "==", year_quarter)]
 
         return pd.read_parquet(
             self.outputs_bucket_path / "sec10k_filing_metadata", filters=selection
