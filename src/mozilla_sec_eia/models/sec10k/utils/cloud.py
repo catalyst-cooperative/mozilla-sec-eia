@@ -231,7 +231,7 @@ class GCSArchive(ConfigurableResource):
                     ex_21_version=filing["exhibit_21_version"],
                 )
                 filings.append(sec10k_filing)
-            if cache_pdf:
+            if cache_pdf and sec10k_filing.ex_21 is not None:
                 pdf_path = self.get_local_filename(
                     cache_directory=cache_directory,
                     filing=filing,

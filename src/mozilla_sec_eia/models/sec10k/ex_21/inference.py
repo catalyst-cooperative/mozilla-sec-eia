@@ -284,12 +284,10 @@ class Exhibit21Extractor(ConfigurableResource):
             predictions.append(output_dict["predictions"])
             hidden_states.append(output_dict["final_hidden_state_embeddings"])
             output_df = output_dict["output_df"]
-            logger.warning(f"OUTPUT DF LEN: {len(output_df)}")
             if not output_df.empty:
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
             all_output_df = pd.concat([all_output_df, output_df])
-        logger.warning(f"ALL OUTPUT DF LENGTH: {len(all_output_df)}")
         all_output_df.columns.name = None
         all_output_df = clean_extracted_df(all_output_df)
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
@@ -487,6 +485,7 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         # assign a new row every time there's a new subsidiary
         grouped_df["row"] = (grouped_df["pred"].str.startswith("subsidiary")).cumsum()
+        # separate_subsidiaries_by_bbox(grouped_df)
         output_df = grouped_df.pivot_table(
             index="row", columns="pred", values="word", aggfunc=lambda x: " ".join(x)
         ).reset_index()
@@ -494,3 +493,18 @@ class LayoutLMInferencePipeline(Pipeline):
             return output_df
         output_df.loc[:, "id"] = doc_dict["id"]
         return output_df
+
+
+def separate_subsidiaries_by_bbox(page_df):
+    # get the bounding boxes with labeled entities
+    # get the average distance between boxes that don't share an x coordinate (with threshold)
+    # if space between the y coordinates of two bboxes is greater than the average then
+    # they can't have the same row
+    # try using the fourth quartile
+    pass
+
+
+def id_paragraph_layout(page_df):
+    # if the average space between x and y bboxes is around the correct ratio
+    # or try if it's below a certain threshold
+    pass
