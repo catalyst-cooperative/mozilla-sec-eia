@@ -285,6 +285,9 @@ class Exhibit21Extractor(ConfigurableResource):
             hidden_states.append(output_dict["final_hidden_state_embeddings"])
             output_df = output_dict["output_df"]
             if not output_df.empty:
+                output_df = output_df.drop_duplicates(
+                    subset=["subsidiary", "loc", "own_per"]
+                )
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
             all_output_df = pd.concat([all_output_df, output_df])
