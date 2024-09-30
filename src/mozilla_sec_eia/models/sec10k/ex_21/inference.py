@@ -500,12 +500,6 @@ class LayoutLMInferencePipeline(Pipeline):
 
 
 def separate_entities_by_row(df):
-    """Separate entities that span multiple rows and should be distinct.
-
-    Args:
-        df: A dataframe sorted by y and x coordinates with an IOB
-            label column.
-    """
     # get the bounding boxes with labeled entities
     # get the average distance between boxes that don't share an x coordinate (with threshold)
     # if space between the y coordinates of two bboxes is greater than the average then
@@ -515,18 +509,18 @@ def separate_entities_by_row(df):
     # same subsidiaries can't share an x value
     # TODO: do we want to separate out by entity label?
     threshold = 0.2
-    df["line_group"] = df["top_left_y_pdf"].transform(
+    df["line_group"] = df["top_left_y"].transform(
         lambda y: (y // threshold).astype(int)
     )
     # Get the unique y-values for each line (group) per file
-    line_positions = df.groupby(["line_group"])["top_left_y_pdf"].mean().reset_index()
+    line_positions = df.groupby(["line_group"])["top_left_y"].mean().reset_index()
     # Calculate the difference between adjacent y-values (i.e., distance between lines)
-    line_positions["y_diff"] = line_positions["top_left_y_pdf"].diff()
+    line_positions["y_diff"] = line_positions["top_left_y"].diff()
     # Filter out NaN values and take the mean of the valid distances
     y_diffs = line_positions["y_diff"].dropna()
     avg_y_diff = round(y_diffs).quantile(0.3)
     # if an I labeled entity is more than avg_y_diff from it's previoius box then make it a B entity
-    df["prev_y"] = df["top_left_y_pdf"].shift(1)
+    df["prev_y"] = df["top_left_y"].shift(1)
     df["prev_iob"] = df["iob_pred"].shift(1)
 
     # Apply vectorized condition:
@@ -535,7 +529,7 @@ def separate_entities_by_row(df):
     # 3. Y-distance exceeds the average y difference
     df["iob_pred"] = np.where(
         (df["iob_pred"].str[0] == "I")
-        & ((df["top_left_y_pdf"] - df["prev_y"]) >= avg_y_diff),
+        & ((df["top_left_y"] - df["prev_y"]) >= avg_y_diff),
         "B" + df["iob_pred"].str[1:],  # Update to 'B'
         df["iob_pred"],  # Keep as is
     )
