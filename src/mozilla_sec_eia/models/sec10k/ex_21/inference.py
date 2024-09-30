@@ -282,12 +282,10 @@ class Exhibit21Extractor(ConfigurableResource):
             # TODO: logits and predictions are useful for debugging, do something with them?
             logits.append(output_dict["logits"])
             predictions.append(output_dict["predictions"])
-            hidden_states.append(output_dict["final_hidden_state_embeddings"])
+            # hidden_states.append(output_dict["final_hidden_state_embeddings"])
             output_df = output_dict["output_df"]
             if not output_df.empty:
-                output_df = output_df.drop_duplicates(
-                    subset=["subsidiary", "loc", "own_per"]
-                )
+                output_df = output_df.groupby("subsidiary").first().reset_index()
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
             all_output_df = pd.concat([all_output_df, output_df])
@@ -299,7 +297,7 @@ class Exhibit21Extractor(ConfigurableResource):
             "all_output_df": all_output_df,
             "logits": logits,
             "predictions": predictions,
-            "final_hidden_state_embeddings": hidden_states,
+            # "final_hidden_state_embeddings": hidden_states,
         }
         return extraction_metadata, outputs_dict
 
@@ -394,9 +392,10 @@ class LayoutLMInferencePipeline(Pipeline):
             return {
                 "logits": outputs.logits,
                 "predictions": outputs.logits.argmax(-1).squeeze().tolist(),
-                "final_hidden_state_embeddings": self._get_hidden_state_embeddings(
-                    outputs=outputs, attention_mask=encoding["attention_mask"]
-                ),
+                # TODO: debug this function
+                # "final_hidden_state_embeddings": self._get_hidden_state_embeddings(
+                # outputs=outputs, attention_mask=encoding["attention_mask"]
+                # ),
                 "raw_encoding": model_inputs["raw_encoding"],
                 "doc_dict": model_inputs["doc_dict"],
             }
