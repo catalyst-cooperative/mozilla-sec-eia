@@ -301,6 +301,9 @@ class Exhibit21Extractor(ConfigurableResource):
             if not output_df.empty:
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
+                output_df = output_df.drop_duplicates(
+                    subset=["subsidiary", "loc", "own_per"]
+                )
             all_output_df = pd.concat([all_output_df, output_df])
         all_output_df.columns.name = None
         all_output_df = clean_extracted_df(all_output_df)
@@ -434,6 +437,7 @@ class LayoutLMInferencePipeline(Pipeline):
         # filter for just words that were labeled with non "other" entities
         entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
         entities_df = entities_df[entities_df["pred"] != "other"]
+        entities_df = separate_entities_by_row(entities_df)
         # words are labeled with IOB format which stands for inside, outside, beginning
         # merge B and I entities to form one entity group
         # (i.e. "B-Subsidiary" and "I-Subsidiary" become just "subsidiary"), assign a group ID
@@ -452,3 +456,44 @@ class LayoutLMInferencePipeline(Pipeline):
             return output_df
         output_df.loc[:, "id"] = doc_dict["id"]
         return output_df
+
+
+def separate_entities_by_row(df):
+    # get the bounding boxes with labeled entities
+    # get the average distance between boxes that don't share an x coordinate (with threshold)
+    # if space between the y coordinates of two bboxes is greater than the average then
+    # they can't have the same row
+    # try using the fourth quartile
+    # alternatively: run a document classifier, then if it's "subsidiary list" type
+    # same subsidiaries can't share an x value
+    # TODO: do we want to separate out by entity label?
+    threshold = 0.2
+    df["line_group"] = df["top_left_y"].transform(
+        lambda y: (y // threshold).astype(int)
+    )
+    # Get the unique y-values for each line (group) per file
+    line_positions = df.groupby(["line_group"])["top_left_y"].mean().reset_index()
+    # Calculate the difference between adjacent y-values (i.e., distance between lines)
+    line_positions["y_diff"] = line_positions["top_left_y"].diff()
+    # Filter out NaN values and take the mean of the valid distances
+    y_diffs = line_positions["y_diff"].dropna()
+    avg_y_diff = round(y_diffs).quantile(0.3)
+    # if an I labeled entity is more than avg_y_diff from it's previoius box then make it a B entity
+    df["prev_y"] = df["top_left_y"].shift(1)
+    df["prev_iob"] = df["iob_pred"].shift(1)
+
+    # Apply vectorized condition:
+    # 1. Current label is 'I'
+    # 2. Previous row exists in the same file
+    # 3. Y-distance exceeds the average y difference
+    df["iob_pred"] = np.where(
+        (df["iob_pred"].str[0] == "I")
+        & ((df["top_left_y"] - df["prev_y"]) >= avg_y_diff),
+        "B" + df["iob_pred"].str[1:],  # Update to 'B'
+        df["iob_pred"],  # Keep as is
+    )
+
+    # Drop temporary columns
+    df = df.drop(columns=["prev_y", "prev_iob"])
+
+    return df
