@@ -7,6 +7,18 @@ from importlib import resources
 import pandas as pd
 
 
+def load_training_data(
+    filename: str, index_cols: list[str] | None = None
+) -> pd.DataFrame:
+    """Load csv with validation data from `package_data` directory."""
+    df = pd.read_csv(
+        resources.files("mozilla_sec_eia.package_data.training_data") / filename
+    )
+    if index_cols is not None:
+        df = df.set_index(index_cols)
+    return df
+
+
 def load_validation_data(
     filename: str, index_cols: list[str] | None = None
 ) -> pd.DataFrame:

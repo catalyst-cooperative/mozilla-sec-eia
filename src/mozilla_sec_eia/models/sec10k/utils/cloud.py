@@ -4,24 +4,17 @@ import base64
 import io
 import logging
 import re
-from contextlib import contextmanager
 from hashlib import md5
 from pathlib import Path
 from typing import BinaryIO, TextIO
 
 import fitz
 import pandas as pd
-import pg8000
-from dagster import ConfigurableResource, EnvVar
-from google.cloud import storage
-from google.cloud.sql.connector import Connector
+from dagster import ConfigurableResource
 from PIL import Image
-from pydantic import BaseModel, PrivateAttr
-from sqlalchemy import Engine, create_engine, select
-from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from upath import UPath
 from xhtml2pdf import pisa
-
-from .db_metadata import Base, Sec10kMetadata
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -64,6 +57,7 @@ class Exhibit21(BaseModel):
         """Save Exhibit 21 as a PDF in `file`, which can be in memory or on disk."""
         # TODO: probably should make a "corrections" file that has CSS/HTML replacements
         # to make PDF render
+        # TODO: should probably also catch errors and not fail
         if "border-bottom: black thin solid;" in self.ex_21_text:
             self.ex_21_text = self.ex_21_text.replace(
                 "border-bottom: black thin solid;", "border-bottom: 1px solid black;"
@@ -148,125 +142,53 @@ class Sec10K(BaseModel):
 
 
 class GCSArchive(ConfigurableResource):
-    """Provides an interface for archived filings on GCS.
+    """Provides an interface for archived filings on GCS."""
 
-    This class looks for several environment variables to configure
-    access to cloud resources. These can be set directly, or be in a
-    .env file at the top level.
+    filings_bucket: str = "gs://2de2b9f52c99a240-bucket-sec-10ks/"
+    labels_bucket: str = "gs://labeled-ex21-filings/"
+    outputs_bucket: str = "gs://sec10k-outputs/"
 
-    The following variables need to be set:
+    @property
+    def filings_bucket_path(self):
+        """Return UPath of filings bucket."""
+        path = UPath(self.filings_bucket)
+        assert path.exists(), "Filings bucket path does not exist"
+        return path
 
-    GCS_FILINGS_BUCKET_NAME: Name of bucket where 10k filings are stored.
-    GCS_LABELS_BUCKET_NAME: Name of top-level bucket where labelled training data is stored.
-    GCS_METADATA_DB_INSTANCE_CONNECTION: instance connection string
-    in the form 'project:region:instance'.
-    GCS_IAM_USER: Email of user of service account trying to connect.
-    GCS_METADATA_DB_NAME: Name of DB in instance to connect to.
-    GCS_PROJECT: Name of google cloud project.
-    MLFLOW_TRACKING_URI: URI of mlflow tracking server.
-    """
+    @property
+    def labels_bucket_path(self):
+        """Return UPath of filings bucket."""
+        path = UPath(self.labels_bucket)
+        assert path.exists(), "Labels bucket path does not exist"
+        return path
 
-    filings_bucket_name: str
-    labels_bucket_name: str
-    metadata_db_instance_connection: str
-    user: str
-    metadata_db_name: str
-    project: str
+    @property
+    def outputs_bucket_path(self):
+        """Return UPath of filings bucket."""
+        path = UPath(self.outputs_bucket)
+        assert path.exists(), "Outputs bucket path does not exist"
+        return path
 
-    _filings_bucket = PrivateAttr()
-    _labels_bucket = PrivateAttr()
-    _engine = PrivateAttr()
-
-    def setup_for_execution(self, context):
-        """Initialize interface to filings archive on GCS."""
-        self._engine = self._get_engine()
-        self._filings_bucket = self._get_bucket(self.filings_bucket_name)
-        self._labels_bucket = self._get_bucket(self.labels_bucket_name)
-
-        Base.metadata.create_all(self._engine)
-
-    def _get_bucket(self, bucket_name):
-        """Return cloud storage bucket where SEC10k filings are archived."""
-        storage_client = storage.Client()
-        return storage_client.bucket(bucket_name)
-
-    def _get_engine(self) -> Engine:
-        """Initialize a connection pool for a Cloud SQL instance of Postgres.
-
-        Uses the Cloud SQL Python Connector with Automatic IAM Database Authentication.
-        """
-        # initialize Cloud SQL Python Connector object
-        connector = Connector()
-
-        def getconn() -> pg8000.dbapi.Connection:
-            conn: pg8000.dbapi.Connection = connector.connect(
-                self.metadata_db_instance_connection,
-                "pg8000",
-                user=self.user,
-                db=self.metadata_db_name,
-                enable_iam_auth=True,
-            )
-            return conn
-
-        return create_engine(
-            "postgresql+pg8000://",
-            creator=getconn,
-        )
-
-    @contextmanager
-    def create_session(self) -> Session:
-        """Yield sqlalchemy session."""
-        with Session(self._engine) as session:
-            yield session
-
-    def get_metadata(self, year_quarter: str | None = None) -> pd:
+    def get_metadata(self, year_quarter: str | None = None) -> pd.DataFrame:
         """Return dataframe of filing metadata."""
-        selection = select(Sec10kMetadata)
+        selection = None
         if year_quarter is not None:
-            selection = selection.where(Sec10kMetadata.year_quarter == year_quarter)
+            selection = ["year_quarter", "==", year_quarter]
 
-        return pd.read_sql(selection, self._engine)
-
-    def get_filing_blob(self, year_quarter: str, path: str) -> storage.Blob:
-        """Return Blob pointing to file in GCS bucket."""
-        return self._filings_bucket.blob(f"sec10k/sec10k-{year_quarter}/{path}")
+        return pd.read_parquet(
+            self.outputs_bucket_path / "sec10k_filing_metadata", filters=selection
+        )
 
     def get_local_filename(
         self, cache_directory: Path, filing: pd.Series | Sec10K, extension=".html"
     ) -> Path:
         """Return path to a filing in local cache based on metadata."""
-        if isinstance(filing, pd.Series):
-            filename = filing["filename"]
-        else:
-            filename = filing.filename
+        filename = filing.name if isinstance(filing, pd.Series) else filing.filename
         return cache_directory / Path(
             f"{filename.replace('edgar/data/', '').replace('/', '-')}".replace(
                 ".txt", extension
             )
         )
-
-    def cache_blob(
-        self,
-        blob: storage.Blob,
-        local_path: Path,
-    ) -> Path:
-        """Cache a single filing in cache_directory and return path."""
-        # Create cache directory
-        local_path.parent.mkdir(parents=True, exist_ok=True)
-
-        if exists := local_path.exists():
-            blob.update()
-            local_hash = _compute_md5(local_path)
-            remote_hash = blob.md5_hash
-            refresh = remote_hash != local_hash
-
-        if (not exists) or refresh:
-            logger.info(f"Downloading to {local_path}")
-            blob.download_to_filename(local_path)
-        else:
-            logger.info(f"{local_path} is already cached")
-
-        return local_path
 
     def get_filings(
         self,
@@ -283,15 +205,17 @@ class GCSArchive(ConfigurableResource):
             cache_pdf: Boolean indicating whether to also cache a PDF of the Ex. 21
         """
         filings = []
-        for _, filing in filing_selection.iterrows():
-            blob = self.get_filing_blob(filing["year_quarter"], filing["filename"])
+        for filename, filing in filing_selection.iterrows():
             local_path = self.get_local_filename(cache_directory, filing)
-            filing_path = self.cache_blob(blob, local_path)
+            filepath = f"sec10k/sec10k-{filing.year_quarter}/{filename}"
+            if not local_path.exists():
+                with local_path.open("w") as f:
+                    f.write((self.filings_bucket_path / filepath).read_text())
 
-            with filing_path.open() as f:
+            with local_path.open() as f:
                 sec10k_filing = Sec10K.from_file(
                     file=f,
-                    filename=filing["filename"],
+                    filename=filename,
                     cik=filing["cik"],
                     year_quarter=filing["year_quarter"],
                     ex_21_version=filing["exhibit_21_version"],
@@ -323,14 +247,11 @@ class GCSArchive(ConfigurableResource):
             filing_selection: Pandas dataframe with same schema as metadata df where each row
                 is a filing to return.
         """
-        for _, filing in filing_selection.iterrows():
+        for filename, filing in filing_selection.iterrows():
+            filepath = f"sec10k/sec10k-{filing.year_quarter}/{filename}"
             yield Sec10K.from_file(
-                file=io.StringIO(
-                    self.get_filing_blob(
-                        filing["year_quarter"], filing["filename"]
-                    ).download_as_text()
-                ),
-                filename=filing["filename"],
+                file=io.StringIO((self.filings_bucket_path / filepath).read_text()),
+                filename=filename,
                 cik=filing["cik"],
                 year_quarter=filing["year_quarter"],
                 ex_21_version=filing["exhibit_21_version"],
@@ -340,7 +261,7 @@ class GCSArchive(ConfigurableResource):
         self,
         json_cache_path: Path,
         pdf_cache_path: Path,
-        gcs_folder_name: str = "labeled/",
+        gcs_folder_name: str = "labeledv0.2",
         overwrite_pdfs: bool = False,
     ):
         """Cache labeled training data stored on GCS for local use."""
@@ -348,41 +269,40 @@ class GCSArchive(ConfigurableResource):
         pdf_cache_path.mkdir(parents=True, exist_ok=True)
         metadata_df = self.get_metadata()
         label_name_pattern = re.compile(r"(\d+)-(.+)")
-        if gcs_folder_name[-1] != "/":
-            gcs_folder_name += "/"
-        for blob in self._labels_bucket.list_blobs(match_glob=f"{gcs_folder_name}*"):
-            if blob.name == gcs_folder_name:
-                continue
 
+        # Cache filings and labels
+        filenames = []
+        direc = self.labels_bucket_path / gcs_folder_name
+        logger.info(direc.is_dir())
+        for file in direc.iterdir():
+            if file.name in gcs_folder_name:
+                continue
             # Cache labels
-            self.cache_blob(
-                blob, json_cache_path / blob.name.replace(gcs_folder_name, "")
-            )
+            with (json_cache_path / file.name).open("w") as f:
+                f.write(file.read_text())
 
             # Cache filing
-            match = label_name_pattern.search(blob.name)
-            filename = f"edgar/data/{match.group(1)}/{match.group(2)}.txt"
-            filing_metadata = metadata_df[metadata_df["filename"] == filename]
-            filing = self.get_filings(filing_metadata)[0]
-            pdf_path = self.get_local_filename(
-                pdf_cache_path, filing_metadata.iloc[0], extension=".pdf"
-            )
-            if not pdf_path.exists() or overwrite_pdfs:
-                with pdf_path.open("wb") as f:
-                    filing.ex_21.save_as_pdf(f)
+            match = label_name_pattern.search(file.name)
+            filenames.append(f"edgar/data/{match.group(1)}/{match.group(2)}.txt")
+
+        filings = metadata_df[metadata_df.index.isin(filenames)]
+        self.get_filings(
+            filings,
+            cache_directory=pdf_cache_path,
+            cache_pdf=True,
+        )
 
     def validate_archive(self) -> bool:
         """Validate that all filings described in metadata table exist in GCS bucket."""
         # Get files in archive
         logger.info("Get list of files in archive.")
         archive_filenames = {
-            re.sub(r"sec10k/sec10k-\d{4}q\d/", "", blob.name)
-            for blob in self._filings_bucket.list_blobs()
+            filing.name for filing in self.filings_bucket_path.iterdir()
         }
 
         # Get metadata df
         logger.info("Get list of files in metadata.")
-        metadata_filenames = set(self.get_metadata()["filename"])
+        metadata_filenames = set(self.get_metadata().index)
 
         if not (valid := archive_filenames == metadata_filenames):
             logger.warning("Archive validation failed.")
@@ -406,11 +326,4 @@ def get_metadata_filename(local_filename: str):
     return "edgar/data/" + local_filename.replace("-", "/", 1) + ".txt"
 
 
-cloud_interface_resource = GCSArchive(
-    filings_bucket_name=EnvVar("GCS_FILINGS_BUCKET_NAME"),
-    labels_bucket_name=EnvVar("GCS_LABELS_BUCKET_NAME"),
-    metadata_db_instance_connection=EnvVar("GCS_METADATA_DB_INSTANCE_CONNECTION"),
-    user=EnvVar("GCS_IAM_USER"),
-    metadata_db_name=EnvVar("GCS_METADATA_DB_NAME"),
-    project=EnvVar("GCS_PROJECT"),
-)
+cloud_interface_resource = GCSArchive()

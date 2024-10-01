@@ -45,10 +45,6 @@ ex21_validation_job = model_jobs.create_validation_model_job(
     ex_21.validation_assets,
 )
 
-ex21_test_job = model_jobs.create_validation_model_job(
-    "ex21_test", [ex_21.test_extraction_metrics]
-)
-
 layoutlm_finetune_job = model_jobs.create_training_job(
     "layoutlm_finetune",
     layoutlm_assets,
@@ -62,7 +58,6 @@ defs = Definitions(
         basic_10k_validation_job,
         ex21_production_job,
         ex21_validation_job,
-        ex21_test_job,
         layoutlm_finetune_job,
     ],
     resources={

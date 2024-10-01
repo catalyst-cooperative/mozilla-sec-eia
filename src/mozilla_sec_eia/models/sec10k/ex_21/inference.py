@@ -3,6 +3,7 @@
 import logging
 import os
 import tempfile
+import traceback
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -17,9 +18,9 @@ from transformers import (
 )
 from transformers.tokenization_utils_base import BatchEncoding
 
+from ..entities import Ex21CompanyOwnership, Sec10kExtractionMetadata
 from ..utils.cloud import GCSArchive, get_metadata_filename
 from ..utils.layoutlm import (
-    LayoutlmResource,
     get_id_label_conversions,
     iob_to_label,
     normalize_bboxes,
@@ -70,18 +71,35 @@ def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
     return inference_df
 
 
-def create_inference_dataset(pdfs_dir: Path, labeled_json_dir=None, has_labels=False):
+def create_inference_dataset(
+    filing_metadata: pd.DataFrame, cloud_interface: GCSArchive, has_labels: bool = False
+) -> tuple[pd.DataFrame, Dataset]:
     """Create a Hugging Face Dataset from PDFs for inference."""
-    if has_labels:
-        inference_df = format_label_studio_output(
-            labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
+    filings_with_ex21 = filing_metadata[~filing_metadata["exhibit_21_version"].isna()]
+
+    # Parse PDFS
+    with (
+        tempfile.TemporaryDirectory() as pdfs_dir,
+        tempfile.TemporaryDirectory() as labeled_json_dir,
+    ):
+        pdfs_dir = Path(pdfs_dir)
+        labeled_json_dir = Path(labeled_json_dir)
+
+        extraction_metadata = _cache_pdfs(
+            filings_with_ex21,
+            cloud_interface=cloud_interface,
+            pdf_dir=pdfs_dir,
         )
-    else:
-        inference_df = format_unlabeled_pdf_dataframe(pdfs_dir=pdfs_dir)
-    image_dict = get_image_dict(pdfs_dir)
-    doc_filenames = inference_df["id"].unique()
+        if has_labels:
+            inference_df = format_label_studio_output(
+                labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
+            )
+        else:
+            inference_df = format_unlabeled_pdf_dataframe(pdfs_dir=pdfs_dir)
+        image_dict = get_image_dict(pdfs_dir)
+
     annotations = []
-    for filename in doc_filenames:
+    for filename in image_dict:
         annotation = {
             "id": filename,
             "tokens": inference_df.groupby("id")["text"].apply(list).loc[filename],
@@ -97,7 +115,7 @@ def create_inference_dataset(pdfs_dir: Path, labeled_json_dir=None, has_labels=F
         annotations.append(annotation)
 
     dataset = Dataset.from_list(annotations)
-    return dataset
+    return extraction_metadata, dataset
 
 
 def clean_extracted_df(extracted_df: pd.DataFrame) -> pd.DataFrame:
@@ -120,6 +138,10 @@ def clean_extracted_df(extracted_df: pd.DataFrame) -> pd.DataFrame:
         # remove special chars and letters
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
             r"[^\d.]", "", regex=True
+        )
+        # Find values with multiple decimal points
+        extracted_df["own_per"] = extracted_df["own_per"].str.replace(
+            r"(\d*\.\d+)\..*", r"\1", regex=True
         )
         extracted_df["own_per"] = extracted_df["own_per"].replace("", np.nan)
         extracted_df["own_per"] = extracted_df["own_per"].astype(
@@ -207,6 +229,13 @@ def _cache_pdfs(
         except Exception as e:
             extraction_metadata.loc[filing.filename, ["success"]] = False
             extraction_metadata.loc[filing.filename, ["note"]] = str(e)
+
+        # Some pdfs are empty. Check for these and remove from dir
+        if pdf_path.stat().st_size == 0:
+            extraction_metadata.loc[filing.filename, ["success"]] = False
+            extraction_metadata.loc[filing.filename, ["note"]] = "PDF empty"
+            pdf_path.unlink()
+
     return extraction_metadata
 
 
@@ -218,7 +247,6 @@ class Exhibit21Extractor(ConfigurableResource):
     """Implement `Sec10kExtractor` interface for exhibit 21 data."""
 
     cloud_interface: GCSArchive
-    layoutlm: LayoutlmResource
     name: str = "exhibit21_extractor"
     device: str = "cpu"
     has_labels: bool = False
@@ -230,59 +258,13 @@ class Exhibit21Extractor(ConfigurableResource):
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
     def extract_filings(
-        self,
-        filing_metadata: pd.DataFrame,
+        self, dataset: Dataset, model, processor
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        """Predict entities with a fine-tuned model and extract Ex. 21 tables.
-
-        This function starts by creating a HuggingFace dataset from PDFs
-        that the fine-tuned LayoutLM model can then perform inference on
-        (`create_inference_dataset`).
-        Then it creates an instance of the custom LayoutLM inference pipeline and
-        runs the dataset through the pipeline. The pipeline outputs logits, predictions,
-        and an output dataframe with extracted Ex. 21 table.
-
-        Arguments:
-            filing_metadata: Metadata dataframe for the filings that will be run through
-                the extraction pipeline.
-
-        Returns:
-            logits: A list of logits. The list is the length of the number of documents in the
-                dataset (number of PDFs in pdfs_dir). Each logit object in the list is of
-                shape (batch_size, seq_len, num_labels). Seq_len is
-                the same as token length (512 in this case).
-            predictions: A list of predictions. The list is the length of the number of documents
-                in the dataset (number of PDFs in pdfs_dir).
-                From the logits, we take the highest score for each token, using argmax.
-                This serves as the predicted label for each token. It is shape (seq_len) or token
-                length.
-            output_dfs: The extracted Ex. 21 tables. This is one big dataframe with an ID column
-                that is the filename of the extracted Ex. 21. Dataframe contains columns id,
-                subsidiary, loc, own_per.
-        """
-        filings_with_ex21 = filing_metadata[
-            ~filing_metadata["exhibit_21_version"].isna()
-        ]
-
-        with (
-            tempfile.TemporaryDirectory() as pdf_dir,
-            tempfile.TemporaryDirectory() as labeled_json_dir,
-        ):
-            extraction_metadata = _cache_pdfs(
-                filings_with_ex21,
-                cloud_interface=self.cloud_interface,
-                pdf_dir=pdf_dir,
-            )
-            dataset = create_inference_dataset(
-                pdfs_dir=Path(pdf_dir),
-                labeled_json_dir=labeled_json_dir,
-                has_labels=self.has_labels,
-            )
+        """Predict entities with a fine-tuned model and extract Ex. 21 tables."""
         if self.dataset_ind:
             dataset = dataset.select(self.dataset_ind)
 
         # TODO: figure out device argument
-        model, processor = self.layoutlm.get_model_components()
         pipe = pipeline(
             "token-classification",
             model=model,
@@ -293,7 +275,8 @@ class Exhibit21Extractor(ConfigurableResource):
 
         logits = []
         predictions = []
-        all_output_df = pd.DataFrame(columns=["id", "subsidiary", "loc", "own_per"])
+        all_output_df = Ex21CompanyOwnership.example(size=0)
+        extraction_metadata = Sec10kExtractionMetadata.example(size=0)
         for logit, pred, output_df in pipe(_get_data(dataset)):
             # TODO: logits and predictions are useful for debugging, do something with them?
             logits.append(logit)
@@ -307,6 +290,38 @@ class Exhibit21Extractor(ConfigurableResource):
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
         all_output_df = all_output_df.reset_index(drop=True)
         return extraction_metadata, all_output_df
+
+
+def extract_filings(
+    exhibit21_extractor: Exhibit21Extractor,
+    filings: pd.DataFrame,
+    layoutlm,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Create huggingface dataset from filings and perform extraction."""
+    try:
+        failed_metadata, dataset = create_inference_dataset(
+            filing_metadata=filings,
+            cloud_interface=exhibit21_extractor.cloud_interface,
+            has_labels=exhibit21_extractor.has_labels,
+        )
+        metadata, extracted = exhibit21_extractor.extract_filings(
+            dataset,
+            model=layoutlm["model"],
+            processor=layoutlm["tokenizer"],
+        )
+        metadata = pd.concat([failed_metadata, metadata])
+    except Exception as e:
+        logger.warning(traceback.format_exc())
+        logger.warning(f"Error while extracting filings: {filings.index}")
+        metadata = pd.DataFrame(
+            {
+                "filename": filings.index,
+                "success": [False] * len(filings),
+                "notes": [str(e)] * len(filings),
+            }
+        ).set_index("filename")
+        extracted = Ex21CompanyOwnership.example(size=0)
+    return metadata, extracted
 
 
 class LayoutLMInferencePipeline(Pipeline):

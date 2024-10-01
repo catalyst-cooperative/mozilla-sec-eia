@@ -4,7 +4,6 @@ import logging
 
 import mlflow
 import pandas as pd
-import torch
 from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asset, op
 
 from mozilla_sec_eia.library import validation_helpers
@@ -13,15 +12,20 @@ from mozilla_sec_eia.models.sec10k.ex_21.ex21_validation_helpers import (
     clean_ex21_validation_set,
 )
 
+from ..entities import (
+    Ex21CompanyOwnership,
+    Sec10kExtractionMetadata,
+    ex21_extract_type,
+    sec10k_extract_metadata_type,
+)
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
-from ..utils.cloud import GCSArchive, cloud_interface_resource
-from ..utils.layoutlm import LayoutlmResource
-from .inference import Exhibit21Extractor
+from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
+from .inference import Exhibit21Extractor, clean_extracted_df, extract_filings
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-@asset
+@asset(dagster_type=ex21_extract_type)
 def ex21_validation_set() -> pd.DataFrame:
     """Return dataframe containing exhibit 21 validation data."""
     return clean_ex21_validation_set(
@@ -37,7 +41,7 @@ def ex21_validation_filing_metadata(
     """Get sec 10k filing metadata from validation set."""
     filing_metadata = cloud_interface.get_metadata()
     return filing_metadata[
-        filing_metadata["filename"].isin(ex21_validation_set["filename"].unique())
+        filing_metadata.index.isin(ex21_validation_set["filename"].unique())
     ]
 
 
@@ -142,51 +146,31 @@ def ex21_validation_metrics(computed_df: pd.DataFrame, validation_df: pd.DataFra
     )
 
 
-@asset
-def test_extraction_metrics(
-    cloud_interface: GCSArchive,
-    exhibit21_extractor: Exhibit21Extractor,
-    mlflow_interface: MlflowInterface,
-):
-    """Run extraction with various numbers of filings to view resource usage."""
-    filings = cloud_interface.get_metadata()
-    for num_filings in [8, 16, 32, 64, 128]:
-        with mlflow.start_run(
-            run_name=f"extract_{num_filings}_filings",
-            nested=True,
-            parent_run_id=mlflow_interface.mlflow_run_id,
-            experiment_id=MlflowInterface.get_or_create_experiment("ex21_test"),
-        ):
-            mlflow.log_param("num_filings", num_filings)
-            exhibit21_extractor.extract_filings(filings.sample(num_filings))
-
-
-@op(out={"metadata": Out(), "extracted": Out()})
+@op(
+    out={
+        "metadata": Out(dagster_type=sec10k_extract_metadata_type),
+        "extracted": Out(dagster_type=ex21_extract_type),
+    }
+)
 def extract_filing_chunk(
-    exhibit21_extractor: Exhibit21Extractor, filings: pd.DataFrame
+    exhibit21_extractor: Exhibit21Extractor,
+    filings: pd.DataFrame,
+    layoutlm,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract a set of filings and return results."""
-    try:
-        metadata, extracted = exhibit21_extractor.extract_filings(filings)
-    except torch.OutOfMemoryError:
-        logging.warning(
-            f"Ran out of memory while extracting filings: {filings['filename']}"
-        )
-        metadata = pd.DataFrame(
-            {
-                "filename": filings["filename"],
-                "success": [False] * len(filings),
-                "notes": ["Out of memory error"] * len(filings),
-            }
-        ).set_index("filename")
-        extracted = pd.DataFrame()
-    return metadata, extracted
+    return extract_filings(exhibit21_extractor, filings, layoutlm)
 
 
 @op(
     out={
-        "metadata": Out(io_manager_key="pandas_parquet_io_manager"),
-        "extracted": Out(io_manager_key="pandas_parquet_io_manager"),
+        "metadata": Out(
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=sec10k_extract_metadata_type,
+        ),
+        "extracted": Out(
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=ex21_extract_type,
+        ),
     }
 )
 def collect_extracted_chunks(
@@ -196,7 +180,12 @@ def collect_extracted_chunks(
     """Collect chunks of extracted filings."""
     metadata_dfs = [df for df in metadata_dfs if not df.empty]
     extracted_dfs = [df for df in extracted_dfs if not df.empty]
-    return pd.concat(metadata_dfs), pd.concat(extracted_dfs)
+    metadata_df = pd.concat(metadata_dfs)
+    extracted_df = pd.concat(extracted_dfs)
+    return (
+        Sec10kExtractionMetadata.validate(metadata_df),
+        Ex21CompanyOwnership.validate(extracted_df),
+    )
 
 
 @graph_multi_asset(
@@ -208,14 +197,18 @@ def collect_extracted_chunks(
             io_manager_key="pandas_parquet_io_manager"
         ),
     },
+    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
     partitions_def=year_quarter_partitions,
 )
 def ex21_extract(
     sec10k_filing_metadata: pd.DataFrame,
+    layoutlm,
 ):
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)
-    metadata_chunks, extracted_chunks = filing_chunks.map(extract_filing_chunk)
+    metadata_chunks, extracted_chunks = filing_chunks.map(
+        lambda filings: extract_filing_chunk(filings, layoutlm)
+    )
     metadata, extracted = collect_extracted_chunks(
         metadata_chunks.collect(), extracted_chunks.collect()
     )
@@ -226,33 +219,32 @@ def ex21_extract(
 @multi_asset(
     outs={
         "ex21_extraction_metadata_validation": AssetOut(
-            io_manager_key="mlflow_pandas_artifact_io_manager"
+            io_manager_key="mlflow_pandas_artifact_io_manager",
+            dagster_type=sec10k_extract_metadata_type,
         ),
         "ex21_company_ownership_info_validation": AssetOut(
-            io_manager_key="mlflow_pandas_artifact_io_manager"
+            io_manager_key="mlflow_pandas_artifact_io_manager",
+            dagster_type=ex21_extract_type,
         ),
-    }
+    },
+    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
 )
 def ex21_extract_validation(
     ex21_validation_filing_metadata: pd.DataFrame,
     exhibit21_extractor: Exhibit21Extractor,
+    layoutlm,
 ):
     """Extract ownership info from exhibit 21 docs."""
-    metadata, extracted = exhibit21_extractor.extract_filings(
-        ex21_validation_filing_metadata
+    return extract_filings(
+        exhibit21_extractor, ex21_validation_filing_metadata, layoutlm
     )
-    return metadata, extracted
 
 
 exhibit_21_extractor_resource = Exhibit21Extractor(
     cloud_interface=cloud_interface_resource,
-    layoutlm=LayoutlmResource(mlflow_interface=mlflow_interface_resource),
 )
 
-production_assets = [
-    sec10k_filing_metadata,
-    ex21_extract,
-]
+production_assets = [sec10k_filing_metadata, ex21_extract]
 
 validation_assets = [
     ex21_validation_set,

@@ -7,6 +7,7 @@ from dagster import AssetIn, AssetOut, asset, multi_asset
 
 from mozilla_sec_eia.library import validation_helpers
 
+from .entities import basic_10k_extract_type, sec10k_extract_metadata_type
 from .extract import (
     sec10k_filing_metadata,
     year_quarter_partitions,
@@ -81,15 +82,19 @@ def extract_filings(
     logger.info(f"Extracting {len(filings_to_extract)} filings.")
 
     extraction_metadata = pd.DataFrame(
-        {"filename": pd.Series(dtype=str), "success": pd.Series(dtype=bool)}
+        {
+            "filename": pd.Series(dtype=str),
+            "success": pd.Series(dtype=bool),
+            "notes": pd.Series(dtype=str),
+        }
     ).set_index("filename")
     extracted = pd.DataFrame()
 
     for filing in cloud_interface.iterate_filings(filings_to_extract):
         ext, filename, unmatched_keys = _extract_10k(filing)
-        extraction_metadata.loc[filename, ["success", "unmatched_keys"]] = [
+        extraction_metadata.loc[filename, ["success", "notes"]] = [
             len(ext) > 0,
-            ",".join(unmatched_keys),
+            "Unmatched Keys: " + ",".join(unmatched_keys),
         ]
         extracted = pd.concat([extracted, ext])
 
@@ -99,7 +104,7 @@ def extract_filings(
     )
 
 
-@asset
+@asset(dagster_type=basic_10k_extract_type)
 def basic_10k_validation_set() -> pd.DataFrame:
     """Return dataframe containing basic 10k validation data."""
     return validation_helpers.load_validation_data(
@@ -133,7 +138,7 @@ def basic_10k_validation_filing_metadata(
     """Get sec 10k filing metadata from validation set."""
     filing_metadata = cloud_interface.get_metadata()
     return filing_metadata[
-        filing_metadata["filename"].isin(
+        filing_metadata.index.isin(
             basic_10k_validation_set.index.get_level_values("filename").unique()
         )
     ]
@@ -142,9 +147,13 @@ def basic_10k_validation_filing_metadata(
 @multi_asset(
     outs={
         "basic_10k_extraction_metadata": AssetOut(
-            io_manager_key="pandas_parquet_io_manager"
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=sec10k_extract_metadata_type,
         ),
-        "basic_10k_company_info": AssetOut(io_manager_key="pandas_parquet_io_manager"),
+        "basic_10k_company_info": AssetOut(
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=basic_10k_extract_type,
+        ),
     },
     partitions_def=year_quarter_partitions,
 )
@@ -160,10 +169,12 @@ def basic_10k_extract(
 @multi_asset(
     outs={
         "basic_10k_extraction_metadata_validation": AssetOut(
-            io_manager_key="mlflow_pandas_artifact_io_manager"
+            io_manager_key="mlflow_pandas_artifact_io_manager",
+            dagster_type=sec10k_extract_metadata_type,
         ),
         "basic_10k_company_info_validation": AssetOut(
-            io_manager_key="mlflow_pandas_artifact_io_manager"
+            io_manager_key="mlflow_pandas_artifact_io_manager",
+            dagster_type=basic_10k_extract_type,
         ),
     },
 )

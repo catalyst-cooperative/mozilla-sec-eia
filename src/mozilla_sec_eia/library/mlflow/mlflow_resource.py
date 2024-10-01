@@ -12,6 +12,7 @@ this is a configurable value, which can be found in the dagster UI.
 import logging
 import os
 from contextlib import contextmanager
+from pathlib import Path
 
 import mlflow
 from dagster import ConfigurableResource, EnvVar, InitResourceContext
@@ -21,9 +22,23 @@ from pydantic import PrivateAttr
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-def _get_tracking_password(
-    tracking_uri: str, gcs_project: str, version_id: str = "latest"
-):
+def configure_mlflow(tracking_uri: str | None = None, project: str | None = None):
+    """Do runtime configuration of mlflow."""
+    tracking_uri = tracking_uri if tracking_uri else os.getenv("MLFLOW_TRACKING_URI")
+    project = project if project else os.getenv("GCS_PROJECT")
+
+    os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
+    os.environ["MLFLOW_TRACKING_PASSWORD"] = _get_tracking_password(
+        tracking_uri, project
+    )
+    os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
+    os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
+    os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
+    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
+    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
+
+
+def _get_tracking_password(tracking_uri: str, project: str, version_id: str = "latest"):
     """Get tracking server password from gcloud secrets."""
     # Password not required for local use
     if "sqlite" not in tracking_uri:
@@ -31,7 +46,7 @@ def _get_tracking_password(
         client = secretmanager.SecretManagerServiceClient()
 
         # Build the resource name of the secret version.
-        name = f"projects/{gcs_project}/secrets/mlflow_admin_password/versions/{version_id}"
+        name = f"projects/{project}/secrets/mlflow_admin_password/versions/{version_id}"
 
         # Access the secret version.
         response = client.access_secret_version(name=name)
@@ -39,22 +54,6 @@ def _get_tracking_password(
         # Return the decoded payload.
         return response.payload.data.decode("UTF-8")
     return ""
-
-
-def _configure_mlflow(
-    tracking_uri: str,
-    gcs_project: str,
-):
-    """Do runtime configuration of mlflow."""
-    os.environ["MLFLOW_TRACKING_USERNAME"] = "admin"
-    os.environ["MLFLOW_TRACKING_PASSWORD"] = _get_tracking_password(
-        tracking_uri, gcs_project
-    )
-    os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
-    os.environ["MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE"] = "20971520"
-    os.environ["MLFLOW_GCS_UPLOAD_CHUNK_SIZE"] = "20971520"
-    os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "900"
-    os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "true"
 
 
 class MlflowInterface(ConfigurableResource):
@@ -77,8 +76,14 @@ class MlflowInterface(ConfigurableResource):
     experiment_name: str
     tags: dict = {}
     project: str = EnvVar("GCS_PROJECT")
+    dagster_home: str = EnvVar("DAGSTER_HOME")
 
     _mlflow_run_id: str = PrivateAttr()
+
+    @property
+    def dagster_home_path(self):
+        """Return `dagster_home` as a Path."""
+        return Path(self.dagster_home)
 
     @contextmanager
     def yield_for_execution(
@@ -88,7 +93,7 @@ class MlflowInterface(ConfigurableResource):
         """Create experiment tracker for specified experiment."""
         dagster_run_id = context.run_id
         self._mlflow_run_id = None
-        _configure_mlflow(self.tracking_uri, self.project)
+        configure_mlflow(self.tracking_uri, self.project)
 
         if self.tracking_enabled:
             # Get run_id associated with current dagster run

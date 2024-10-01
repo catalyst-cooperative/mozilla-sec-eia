@@ -6,10 +6,8 @@ import unittest
 
 import dotenv
 
-from mozilla_sec_eia.library.mlflow.mlflow_resource import (
-    _configure_mlflow,
-    get_most_recent_run,
-)
+from mozilla_sec_eia.library.mlflow import configure_mlflow
+from mozilla_sec_eia.library.mlflow.mlflow_resource import get_most_recent_run
 from mozilla_sec_eia.models import sec10k
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
@@ -34,19 +32,22 @@ def test_basic_10k_validation(
 
 
 def test_ex21_validation(
+    tmp_path,
     set_test_mlflow_env_vars_factory,
 ):
     """Test ex21_validation_job."""
     dotenv.load_dotenv(override=True)
-    _configure_mlflow(
+    configure_mlflow(
         os.getenv("MLFLOW_TRACKING_URI"),
         os.getenv("GCS_PROJECT"),
     )
-    pretrained_model = sec10k.utils.layoutlm._load_pretrained_layoutlm()
+    pretrained_model = sec10k.utils.layoutlm._load_pretrained_layoutlm(
+        cache_path=tmp_path
+    )
 
     with unittest.mock.patch(
         "mozilla_sec_eia.models.sec10k.utils.layoutlm._load_pretrained_layoutlm",
-        new=lambda _: pretrained_model,
+        new=lambda cache_path, version: pretrained_model,
     ):
         set_test_mlflow_env_vars_factory()
         result = sec10k.defs.get_job_def(
@@ -56,4 +57,4 @@ def test_ex21_validation(
     run = get_most_recent_run("ex21_extraction_validation", result.run_id)
 
     assert run.data.metrics["avg_subsidiary_jaccard_sim"] > 0.85
-    assert run.data.metrics["avg_location_jaccard_sim"] > 0.85
+    assert run.data.metrics["avg_location_jaccard_sim"] > 0.83

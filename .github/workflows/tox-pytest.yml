@@ -33,6 +33,8 @@ jobs:
       - name: Set up conda environment for testing
         uses: mamba-org/setup-micromamba@v1
         with:
+          micromamba-version: 1.5.10-0
+          micromamba-binary-path: /home/runner/micromamba-bin-versioned/micromamba
           environment-file: test_environment.yml
           cache-environment: true
           cache-environment-key: environment-${{ hashFiles('pyproject.toml') }}

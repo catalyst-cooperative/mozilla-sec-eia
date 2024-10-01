@@ -22,20 +22,20 @@ def rename_filings(labeled_bucket_name="labeledv0.1"):
     filename.
     """
     archive = GCSArchive()
-    bucket = archive._labels_bucket
+    bucket_path = archive.labels_bucket_path / labeled_bucket_name
 
-    for blob in bucket.list_blobs(prefix=labeled_bucket_name):
-        name = blob.name.replace("/", "")
-        if name != labeled_bucket_name:
-            logger.info(blob.name)
-            file_dict = json.loads(blob.download_as_text())
+    for file in bucket_path.iterdir():
+        filename = file.parts[-1]
+        if filename != labeled_bucket_name:
+            logger.info(filename)
+            file_dict = json.loads(file.read_text())
             archive_name = file_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
             # check if name uses the old local filing naming schema
             if len(archive_name.split("-")) == 6:
                 archive_name = "-".join(archive_name.split("-")[2:])
-            archive_filepath = f"{labeled_bucket_name}/{archive_name}"
-            logger.info(archive_filepath)
-            bucket.rename_blob(blob, archive_filepath)
+            new_name = file.with_name(archive_name)
+            logger.info(new_name)
+            file.move(new_name)
 
 
 def copy_labeled_jsons_to_new_version_folder(

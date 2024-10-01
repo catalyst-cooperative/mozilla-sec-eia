@@ -16,7 +16,7 @@ from ..utils.pdf import (
 )
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
-ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
+ROOT_DIR = Path(__file__).parent.parent.parent.parent.parent.parent.resolve()
 
 
 BBOX_COLS_PDF = [
@@ -141,8 +141,6 @@ def _is_cik_in_training_data(labeled_json_filename, tracking_df):
     return cik in tracking_df.CIK.unique()
 
 
-# TODO: make this work with GCS input directory not local
-# TODO: have default paths?
 def format_label_studio_output(
     labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
     pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
@@ -184,6 +182,7 @@ def format_label_studio_output(
             # combine the bounding boxes for each word
             doc_df = doc_df.groupby(level=0).first()
             txt.loc[:, "id"] = filename
+            # TODO: probably want to filter out these empty Ex. 21 docs
             # the doc might not have any labels in it if it was an empty Ex. 21
             if "labels" not in doc_df:
                 doc_df.loc[:, "labels"] = pd.Series()

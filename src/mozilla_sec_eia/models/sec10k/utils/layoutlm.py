@@ -1,21 +1,22 @@
 """Util functions for training and predicting with LayoutLM on Ex. 21 tables."""
 
 import mlflow
-from dagster import ConfigurableResource, InputContext, OutputContext
+from dagster import InputContext, OutputContext
 from PIL import ImageDraw, ImageFont
-from pydantic import PrivateAttr
 from transformers import (
     Trainer,
 )
 
-from mozilla_sec_eia.library.mlflow import MlflowBaseIOManager, MlflowInterface
+from mozilla_sec_eia.library.mlflow import MlflowBaseIOManager
 
 
-def _load_pretrained_layoutlm(version: str = "latest") -> dict:
+def _load_pretrained_layoutlm(cache_path: str, version: str = "latest") -> dict:
     """Function to load layoutlm from mlflow."""
     path = f"models:/layoutlm_extractor/{version}"
 
-    return mlflow.transformers.load_model(path, return_type="components")
+    return mlflow.transformers.load_model(
+        path, dst_path=cache_path, return_type="components"
+    )
 
 
 class LayoutlmIOManager(MlflowBaseIOManager):
@@ -32,23 +33,14 @@ class LayoutlmIOManager(MlflowBaseIOManager):
 
     def load_input(self, context: InputContext) -> dict:
         """Log metrics to mlflow run/experiment created by `MlflowInterface`."""
-        return _load_pretrained_layoutlm(self.version)
-
-
-class LayoutlmResource(ConfigurableResource):
-    """Dagster resource for loading/using pretrained layoutlm model as a resource."""
-
-    mlflow_interface: MlflowInterface
-    version: str | None = None
-    _model_components: dict = PrivateAttr()
-
-    def setup_for_execution(self, context):
-        """Load layoutlm from mlflow."""
-        self._model_components = _load_pretrained_layoutlm(self.version)
-
-    def get_model_components(self):
-        """Return model components from loaded model."""
-        return self._model_components["model"], self._model_components["tokenizer"]
+        cache_path = (
+            self.mlflow_interface.dagster_home_path / "model_cache" / "layoutlm"
+        )
+        cache_path.mkdir(exist_ok=True, parents=True)
+        return _load_pretrained_layoutlm(
+            cache_path=cache_path,
+            version=self.version,
+        )
 
 
 def normalize_bboxes(txt_df, pg_meta_df):
