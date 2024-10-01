@@ -118,7 +118,7 @@ def create_inference_dataset(
     return extraction_metadata, dataset
 
 
-def clean_extracted_df(extracted_df):
+def clean_extracted_df(extracted_df: pd.DataFrame) -> pd.DataFrame:
     """Perform basic cleaning on a dataframe extracted from an Ex. 21."""
     if extracted_df.empty:
         return extracted_df
@@ -278,6 +278,7 @@ class Exhibit21Extractor(ConfigurableResource):
         all_output_df = Ex21CompanyOwnership.example(size=0)
         extraction_metadata = Sec10kExtractionMetadata.example(size=0)
         for logit, pred, output_df in pipe(_get_data(dataset)):
+            # TODO: logits and predictions are useful for debugging, do something with them?
             logits.append(logit)
             predictions.append(pred)
             if not output_df.empty:
@@ -387,10 +388,10 @@ class LayoutLMInferencePipeline(Pipeline):
         """Return logits, model predictions, and the extracted dataframe."""
         logits = all_outputs["logits"]
         predictions = all_outputs["logits"].argmax(-1).squeeze().tolist()
-        output_df = self.extract_table(all_outputs)
+        output_df = self._extract_table(all_outputs)
         return logits, predictions, output_df
 
-    def extract_table(self, all_outputs):
+    def _extract_table(self, all_outputs):
         """Extract a structured table from a set of inference predictions.
 
         This function essentially works by stacking bounding boxes and predictions

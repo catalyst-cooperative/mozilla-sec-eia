@@ -8,6 +8,9 @@ from dagster import AssetIn, AssetOut, Out, asset, graph_multi_asset, multi_asse
 
 from mozilla_sec_eia.library import validation_helpers
 from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
+from mozilla_sec_eia.models.sec10k.ex_21.ex21_validation_helpers import (
+    clean_ex21_validation_set,
+)
 
 from ..entities import (
     Ex21CompanyOwnership,
@@ -64,6 +67,13 @@ def ex21_validation_metrics(computed_df: pd.DataFrame, validation_df: pd.DataFra
     """Compute validation metrics for Ex. 21 extraction."""
     shared_cols = validation_df.columns.intersection(computed_df.columns)
     validation_df = validation_df.astype(computed_df[shared_cols].dtypes)
+    # strip llc and other company name parts for the similarity comparison
+    computed_df["subsidiary"] = validation_helpers.strip_down_company_names(
+        computed_df["subsidiary"]
+    )
+    validation_df["subsidiary"] = validation_helpers.strip_down_company_names(
+        validation_df["subsidiary"]
+    )
     n_equal = 0
     validation_filenames = validation_df["id"].unique()
     n_files = len(validation_filenames)
@@ -79,15 +89,22 @@ def ex21_validation_metrics(computed_df: pd.DataFrame, validation_df: pd.DataFra
             validation_df["id"] == filename
         ].reset_index(drop=True)
         # check if the tables are exactly equal
-        if extracted_table_df.equals(validation_table_df):
-            # TODO: strip llc and other company strings before comparison
+        if extracted_table_df[["subsidiary", "loc", "own_per"]].equals(
+            validation_table_df[["subsidiary", "loc", "own_per"]]
+        ):
             n_equal += 1
         else:
             incorrect_files.append(filename)
-        # compute precision and recall for each column
+        # compute jaccard sim + precision and recall for each column
         table_metrics_dict[filename] = {}
         jaccard_dict[filename] = {}
         for col in ["subsidiary", "loc", "own_per"]:
+            extracted_table_df[col] = validation_helpers.fill_nulls_for_comparison(
+                extracted_table_df[col]
+            )
+            validation_table_df[col] = validation_helpers.fill_nulls_for_comparison(
+                validation_table_df[col]
+            )
             table_prec_recall = validation_helpers.pandas_compute_precision_recall(
                 extracted_table_df, validation_table_df, value_col=col
             )
@@ -127,22 +144,6 @@ def ex21_validation_metrics(computed_df: pd.DataFrame, validation_df: pd.DataFra
             "avg_own_per_recall": prec_recall_df["own_per_recall"].sum() / n_files,
         },
     )
-
-
-def clean_ex21_validation_set(validation_df: pd.DataFrame):
-    """Clean Ex. 21 validation data to match extracted format."""
-    validation_df = validation_df.rename(
-        columns={
-            "Filename": "id",
-            "Subsidiary": "subsidiary",
-            "Location of Incorporation": "loc",
-            "Ownership Percentage": "own_per",
-        }
-    )
-    validation_df["own_per"] = validation_df["own_per"].astype(str)
-    validation_df["filename"] = validation_df["id"].apply(get_metadata_filename)
-    validation_df = clean_extracted_df(validation_df)
-    return validation_df
 
 
 @op(

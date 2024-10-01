@@ -1,5 +1,7 @@
 """Implement common utilities/functions for validating models."""
 
+import json
+import re
 from importlib import resources
 
 import pandas as pd
@@ -77,17 +79,40 @@ def jaccard_similarity(
         value_col: Column to calculate Jaccard similarity on.
             Must be present in both dataframes.
     """
-    # fill nans to make similarity comparison more accurate
-    if (computed_df[value_col].dtype == float) and (
-        validation_df[value_col].dtype == float
-    ):
-        computed_df[value_col] = computed_df[value_col].fillna(999)
-        validation_df[value_col] = validation_df[value_col].fillna(999)
-    else:
-        computed_df[value_col] = computed_df[value_col].fillna("zzz")
-        validation_df[value_col] = validation_df[value_col].fillna("zzz")
     intersection = set(computed_df[value_col]).intersection(
         set(validation_df[value_col])
     )
     union = set(computed_df[value_col]).union(set(validation_df[value_col]))
     return float(len(intersection)) / float(len(union))
+
+
+def strip_down_company_names(ser: pd.Series) -> pd.Series:
+    """Strip LLC and other company name suffixes from a column.
+
+    Used to compare subsidiary name columns during validation.
+    """
+    # this JSON is taken from PUDL package data (used for CompanyNameCleaner)
+    json_source = (
+        resources.files("mozilla_sec_eia.package_data") / "us_legal_forms.json"
+    )
+    with json_source.open() as json_file:
+        legal_terms_dict = json.load(json_file)["legal_forms"]["en"]
+    terms_list = list(legal_terms_dict.keys())
+    for key in legal_terms_dict:
+        terms_list += legal_terms_dict[key]
+    reg = r"\b(?:" + "|".join(re.escape(word) for word in terms_list) + r")\b"
+    ser = ser.replace(reg, "", regex=True)
+    ser = ser.str.strip()
+    # strip commas or other special chars that might be at the end of the name
+    ser = ser.str.replace(r"[^[^\w&\s]+|[^\w&\s]+$]+", "", regex=True)
+    ser = ser.str.strip()
+    return ser
+
+
+def fill_nulls_for_comparison(ser: pd.Series):
+    """Fill nans in column to make similarity comparison more accurate.
+
+    Used during validation of Ex. 21 table extraction.
+    """
+    ser = ser.fillna(999) if ser.dtype == float else ser.fillna("zzz")
+    return ser
