@@ -169,7 +169,7 @@ class GCSArchive(ConfigurableResource):
         assert path.exists(), "Outputs bucket path does not exist"
         return path
 
-    def get_metadata(self, year_quarter: str | None = None) -> pd:
+    def get_metadata(self, year_quarter: str | None = None) -> pd.DataFrame:
         """Return dataframe of filing metadata."""
         selection = None
         if year_quarter is not None:
@@ -183,10 +183,7 @@ class GCSArchive(ConfigurableResource):
         self, cache_directory: Path, filing: pd.Series | Sec10K, extension=".html"
     ) -> Path:
         """Return path to a filing in local cache based on metadata."""
-        if isinstance(filing, pd.Series):
-            filename = filing["filename"]
-        else:
-            filename = filing.filename
+        filename = filing.name if isinstance(filing, pd.Series) else filing.filename
         return cache_directory / Path(
             f"{filename.replace('edgar/data/', '').replace('/', '-')}".replace(
                 ".txt", extension
@@ -208,24 +205,17 @@ class GCSArchive(ConfigurableResource):
             cache_pdf: Boolean indicating whether to also cache a PDF of the Ex. 21
         """
         filings = []
-        for _, filing in filing_selection.iterrows():
+        for filename, filing in filing_selection.iterrows():
             local_path = self.get_local_filename(cache_directory, filing)
-            year_quarter = filing["year_quarter"]
+            filepath = f"sec10k/sec10k-{filing.year_quarter}/{filename}"
             if not local_path.exists():
                 with local_path.open("w") as f:
-                    f.write(
-                        (
-                            self.filings_bucket_path
-                            / "sec10k"
-                            / f"sec10k-{year_quarter}"
-                            / filing.filename
-                        ).read_text()
-                    )
+                    f.write((self.filings_bucket_path / filepath).read_text())
 
             with local_path.open() as f:
                 sec10k_filing = Sec10K.from_file(
                     file=f,
-                    filename=filing["filename"],
+                    filename=filename,
                     cik=filing["cik"],
                     year_quarter=filing["year_quarter"],
                     ex_21_version=filing["exhibit_21_version"],
@@ -278,13 +268,14 @@ class GCSArchive(ConfigurableResource):
         json_cache_path.mkdir(parents=True, exist_ok=True)
         pdf_cache_path.mkdir(parents=True, exist_ok=True)
         metadata_df = self.get_metadata()
-        # label_name_pattern = re.compile(r"(\d+)-\d{4}q[1-4]-\d+-(.+)")
         label_name_pattern = re.compile(r"(\d+)-(.+)")
+
         # Cache filings and labels
         filenames = []
         direc = self.labels_bucket_path / gcs_folder_name
+        logger.info(direc.is_dir())
         for file in direc.iterdir():
-            if file.name == gcs_folder_name:
+            if file.name in gcs_folder_name:
                 continue
             # Cache labels
             with (json_cache_path / file.name).open("w") as f:
@@ -294,10 +285,9 @@ class GCSArchive(ConfigurableResource):
             match = label_name_pattern.search(file.name)
             filenames.append(f"edgar/data/{match.group(1)}/{match.group(2)}.txt")
 
-        metadata_df = metadata_df.reset_index()
-        filings = metadata_df[metadata_df["filename"].isin(filenames)]
+        filings = metadata_df[metadata_df.index.isin(filenames)]
         self.get_filings(
-            filing_selection=filings,
+            filings,
             cache_directory=pdf_cache_path,
             cache_pdf=True,
         )
@@ -312,7 +302,7 @@ class GCSArchive(ConfigurableResource):
 
         # Get metadata df
         logger.info("Get list of files in metadata.")
-        metadata_filenames = set(self.get_metadata()["filename"])
+        metadata_filenames = set(self.get_metadata().index)
 
         if not (valid := archive_filenames == metadata_filenames):
             logger.warning("Archive validation failed.")

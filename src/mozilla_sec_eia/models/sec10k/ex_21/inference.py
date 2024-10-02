@@ -118,7 +118,7 @@ def create_inference_dataset(
     return extraction_metadata, dataset
 
 
-def clean_extracted_df(extracted_df):
+def clean_extracted_df(extracted_df: pd.DataFrame) -> pd.DataFrame:
     """Perform basic cleaning on a dataframe extracted from an Ex. 21."""
     if extracted_df.empty:
         return extracted_df
@@ -521,14 +521,14 @@ class LayoutLMInferencePipeline(Pipeline):
 
 
 def separate_entities_by_row(df):
-    # get the bounding boxes with labeled entities
-    # get the average distance between boxes that don't share an x coordinate (with threshold)
-    # if space between the y coordinates of two bboxes is greater than the average then
-    # they can't have the same row
-    # try using the fourth quartile
-    # alternatively: run a document classifier, then if it's "subsidiary list" type
-    # same subsidiaries can't share an x value
-    # TODO: just round instead of using a threshold?
+    """Separate entities that span multiple rows and should be distinct.
+
+    Sometimes LayoutLM groups multiple entities that span multiple rows
+    into one entity. This function makes an attempt to break these out
+    into multiple entities, by taking the average distance between rows
+    and separating a grouped entity if the distance between y values
+    is greater than the third quantile of y value spacing.
+    """
     threshold = 1.0
     for entity in ["subsidiary", "loc", "own_per"]:
         entity_df = df[df["pred"] == entity]

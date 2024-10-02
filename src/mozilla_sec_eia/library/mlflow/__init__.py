@@ -7,6 +7,7 @@ from .mlflow_io_managers import (
 )
 from .mlflow_resource import (
     MlflowInterface,
+    configure_mlflow,
     get_most_recent_run,
 )
 

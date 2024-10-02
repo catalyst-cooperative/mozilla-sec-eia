@@ -45,6 +45,7 @@ def create_inputs_for_label_studio(
     image_dir.mkdir(parents=True, exist_ok=True)
     json_dir = cache_dir / "jsons"
     json_dir.mkdir(parents=True, exist_ok=True)
+    pdfs_dir = Path(pdfs_dir)
 
     for pdf_filename in os.listdir(pdfs_dir):
         if pdf_filename.split(".")[-1] != "pdf":
