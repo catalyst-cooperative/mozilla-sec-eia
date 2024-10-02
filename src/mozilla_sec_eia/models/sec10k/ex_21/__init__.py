@@ -79,8 +79,9 @@ def ex21_validation_metrics(computed_df: pd.DataFrame, validation_df: pd.DataFra
             validation_df["id"] == filename
         ].reset_index(drop=True)
         # check if the tables are exactly equal
-        if extracted_table_df.equals(validation_table_df):
-            # TODO: strip llc and other company strings before comparison
+        if extracted_table_df[["subsidiary", "loc", "own_per"]].equals(
+            validation_table_df[["subsidiary", "loc", "own_per"]]
+        ):
             n_equal += 1
         else:
             incorrect_files.append(filename)

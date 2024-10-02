@@ -243,6 +243,26 @@ def _get_data(dataset):
     yield from dataset
 
 
+def _fill_known_nulls(df):
+    """Fill known nulls in location and own per column.
+
+    Fill with known values from rows with same subsidiary.
+    """
+    if "own_per" in df:
+        df["own_per"] = df.groupby(["id", "subsidiary"])["own_per"].transform(
+            lambda group: group.ffill()
+        )
+    if "loc" in df:
+        df["loc"] = df.groupby(["id", "subsidiary"])["loc"].transform(
+            lambda group: group.ffill()
+        )
+        # there can be the same name company with different locations
+        # so drop duplicates with location included in subset arg
+        return df.drop_duplicates(subset=["id", "subsidiary", "loc"])
+    # drop duplicate subsidiary rows now that all known nulls are filled
+    return df.drop_duplicates(subset=["id", "subsidiary"])
+
+
 class Exhibit21Extractor(ConfigurableResource):
     """Implement `Sec10kExtractor` interface for exhibit 21 data."""
 
@@ -275,7 +295,7 @@ class Exhibit21Extractor(ConfigurableResource):
 
         logits = []
         predictions = []
-        hidden_states = []
+        # hidden_states = []
         all_output_df = Ex21CompanyOwnership.example(size=0)
         extraction_metadata = Sec10kExtractionMetadata.example(size=0)
         for output_dict in pipe(_get_data(dataset)):
@@ -285,12 +305,12 @@ class Exhibit21Extractor(ConfigurableResource):
             # hidden_states.append(output_dict["final_hidden_state_embeddings"])
             output_df = output_dict["output_df"]
             if not output_df.empty:
-                output_df = output_df.groupby("subsidiary").first().reset_index()
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
             all_output_df = pd.concat([all_output_df, output_df])
         all_output_df.columns.name = None
         all_output_df = clean_extracted_df(all_output_df)
+        all_output_df = _fill_known_nulls(all_output_df)
         all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
         all_output_df = all_output_df.reset_index(drop=True)
         outputs_dict = {
@@ -464,6 +484,7 @@ class LayoutLMInferencePipeline(Pipeline):
         df = df.merge(words_df, how="left", on=BBOX_COLS).drop_duplicates(
             subset=BBOX_COLS + ["pred", "word"]
         )
+        df = df.sort_values(by=["top_left_y", "top_left_x"])
         # rows that are the first occurrence in a new group (subsidiary, loc, own_per)
         # should always have a B entity label. Manually override labels so this is true.
         first_in_group_df = df[
@@ -474,9 +495,8 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         df.update(first_in_group_df)
         # filter for just words that were labeled with non "other" entities
-        # TODO: are the column top_left_y or top_left_y_pdf?
-        entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
-        entities_df = entities_df[entities_df["pred"] != "other"]
+        # entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
+        entities_df = df[df["pred"] != "other"]
         # boxes that have the same group label but are on different rows
         # should be updated to have two different B labels
         entities_df = separate_entities_by_row(entities_df)
@@ -491,7 +511,6 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         # assign a new row every time there's a new subsidiary
         grouped_df["row"] = (grouped_df["pred"].str.startswith("subsidiary")).cumsum()
-        # separate_subsidiaries_by_bbox(grouped_df)
         output_df = grouped_df.pivot_table(
             index="row", columns="pred", values="word", aggfunc=lambda x: " ".join(x)
         ).reset_index()
@@ -509,35 +528,40 @@ def separate_entities_by_row(df):
     # try using the fourth quartile
     # alternatively: run a document classifier, then if it's "subsidiary list" type
     # same subsidiaries can't share an x value
-    # TODO: do we want to separate out by entity label?
-    threshold = 0.2
-    df["line_group"] = df["top_left_y"].transform(
-        lambda y: (y // threshold).astype(int)
-    )
-    # Get the unique y-values for each line (group) per file
-    line_positions = df.groupby(["line_group"])["top_left_y"].mean().reset_index()
-    # Calculate the difference between adjacent y-values (i.e., distance between lines)
-    line_positions["y_diff"] = line_positions["top_left_y"].diff()
-    # Filter out NaN values and take the mean of the valid distances
-    y_diffs = line_positions["y_diff"].dropna()
-    avg_y_diff = round(y_diffs).quantile(0.3)
-    # if an I labeled entity is more than avg_y_diff from it's previoius box then make it a B entity
-    df["prev_y"] = df["top_left_y"].shift(1)
-    df["prev_iob"] = df["iob_pred"].shift(1)
+    # TODO: just round instead of using a threshold?
+    threshold = 1.0
+    for entity in ["subsidiary", "loc", "own_per"]:
+        entity_df = df[df["pred"] == entity]
+        entity_df["line_group"] = entity_df["top_left_y"].transform(
+            lambda y: (y // threshold).astype(int)
+        )
+        # Get the unique y-values for each line (group) per file
+        line_positions = (
+            entity_df.groupby(["line_group"])["top_left_y"].mean().reset_index()
+        )
+        # Calculate the difference between adjacent y-values (i.e., distance between lines)
+        line_positions["y_diff"] = line_positions["top_left_y"].diff()
+        # Filter out NaN values and take the mean of the valid distances
+        y_diffs = line_positions["y_diff"].dropna()
+        avg_y_diff = round(y_diffs).quantile(0.3)
+        # if an I labeled entity is more than avg_y_diff from it's previoius box then make it a B entity
+        entity_df["prev_y"] = entity_df["top_left_y"].shift(1)
+        entity_df["prev_iob"] = entity_df["iob_pred"].shift(1)
 
-    # Apply vectorized condition:
-    # 1. Current label is 'I'
-    # 2. Previous row exists in the same file
-    # 3. Y-distance exceeds the average y difference
-    df["iob_pred"] = np.where(
-        (df["iob_pred"].str[0] == "I")
-        & ((df["top_left_y"] - df["prev_y"]) >= avg_y_diff),
-        "B" + df["iob_pred"].str[1:],  # Update to 'B'
-        df["iob_pred"],  # Keep as is
-    )
+        # Apply vectorized condition:
+        # 1. Current label is 'I'
+        # 2. Previous row exists in the same file
+        # 3. Y-distance exceeds the average y difference
+        entity_df["iob_pred"] = np.where(
+            (entity_df["iob_pred"].str[0] == "I")
+            & ((entity_df["top_left_y"] - entity_df["prev_y"]) >= avg_y_diff),
+            "B" + entity_df["iob_pred"].str[1:],  # Update to 'B'
+            entity_df["iob_pred"],  # Keep as is
+        )
 
-    # Drop temporary columns
-    df = df.drop(columns=["prev_y", "prev_iob"])
+        # Drop temporary columns
+        entity_df = entity_df.drop(columns=["prev_y", "prev_iob"])
+        df.update(entity_df, overwrite=True)
 
     return df
 
