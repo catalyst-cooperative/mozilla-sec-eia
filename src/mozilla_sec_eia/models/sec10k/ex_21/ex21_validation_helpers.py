@@ -49,6 +49,3 @@ def remove_paragraph_tables_from_validation_data():
         / labels_filename_new,
         index=False,
     )
-
-
-remove_paragraph_tables_from_validation_data()

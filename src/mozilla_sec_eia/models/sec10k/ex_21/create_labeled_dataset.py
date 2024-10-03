@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from ..utils.cloud import GCSArchive
 from ..utils.layoutlm import normalize_bboxes
 from ..utils.pdf import (
     get_pdf_data_from_path,
@@ -228,7 +229,7 @@ def format_as_ner_annotations(
     Returns:
         ner_annotations: a list of dicts, with one dict for each doc.
     """
-    # GCSArchive().cache_training_data(labeled_json_path, pdfs_path, gcs_folder_name)
+    GCSArchive().cache_training_data(labeled_json_path, pdfs_path, gcs_folder_name)
 
     labeled_df = format_label_studio_output(
         labeled_json_dir=labeled_json_path, pdfs_dir=pdfs_path

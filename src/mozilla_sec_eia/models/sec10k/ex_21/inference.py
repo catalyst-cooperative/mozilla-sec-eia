@@ -256,11 +256,7 @@ def _fill_known_nulls(df):
         df["loc"] = df.groupby(["id", "subsidiary"])["loc"].transform(
             lambda group: group.ffill()
         )
-        # there can be the same name company with different locations
-        # so drop duplicates with location included in subset arg
-        return df.drop_duplicates(subset=["id", "subsidiary", "loc"])
-    # drop duplicate subsidiary rows now that all known nulls are filled
-    return df.drop_duplicates(subset=["id", "subsidiary"])
+    return df
 
 
 class Exhibit21Extractor(ConfigurableResource):
@@ -311,7 +307,9 @@ class Exhibit21Extractor(ConfigurableResource):
         all_output_df.columns.name = None
         all_output_df = clean_extracted_df(all_output_df)
         all_output_df = _fill_known_nulls(all_output_df)
-        all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
+        all_output_df = all_output_df[
+            ["id", "subsidiary", "loc", "own_per"]
+        ].drop_duplicates()
         all_output_df = all_output_df.reset_index(drop=True)
         outputs_dict = {
             "all_output_df": all_output_df,
@@ -495,7 +493,6 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         df.update(first_in_group_df)
         # filter for just words that were labeled with non "other" entities
-        # entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
         entities_df = df[df["pred"] != "other"]
         # boxes that have the same group label but are on different rows
         # should be updated to have two different B labels
@@ -543,15 +540,14 @@ def separate_entities_by_row(df):
         line_positions["y_diff"] = line_positions["top_left_y"].diff()
         # Filter out NaN values and take the mean of the valid distances
         y_diffs = line_positions["y_diff"].dropna()
-        avg_y_diff = round(y_diffs).quantile(0.3)
+        avg_y_diff = y_diffs.apply(np.floor).mean()
         # if an I labeled entity is more than avg_y_diff from it's previoius box then make it a B entity
         entity_df["prev_y"] = entity_df["top_left_y"].shift(1)
         entity_df["prev_iob"] = entity_df["iob_pred"].shift(1)
 
-        # Apply vectorized condition:
-        # 1. Current label is 'I'
-        # 2. Previous row exists in the same file
-        # 3. Y-distance exceeds the average y difference
+        # If the current prediction is an I label
+        # and y distance exceeds the average y difference
+        # update to a B label and make it the start of a new entity
         entity_df["iob_pred"] = np.where(
             (entity_df["iob_pred"].str[0] == "I")
             & ((entity_df["top_left_y"] - entity_df["prev_y"]) >= avg_y_diff),
@@ -564,10 +560,3 @@ def separate_entities_by_row(df):
         df.update(entity_df, overwrite=True)
 
     return df
-
-
-def id_paragraph_layout(page_df):
-    """Identify the 'paragraph' type layout."""
-    # if the average space between x and y bboxes is around the correct ratio
-    # or try if it's below a certain threshold
-    pass
