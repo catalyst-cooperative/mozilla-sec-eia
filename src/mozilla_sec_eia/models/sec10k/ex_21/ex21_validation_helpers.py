@@ -2,7 +2,6 @@
 
 import pandas as pd
 
-from mozilla_sec_eia.models.sec10k.ex_21.inference import clean_extracted_df
 from mozilla_sec_eia.models.sec10k.utils.cloud import get_metadata_filename
 
 

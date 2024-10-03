@@ -26,6 +26,32 @@ class MlflowBaseIOManager(ConfigurableIOManager):
         return mlflow.get_run(self.mlflow_interface.mlflow_run_id)
 
 
+class MlflowPyfuncModelIOManager(MlflowBaseIOManager):
+    """IO Manager to load pyfunc models from tracking server."""
+
+    uri: str | None = None
+
+    def handle_output(self, context, obj):
+        """Outputs not implemented."""
+        raise NotImplementedError("Logging models not supported by io manager.")
+
+    def load_input(self, context: InputContext):
+        """Load pyfunc model with mlflow server."""
+        cache_path = (
+            self.mlflow_interface.dagster_home_path / "model_cache" / context.name
+        )
+        cache_path.mkdir(exist_ok=True, parents=True)
+
+        model_uri = self.uri
+        if model_uri is None:
+            model_uri = f"models:/{context.name}"
+
+        mlflow.pyfunc.load_model(
+            model_uri,
+            dst_path=cache_path,
+        )
+
+
 class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
     """Implement IO manager for logging/loading dataframes as mlflow artifacts."""
 

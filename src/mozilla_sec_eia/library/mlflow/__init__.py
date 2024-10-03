@@ -4,6 +4,7 @@ from .mlflow_io_managers import (
     MlflowBaseIOManager,
     MlflowMetricsIOManager,
     MlflowPandasArtifactIOManager,
+    MlflowPyfuncModelIOManager,
 )
 from .mlflow_resource import (
     MlflowInterface,
