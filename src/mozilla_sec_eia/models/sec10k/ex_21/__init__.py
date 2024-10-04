@@ -2,22 +2,13 @@
 
 import logging
 
-import mlflow
 import pandas as pd
 from dagster import (
-    AssetIn,
     AssetOut,
     In,
     Out,
-    asset,
     graph_multi_asset,
-    multi_asset,
     op,
-)
-
-from mozilla_sec_eia.library.mlflow import MlflowInterface, mlflow_interface_resource
-from mozilla_sec_eia.models.sec10k.ex_21.ex21_validation_helpers import (
-    clean_ex21_validation_set,
 )
 
 from ..entities import (
@@ -27,7 +18,6 @@ from ..entities import (
     sec10k_extract_metadata_type,
 )
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
-from ..utils.cloud import GCSArchive, cloud_interface_resource, get_metadata_filename
 from .inference import extract_filings
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
@@ -84,12 +74,10 @@ def collect_extracted_chunks(
             io_manager_key="pandas_parquet_io_manager"
         ),
     },
-    ins={"layoutlm": AssetIn(input_manager_key="layoutlm_io_manager")},
     partitions_def=year_quarter_partitions,
 )
 def ex21_extract(
     sec10k_filing_metadata: pd.DataFrame,
-    layoutlm,
 ):
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)

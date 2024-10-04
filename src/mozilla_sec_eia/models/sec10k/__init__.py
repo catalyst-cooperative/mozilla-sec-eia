@@ -1,6 +1,7 @@
 """Implement models to extract data from SEC10k filings."""
 
 from dagster import (
+    AssetIn,
     Config,
     Definitions,
     define_asset_job,
@@ -28,6 +29,7 @@ from .utils.cloud import cloud_interface_resource
 
 basic_10k_assets = load_assets_from_modules([basic_10k])
 ex21_assets = load_assets_from_package_module(ex_21)
+ex21_training_data_assets = load_assets_from_modules([ex_21.data])
 shared_assets = load_assets_from_modules([extract])
 
 basic_10k_production_job = model_jobs.create_production_model_job(
@@ -59,16 +61,26 @@ exhibit21_extractor = define_dagstermill_asset(
     name="exhibit21_extractor",
     notebook_path=file_relative_path(__file__, "notebooks/exhibit21_extractor.ipynb"),
     config_schema=TrainConfig.to_config_schema(),
+    ins={
+        "ex21_training_data": AssetIn(),
+        "ex21_validation_set": AssetIn(),
+        "ex21_failed_parsing_metadata": AssetIn(),
+        "ex21_inference_dataset": AssetIn(),
+    },
 )
 ex21_training_job = define_asset_job(
     "ex21_training",
-    selection=[exhibit21_extractor],
+    selection=[exhibit21_extractor] + ex21_training_data_assets,
     executor_def=in_process_executor,
 )
 
 
 defs = Definitions(
-    assets=basic_10k_assets + ex21_assets + shared_assets + [exhibit21_extractor],
+    assets=basic_10k_assets
+    + ex21_assets
+    + shared_assets
+    + [exhibit21_extractor]
+    + ex21_training_data_assets,
     jobs=[
         basic_10k_production_job,
         basic_10k_validation_job,
