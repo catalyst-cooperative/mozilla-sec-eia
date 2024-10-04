@@ -31,7 +31,7 @@ jobs:
           service_account: "mozilla-dev-sa@catalyst-cooperative-mozilla.iam.gserviceaccount.com"
 
       - name: Set up conda environment for testing
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           micromamba-version: 1.5.10-0
           micromamba-binary-path: /home/runner/micromamba-bin-versioned/micromamba
