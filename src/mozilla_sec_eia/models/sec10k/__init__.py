@@ -53,7 +53,8 @@ ex21_production_job = model_jobs.create_production_model_job(
 class TrainConfig(Config):
     """Config for training notebook."""
 
-    uri: str = "runs:/c363159de2f5439c93dd972d51247370/layoutlm_extractor"
+    uri: str | None = None
+    # "runs:/c363159de2f5439c93dd972d51247370/layoutlm_extractor"
     training_set: str = "labeledv0.2"
 
 
@@ -67,6 +68,7 @@ exhibit21_extractor = define_dagstermill_asset(
         "ex21_failed_parsing_metadata": AssetIn(),
         "ex21_inference_dataset": AssetIn(),
     },
+    save_notebook_on_failure=True,
 )
 ex21_training_job = define_asset_job(
     "ex21_training",
