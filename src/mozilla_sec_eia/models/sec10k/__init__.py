@@ -53,8 +53,9 @@ ex21_production_job = model_jobs.create_production_model_job(
 class TrainConfig(Config):
     """Config for training notebook."""
 
-    uri: str | None = None
-    # "runs:/c363159de2f5439c93dd972d51247370/layoutlm_extractor"
+    layoutlm_uri: str | None = (
+        "runs:/32355367ed444dd0b07f2d1b845f62d8/layoutlm_extractor"
+    )
     training_set: str = "labeledv0.2"
 
 
