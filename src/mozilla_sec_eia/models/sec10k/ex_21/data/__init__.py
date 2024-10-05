@@ -4,7 +4,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pandas as pd
-from dagster import AssetOut, Config, asset, multi_asset
+from dagster import (
+    AssetExecutionContext,
+    AssetOut,
+    StaticPartitionsDefinition,
+    asset,
+    multi_asset,
+)
 
 from mozilla_sec_eia.library import validation_helpers
 
@@ -15,20 +21,18 @@ from .inference import create_inference_dataset
 from .training import format_as_ner_annotations
 
 
-class Ex21TrainingConfig(Config):
-    """Configure asset to produce ex21 training data."""
-
-    training_set: str = "labeledv0.2"
-
-
-@asset
-def ex21_training_data(config: Ex21TrainingConfig):
+@asset(
+    partitions_def=StaticPartitionsDefinition(
+        ["labeledv0.0", "labeledv0.1", "labeledv0.2"]
+    )
+)
+def ex21_training_data(context: AssetExecutionContext):
     """Construct training dataset for ex 21 extraction."""
     with TemporaryDirectory() as temp_dir:
         ner_annotations = format_as_ner_annotations(
             labeled_json_path=Path(temp_dir) / "sec10k_filings" / "labeled_jsons",
             pdfs_path=Path(temp_dir) / "sec10k_filings" / "pdfs",
-            gcs_folder_name=config.training_set,
+            gcs_folder_name=context.partition_key,
         )
     return ner_annotations
 
