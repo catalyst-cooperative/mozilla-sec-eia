@@ -56,7 +56,6 @@ class TrainConfig(Config):
     layoutlm_uri: str | None = (
         "runs:/32355367ed444dd0b07f2d1b845f62d8/layoutlm_extractor"
     )
-    training_set: str = "labeledv0.2"
 
 
 exhibit21_extractor = define_dagstermill_asset(
@@ -70,6 +69,7 @@ exhibit21_extractor = define_dagstermill_asset(
         "ex21_inference_dataset": AssetIn(),
     },
     save_notebook_on_failure=True,
+    partitions_def=ex_21.data.TRAINING_DATA_VERSION_PARTS,
 )
 ex21_training_job = define_asset_job(
     "ex21_training",

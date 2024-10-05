@@ -20,12 +20,12 @@ from ..ex21_validation_helpers import clean_ex21_validation_set
 from .inference import create_inference_dataset
 from .training import format_as_ner_annotations
 
-
-@asset(
-    partitions_def=StaticPartitionsDefinition(
-        ["labeledv0.0", "labeledv0.1", "labeledv0.2"]
-    )
+TRAINING_DATA_VERSION_PARTS = StaticPartitionsDefinition(
+    ["labeledv0.0", "labeledv0.1", "labeledv0.2"]
 )
+
+
+@asset(partitions_def=TRAINING_DATA_VERSION_PARTS)
 def ex21_training_data(context: AssetExecutionContext):
     """Construct training dataset for ex 21 extraction."""
     with TemporaryDirectory() as temp_dir:
