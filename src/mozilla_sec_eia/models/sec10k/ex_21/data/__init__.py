@@ -27,7 +27,7 @@ class Ex21TrainConfig(Config):
     #: mlflow run name used to train layoutlm model
     layoutlm_training_run: str | None = "layoutlm-labeledv0.2"
     #: training data version (doesn't matter if using pretrained model)
-    training_data_version: str | None = "v0.2"
+    training_data_version: str = "v0.2"
 
 
 @asset

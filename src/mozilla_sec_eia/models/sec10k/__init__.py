@@ -2,7 +2,6 @@
 
 from dagster import (
     AssetIn,
-    Config,
     Definitions,
     define_asset_job,
     file_relative_path,
