@@ -53,9 +53,8 @@ ex21_production_job = model_jobs.create_production_model_job(
 class TrainConfig(Config):
     """Config for training notebook."""
 
-    layoutlm_uri: str | None = (
-        "runs:/32355367ed444dd0b07f2d1b845f62d8/layoutlm_extractor"
-    )
+    #: mlflow run name used to train layoutlm model
+    layoutlm_training_run: str | None = "layoutlm-labeledv0.2"
 
 
 exhibit21_extractor = define_dagstermill_asset(
