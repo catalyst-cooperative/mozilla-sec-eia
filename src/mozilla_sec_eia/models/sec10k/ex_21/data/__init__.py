@@ -7,7 +7,7 @@ import pandas as pd
 from dagster import (
     AssetExecutionContext,
     AssetOut,
-    StaticPartitionsDefinition,
+    Config,
     asset,
     multi_asset,
 )
@@ -20,19 +20,24 @@ from ..ex21_validation_helpers import clean_ex21_validation_set
 from .inference import create_inference_dataset
 from .training import format_as_ner_annotations
 
-TRAINING_DATA_VERSION_PARTS = StaticPartitionsDefinition(
-    ["labeledv0.0", "labeledv0.1", "labeledv0.2"]
-)
+
+class Ex21TrainConfig(Config):
+    """Config for training notebook."""
+
+    #: mlflow run name used to train layoutlm model
+    layoutlm_training_run: str | None = "layoutlm-labeledv0.2"
+    #: training data version (doesn't matter if using pretrained model)
+    training_data_version: str | None = "v0.2"
 
 
-@asset(partitions_def=TRAINING_DATA_VERSION_PARTS)
-def ex21_training_data(context: AssetExecutionContext):
+@asset
+def ex21_training_data(config: Ex21TrainConfig):
     """Construct training dataset for ex 21 extraction."""
     with TemporaryDirectory() as temp_dir:
         ner_annotations = format_as_ner_annotations(
             labeled_json_path=Path(temp_dir) / "sec10k_filings" / "labeled_jsons",
             pdfs_path=Path(temp_dir) / "sec10k_filings" / "pdfs",
-            gcs_folder_name=context.partition_key,
+            gcs_folder_name=f"labeled{config.training_data_version}",
         )
     return ner_annotations
 

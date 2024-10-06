@@ -50,17 +50,10 @@ ex21_production_job = model_jobs.create_production_model_job(
 )
 
 
-class TrainConfig(Config):
-    """Config for training notebook."""
-
-    #: mlflow run name used to train layoutlm model
-    layoutlm_training_run: str | None = "layoutlm-labeledv0.2"
-
-
 exhibit21_extractor = define_dagstermill_asset(
     name="exhibit21_extractor",
     notebook_path=file_relative_path(__file__, "notebooks/exhibit21_extractor.ipynb"),
-    config_schema=TrainConfig.to_config_schema(),
+    config_schema=ex_21.data.Ex21TrainConfig.to_config_schema(),
     ins={
         "ex21_training_data": AssetIn(),
         "ex21_validation_set": AssetIn(),
@@ -68,7 +61,6 @@ exhibit21_extractor = define_dagstermill_asset(
         "ex21_inference_dataset": AssetIn(),
     },
     save_notebook_on_failure=True,
-    partitions_def=ex_21.data.TRAINING_DATA_VERSION_PARTS,
 )
 ex21_training_job = define_asset_job(
     "ex21_training",
