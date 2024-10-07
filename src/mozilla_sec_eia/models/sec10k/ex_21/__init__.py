@@ -36,7 +36,7 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 )
 def extract_filing_chunk(
     parsed_chunk: tuple[pd.DataFrame, pd.DataFrame],
-    exhibit21_extractor,
+    exhibit21_extractor: PyFuncModel,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract a set of filings and return results."""
     failed_parsing_metadata, inference_dataset = parsed_chunk
