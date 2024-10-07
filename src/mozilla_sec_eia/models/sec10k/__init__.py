@@ -45,7 +45,9 @@ basic_10k_validation_job = model_jobs.create_validation_model_job(
 ex21_production_job = model_jobs.create_production_model_job(
     "ex21_extraction",
     ex_21.production_assets,
-    concurrency_limit=4,
+    tag_concurrency_limits=[
+        {"key": "model", "value": "exhibit21_extractor", "limit": 2},
+    ],
 )
 
 
@@ -85,10 +87,10 @@ defs = Definitions(
         "mlflow_interface": mlflow_interface_resource,
         "layoutlm_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource,
-            uri="runs:/b959cfa0ba3c4b91a0f8fe158cd0109f/exhibit21_extractor",
+            uri="runs:/d603f8e219da4fd39f3c2f8d7d3bcb40/exhibit21_extractor",
         ),
         "pandas_parquet_io_manager": PandasParquetIOManager(
-            base_path=UPath("gs://sec10k-outputs")
+            base_path=UPath("gs://sec10k-outputs/v2")
         ),
         "output_notebook_io_manager": ConfigurableLocalOutputNotebookIOManager(),
     }

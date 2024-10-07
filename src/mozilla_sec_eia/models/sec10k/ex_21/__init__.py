@@ -1,6 +1,7 @@
 """Module for working with exhibit 21 data."""
 
 import logging
+import traceback
 
 import pandas as pd
 from dagster import (
@@ -10,6 +11,7 @@ from dagster import (
     graph_multi_asset,
     op,
 )
+from mlflow.pyfunc import PyFuncModel
 
 from ..entities import (
     Ex21CompanyOwnership,
@@ -18,7 +20,8 @@ from ..entities import (
     sec10k_extract_metadata_type,
 )
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
-from .inference import extract_filings
+from ..utils.cloud import GCSArchive
+from .data.inference import create_inference_dataset
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -29,13 +32,32 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
         "extracted": Out(dagster_type=ex21_extract_type),
     },
     ins={"exhibit21_extractor": In(input_manager_key="layoutlm_io_manager")},
+    tags={"model": "exhibit21_extractor"},
 )
 def extract_filing_chunk(
-    filings: pd.DataFrame,
+    parsed_chunk: tuple[pd.DataFrame, pd.DataFrame],
     exhibit21_extractor,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Extract a set of filings and return results."""
-    return extract_filings(filings, exhibit21_extractor)
+    failed_parsing_metadata, inference_dataset = parsed_chunk
+    extracted = Ex21CompanyOwnership.example(size=0)
+    try:
+        if not inference_dataset.empty:
+            metadata, extracted = exhibit21_extractor.predict(inference_dataset)
+            metadata = pd.concat([failed_parsing_metadata, metadata])
+        else:
+            metadata = failed_parsing_metadata
+    except Exception as e:
+        logger.warning(traceback.format_exc())
+        logger.warning(f"Error while extracting filings: {inference_dataset['id']}")
+        metadata = pd.DataFrame(
+            {
+                "filename": inference_dataset["id"],
+                "success": [False] * len(inference_dataset),
+                "notes": [str(e)] * len(inference_dataset),
+            }
+        ).set_index("filename")
+    return metadata, extracted
 
 
 @op(
@@ -65,6 +87,17 @@ def collect_extracted_chunks(
     )
 
 
+@op
+def create_dataset(
+    cloud_interface: GCSArchive, filings: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Construct inference dataset from filing chunk."""
+    return create_inference_dataset(
+        filing_metadata=filings,
+        cloud_interface=cloud_interface,
+    )
+
+
 @graph_multi_asset(
     outs={
         "ex21_extraction_metadata": AssetOut(
@@ -81,9 +114,8 @@ def ex21_extract(
 ):
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)
-    metadata_chunks, extracted_chunks = filing_chunks.map(
-        lambda filings: extract_filing_chunk(filings)
-    )
+    parsed_chunks = filing_chunks.map(create_dataset)
+    metadata_chunks, extracted_chunks = parsed_chunks.map(extract_filing_chunk)
     metadata, extracted = collect_extracted_chunks(
         metadata_chunks.collect(), extracted_chunks.collect()
     )

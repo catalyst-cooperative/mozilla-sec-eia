@@ -5,7 +5,6 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 from dagster import (
-    AssetExecutionContext,
     AssetOut,
     Config,
     asset,

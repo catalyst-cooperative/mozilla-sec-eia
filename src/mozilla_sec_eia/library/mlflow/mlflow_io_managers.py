@@ -46,7 +46,7 @@ class MlflowPyfuncModelIOManager(MlflowBaseIOManager):
         if model_uri is None:
             model_uri = f"models:/{context.name}"
 
-        mlflow.pyfunc.load_model(
+        return mlflow.pyfunc.load_model(
             model_uri,
             dst_path=cache_path,
         )
