@@ -43,7 +43,7 @@ def ex21_training_data(config: Ex21TrainConfig):
 
 @asset(dagster_type=ex21_extract_type)
 def ex21_validation_set() -> pd.DataFrame:
-    """Return dataframe containing basic 10k validation data."""
+    """Return dataframe containing ex 21 validation data."""
     return clean_ex21_validation_set(
         validation_helpers.load_validation_data("ex21_labels.csv")
     )
@@ -78,3 +78,46 @@ def ex21_inference_dataset(
         filing_metadata=ex21_validation_filing_metadata,
         cloud_interface=cloud_interface,
     )
+
+
+@asset
+def ex21_layout_labels() -> pd.DataFrame:
+    """Return dataframe with labels describing layout of validation filings."""
+    return validation_helpers.load_validation_data("ex21_layout_histogram.csv")
+
+
+@asset
+def ex21_layout_classifier_filing_metadata(
+    cloud_interface: GCSArchive,
+    ex21_layout_labels: pd.DataFrame,
+) -> pd.DataFrame:
+    """Get sec 10k filing metadata from validation set."""
+    filing_metadata = cloud_interface.get_metadata()
+    return filing_metadata[filing_metadata.index.isin(ex21_layout_labels["filename"])]
+
+
+@asset
+def ex21_layout_classifier_training_dataset(
+    cloud_interface: GCSArchive,
+    ex21_layout_classifier_filing_metadata: pd.DataFrame,
+) -> pd.DataFrame:
+    """Construct inference dataset for ex 21 extraction."""
+    _, dataset = create_inference_dataset(
+        filing_metadata=ex21_layout_classifier_filing_metadata,
+        cloud_interface=cloud_interface,
+    )
+    return dataset
+
+
+ex21_extraction_training_assets = [
+    ex21_training_data,
+    ex21_validation_set,
+    ex21_validation_filing_metadata,
+    ex21_inference_dataset,
+]
+
+ex21_layout_classifier_assets = [
+    ex21_layout_labels,
+    ex21_layout_classifier_filing_metadata,
+    ex21_layout_classifier_training_dataset,
+]

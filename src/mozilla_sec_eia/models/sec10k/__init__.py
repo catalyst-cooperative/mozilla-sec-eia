@@ -28,7 +28,7 @@ from .utils.cloud import cloud_interface_resource
 
 basic_10k_assets = load_assets_from_modules([basic_10k])
 ex21_assets = load_assets_from_package_module(ex_21)
-ex21_training_data_assets = load_assets_from_modules([ex_21.data])
+ex21_data_assets = load_assets_from_modules([ex_21.data])
 shared_assets = load_assets_from_modules([extract])
 
 basic_10k_production_job = model_jobs.create_production_model_job(
@@ -65,7 +65,26 @@ exhibit21_extractor = define_dagstermill_asset(
 )
 ex21_training_job = define_asset_job(
     "ex21_training",
-    selection=[exhibit21_extractor] + ex21_training_data_assets,
+    selection=[exhibit21_extractor] + ex_21.data.ex21_extraction_training_assets,
+    executor_def=in_process_executor,
+)
+
+
+exhibit21_layout_classifier = define_dagstermill_asset(
+    name="exhibit21_layout_classifier",
+    notebook_path=file_relative_path(
+        __file__, "notebooks/exhibit21_layout_classifier.ipynb"
+    ),
+    config_schema=ex_21.data.Ex21TrainConfig.to_config_schema(),
+    ins={
+        "ex21_layout_labels": AssetIn(),
+        "ex21_layout_classifier_training_dataset": AssetIn(),
+    },
+    save_notebook_on_failure=True,
+)
+ex21_layout_classifier_training_job = define_asset_job(
+    "ex21_layout_classifier_training",
+    selection=[exhibit21_layout_classifier] + ex_21.data.ex21_layout_classifier_assets,
     executor_def=in_process_executor,
 )
 
@@ -74,13 +93,14 @@ defs = Definitions(
     assets=basic_10k_assets
     + ex21_assets
     + shared_assets
-    + [exhibit21_extractor]
-    + ex21_training_data_assets,
+    + [exhibit21_extractor, exhibit21_layout_classifier]
+    + ex21_data_assets,
     jobs=[
         basic_10k_production_job,
         basic_10k_validation_job,
         ex21_production_job,
         ex21_training_job,
+        ex21_layout_classifier_training_job,
     ],
     resources={
         "cloud_interface": cloud_interface_resource,
