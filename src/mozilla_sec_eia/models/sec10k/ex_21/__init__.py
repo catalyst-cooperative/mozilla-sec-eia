@@ -15,8 +15,10 @@ from mlflow.pyfunc import PyFuncModel
 
 from ..entities import (
     Ex21CompanyOwnership,
+    Ex21Layout,
     Sec10kExtractionMetadata,
     ex21_extract_type,
+    ex21_layout_type,
     sec10k_extract_metadata_type,
 )
 from ..extract import chunk_filings, sec10k_filing_metadata, year_quarter_partitions
@@ -61,6 +63,28 @@ def extract_filing_chunk(
 
 
 @op(
+    out={"layout": Out(dagster_type=ex21_layout_type)},
+    ins={
+        "exhibit21_layout_classifier": In(
+            input_manager_key="ex21_classifier_io_manager"
+        )
+    },
+)
+def classify_chunk_layouts(
+    parsed_chunk: tuple[pd.DataFrame, pd.DataFrame],
+    exhibit21_layout_classifier: PyFuncModel,
+) -> pd.DataFrame:
+    """Extract a set of filings and return results."""
+    _, inference_dataset = parsed_chunk
+    return pd.DataFrame(
+        {
+            "filename": inference_dataset["id"],
+            "paragraph": exhibit21_layout_classifier.predict(inference_dataset),
+        }
+    ).set_index("filename")
+
+
+@op(
     out={
         "metadata": Out(
             io_manager_key="pandas_parquet_io_manager",
@@ -70,20 +94,27 @@ def extract_filing_chunk(
             io_manager_key="pandas_parquet_io_manager",
             dagster_type=ex21_extract_type,
         ),
+        "layout": Out(
+            io_manager_key="pandas_parquet_io_manager",
+            dagster_type=ex21_layout_type,
+        ),
     }
 )
 def collect_extracted_chunks(
     metadata_dfs: list[pd.DataFrame],
     extracted_dfs: list[pd.DataFrame],
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    layout_dfs: list[pd.DataFrame],
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Collect chunks of extracted filings."""
     metadata_dfs = [df for df in metadata_dfs if not df.empty]
     extracted_dfs = [df for df in extracted_dfs if not df.empty]
     metadata_df = pd.concat(metadata_dfs)
     extracted_df = pd.concat(extracted_dfs)
+    layout_df = (pd.concat(layout_dfs),)
     return (
         Sec10kExtractionMetadata.validate(metadata_df),
         Ex21CompanyOwnership.validate(extracted_df),
+        Ex21Layout.validate(layout_df),
     )
 
 
@@ -106,6 +137,7 @@ def create_dataset(
         "ex21_company_ownership_info": AssetOut(
             io_manager_key="pandas_parquet_io_manager"
         ),
+        "ex21_layout": AssetOut(io_manager_key="pandas_parquet_io_manager"),
     },
     partitions_def=year_quarter_partitions,
 )
@@ -115,12 +147,11 @@ def ex21_extract(
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)
     parsed_chunks = filing_chunks.map(create_dataset)
+    layout_chunks = parsed_chunks.map(classify_chunk_layouts)
     metadata_chunks, extracted_chunks = parsed_chunks.map(extract_filing_chunk)
-    metadata, extracted = collect_extracted_chunks(
-        metadata_chunks.collect(), extracted_chunks.collect()
+    return collect_extracted_chunks(
+        metadata_chunks.collect(), extracted_chunks.collect(), layout_chunks.collect()
     )
-
-    return metadata, extracted
 
 
 production_assets = [sec10k_filing_metadata, ex21_extract]

@@ -53,6 +53,17 @@ class Sec10kExtractionMetadata(pa.DataFrameModel):
     )
 
 
+class Ex21Layout(pa.DataFrameModel):
+    """Define table structure for ex21 layout classification."""
+
+    filename: Index[str] = pa.Field(description="Name of extracted filing.")
+    paragraph: Series[bool] = pa.Field(
+        description="Indicates whether ex21 is formatted as a paragraph or not.",
+        coerce=True,
+    )
+
+
 ex21_extract_type = pandera_schema_to_dagster_type(Ex21CompanyOwnership)
 basic_10k_extract_type = pandera_schema_to_dagster_type(Basic10kCompanyInfo)
 sec10k_extract_metadata_type = pandera_schema_to_dagster_type(Sec10kExtractionMetadata)
+ex21_layout_type = pandera_schema_to_dagster_type(Ex21Layout)

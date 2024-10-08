@@ -515,7 +515,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 857501-0001065949-17-000087,First Surety Corporation,West Virginia,
 857501-0001065949-17-000087,"Crystal Mountain Water, Inc.",Arkansas,
 874501-0000874501-15-000013,Ambac Assurance Corporation,Wisconsin,
-874501-0000874501-15-000013,Ambac Assurance UK Limited,United Kingdom Insurance Company,
+874501-0000874501-15-000013,Ambac Assurance UK Limited,United Kingdom,
 874501-0000874501-15-000013,Ambac Capital Corporation,Delaware,
 874501-0000874501-15-000013,"Ambac Capital Funding, Inc.",Delaware,
 874501-0000874501-15-000013,"Ambac Credit Products, LLC",Delaware,
@@ -751,7 +751,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 100826-0001193125-09-042636,Illinois Power Securitization Limited Liability Company,Delaware,
 100826-0001193125-09-042636,Illinois Power Special Purpose Trust,Delaware,
 100826-0001193125-09-042636,Union Electric Company,Missouri,
-100826-0001193125-09-042636,Fuelco LLC,Delaware,33.3
+100826-0001193125-09-042636,Fuelco LLC,Delaware,33.33
 4904-0000004904-09-000040,"American Electric Power Company, Inc.",New York,
 4904-0000004904-09-000040,American Electric Power Service Corporation,New York,100.0
 4904-0000004904-09-000040,"AEP C&I Company, LLC",Delaware,100.0
@@ -1443,13 +1443,13 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 4127-0000004127-17-000033,"Skyworks Solutions Worldwide, Inc., Malaysia Branch",Malaysia,
 4127-0000004127-17-000033,Advanced Analogic Technologies Incorporated,Delaware,
 4127-0000004127-17-000033,"Advanced Analogic Technologies (China), Inc.",Peoples Republic of China,
-4127-0000004127-17-000033,Axiom Microdevices Inc.,Delaware,
-4127-0000004127-17-000033,ICWave LLC,Massachusetts,
-4127-0000004127-17-000033,Isolink inc.,California,
-4127-0000004127-17-000033,MEMS Solutions Inc.,Korea,
-4127-0000004127-17-000033,Quantance Inc.,Delaware,
-4127-0000004127-17-000033,SiGe Semiconductor Inc.,Delaware,
-4127-0000004127-17-000033,SiGe Semiconductor (U.S.) Corp.,Delaware,
+4127-0000004127-17-000033,"Axiom Microdevices, Inc.",Delaware,
+4127-0000004127-17-000033,"ICWave, LLC",Massachusetts,
+4127-0000004127-17-000033,"Isolink, Inc.",California,
+4127-0000004127-17-000033,"MEMS Solutions, Inc.",Korea,
+4127-0000004127-17-000033,"Quantance, Inc.",Delaware,
+4127-0000004127-17-000033,"SiGe Semiconductor, Inc.",Delaware,
+4127-0000004127-17-000033,"SiGe Semiconductor (U.S.), Corp.",Delaware,
 4127-0000004127-17-000033,SiGe Semiconductor (Europe) Limited,United Kingdom,
 4127-0000004127-17-000033,"Trans-Tech, Inc.",Maryland,
 4962-0001193125-10-041232,American Express Company,(USA) New York,
@@ -1627,8 +1627,8 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 11199-0001104659-06-016718,"Bemis Europe Holdings, S.A.",Belgium,100.0
 11199-0001104659-06-016718,Bemis Monceau S.A.,Belgium,100.0
 11199-0001104659-06-016718,Techy France S.A.R.L.,France,100.0
-11199-0001104659-06-016718,"Bemis Flexible Packaging de Mexico, S.A. de C.V.",Mexico,100.0
-11199-0001104659-06-016718,"Bemis Flexible Packaging Mexico Servicios, S.A. de C.V.",Mexico,100.0
+11199-0001104659-06-016718,"Bemis Flexible Packaging de Mexico, S.A. de C.V.",Mexico,87.0
+11199-0001104659-06-016718,"Bemis Flexible Packaging Mexico Servicios, S.A. de C.V.",Mexico,86.0
 11199-0001104659-06-016718,Bemis France Holdings S.A.S.,France,100.0
 11199-0001104659-06-016718,Bemis Packaging France S.A.S.,France,100.0
 11199-0001104659-06-016718,Bemis Le Trait S.A.S.,France,100.0
@@ -1684,6 +1684,26 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 11199-0001104659-06-016718,"Electronic Printing Products, Inc.",Ohio,100.0
 11199-0001104659-06-016718,Enterprise Software Inc.,Ohio,100.0
 11199-0001104659-06-016718,"MACtac Engineered Products, Inc.",Ohio,100.0
+11199-0001104659-06-016718,MACtac Europe S.A.,Belgium,89.0
+11199-0001104659-06-016718,Bemis Coordination Center S.A.,Belgium,67.0
+11199-0001104659-06-016718,Bemis Polska Sp. z o.o.,Poland,100.0
+11199-0001104659-06-016718,MACtac Asia-Pacific Self-Adhesive Products Pte Ltd.,Singapore,100.0
+11199-0001104659-06-016718,MACtac Deutschland GmbH,Germany,100.0
+11199-0001104659-06-016718,MACtac France E.U.R.L.,France,100.0
+11199-0001104659-06-016718,Multi-Fix N.V.,Belgium,100.0
+11199-0001104659-06-016718,MACtac Scandinavia A.B.,Sweden,100.0
+11199-0001104659-06-016718,MACtac Canada Limited/Limitee,Canada,100.0
+11199-0001104659-06-016718,MACtac Europe S.A.,Belgium,11.0
+11199-0001104659-06-016718,MACtac A.G.,Switzerland,100.0
+11199-0001104659-06-016718,"MACtac Mexico, S.A. de C.V.",Mexico,51.0
+11199-0001104659-06-016718,"MACtac Mexico Servicios, S.A. de C.V.",Mexico,51.0
+11199-0001104659-06-016718,"Morgan Adhesives America do Sul, Ltda.",Brazil,100.0
+11199-0001104659-06-016718,Paramount Packaging Corporation,Delaware,100.0
+11199-0001104659-06-016718,Bemis Elsham Limited,United Kingdom,100.0
+11199-0001104659-06-016718,"Bemis Shelbyville, Inc.",Tennessee,100.0
+11199-0001104659-06-016718,"Bemis Longview, Inc.",Texas,100.0
+11199-0001104659-06-016718,"PPC Royalty, Inc.",Delaware,100.0
+11199-0001104659-06-016718,"Pervel Industries, Inc.",Delaware,100.0
 29644-0001628280-16-019746,"Aerospace Filtration Systems, Inc.","Chesterfield, MO USA",
 29644-0001628280-16-019746,ASHC LLC,"Minneapolis, MN USA",
 29644-0001628280-16-019746,DLX Capital S.a.r.l.,"Luxembourg City, Luxembourg",
@@ -1937,15 +1957,15 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 75829-0001206774-11-002167,Pall Austria Filter GesmbH,Austria,
 75829-0001206774-11-002167,Pall (Canada) Limited,Canada,
 75829-0001206774-11-002167,Pall Do Brasil,Brazil,
-75829-0001206774-11-002167,Pall Europe Limited (a),England,
+75829-0001206774-11-002167,Pall Europe Limited,England,
 75829-0001206774-11-002167,Pall France S.A.S.,France,
 75829-0001206774-11-002167,Pall Deutschland Beteiligungs GmbH,Germany,
 75829-0001206774-11-002167,Pall Deutschland Holding GmbH & Co. KG Partnership (c),Germany,
 75829-0001206774-11-002167,Pall Italia S.R.L.,Italy,
 75829-0001206774-11-002167,Pall Manufacturing UK Limited,England,
 75829-0001206774-11-002167,Gelman Ireland Ltd.,Ireland,
-75829-0001206774-11-002167,Pall Netherlands B.V. (a),The Netherlands,
-75829-0001206774-11-002167,PLLN C.V. Partnership (b),The Netherlands,
+75829-0001206774-11-002167,Pall Netherlands B.V.,The Netherlands,
+75829-0001206774-11-002167,PLLN C.V. Partnership,The Netherlands,
 75829-0001206774-11-002167,Pall Norge AS,Norway,
 75829-0001206774-11-002167,Pall Espana S.A.U.,Spain,
 75829-0001206774-11-002167,Pall Norden AB,Sweden,
