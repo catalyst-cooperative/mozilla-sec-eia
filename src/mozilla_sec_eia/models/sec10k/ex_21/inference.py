@@ -243,6 +243,22 @@ def _get_data(dataset):
     yield from dataset
 
 
+def _fill_known_nulls(df):
+    """Fill known nulls in location and own per column.
+
+    Fill with known values from rows with same subsidiary.
+    """
+    if "own_per" in df:
+        df["own_per"] = df.groupby(["id", "subsidiary"])["own_per"].transform(
+            lambda group: group.ffill()
+        )
+    if "loc" in df:
+        df["loc"] = df.groupby(["id", "subsidiary"])["loc"].transform(
+            lambda group: group.ffill()
+        )
+    return df
+
+
 class Exhibit21Extractor(ConfigurableResource):
     """Implement `Sec10kExtractor` interface for exhibit 21 data."""
 
@@ -275,21 +291,33 @@ class Exhibit21Extractor(ConfigurableResource):
 
         logits = []
         predictions = []
+        # hidden_states = []
         all_output_df = Ex21CompanyOwnership.example(size=0)
         extraction_metadata = Sec10kExtractionMetadata.example(size=0)
-        for logit, pred, output_df in pipe(_get_data(dataset)):
+        for output_dict in pipe(_get_data(dataset)):
             # TODO: logits and predictions are useful for debugging, do something with them?
-            logits.append(logit)
-            predictions.append(pred)
+            logits.append(output_dict["logits"])
+            predictions.append(output_dict["predictions"])
+            # hidden_states.append(output_dict["final_hidden_state_embeddings"])
+            output_df = output_dict["output_df"]
             if not output_df.empty:
                 filename = get_metadata_filename(output_df["id"].iloc[0])
                 extraction_metadata.loc[filename, ["success"]] = True
             all_output_df = pd.concat([all_output_df, output_df])
         all_output_df.columns.name = None
         all_output_df = clean_extracted_df(all_output_df)
-        all_output_df = all_output_df[["id", "subsidiary", "loc", "own_per"]]
+        all_output_df = _fill_known_nulls(all_output_df)
+        all_output_df = all_output_df[
+            ["id", "subsidiary", "loc", "own_per"]
+        ].drop_duplicates()
         all_output_df = all_output_df.reset_index(drop=True)
-        return extraction_metadata, all_output_df
+        outputs_dict = {
+            "all_output_df": all_output_df,
+            "logits": logits,
+            "predictions": predictions,
+            # "final_hidden_state_embeddings": hidden_states,
+        }
+        return extraction_metadata, outputs_dict
 
 
 def extract_filings(
@@ -304,11 +332,12 @@ def extract_filings(
             cloud_interface=exhibit21_extractor.cloud_interface,
             has_labels=exhibit21_extractor.has_labels,
         )
-        metadata, extracted = exhibit21_extractor.extract_filings(
+        metadata, outputs_dict = exhibit21_extractor.extract_filings(
             dataset,
             model=layoutlm["model"],
             processor=layoutlm["tokenizer"],
         )
+        extracted = outputs_dict["all_output_df"]
         metadata = pd.concat([failed_metadata, metadata])
     except Exception as e:
         logger.warning(traceback.format_exc())
@@ -376,22 +405,38 @@ class LayoutLMInferencePipeline(Pipeline):
             self.model.to("cuda")
         # since we're doing inference, we don't need gradient computation
         with torch.no_grad():
-            output = self.model(**encoding)
+            # TODO: if hidden states aren't needed, don't return in output
+            outputs = self.model(**encoding, output_hidden_states=True)
             return {
-                "logits": output.logits,
-                "predictions": output.logits.argmax(-1).squeeze().tolist(),
+                "logits": outputs.logits,
+                "predictions": outputs.logits.argmax(-1).squeeze().tolist(),
+                # TODO: debug this function
+                # "final_hidden_state_embeddings": self._get_hidden_state_embeddings(
+                # outputs=outputs, attention_mask=encoding["attention_mask"]
+                # ),
                 "raw_encoding": model_inputs["raw_encoding"],
                 "doc_dict": model_inputs["doc_dict"],
             }
 
-    def postprocess(self, all_outputs):
+    def postprocess(self, output_dict):
         """Return logits, model predictions, and the extracted dataframe."""
-        logits = all_outputs["logits"]
-        predictions = all_outputs["logits"].argmax(-1).squeeze().tolist()
-        output_df = self._extract_table(all_outputs)
-        return logits, predictions, output_df
+        output_df = self._extract_table(output_dict)
+        output_dict["output_df"] = output_df
+        return output_dict
 
-    def _extract_table(self, all_outputs):
+    def _get_hidden_state_embeddings(self, outputs, attention_mask):
+        # This is a tuple with one tensor per model layer
+        hidden_states = outputs.hidden_states
+        # Final layer hidden state (batch_size, seq_length, hidden_size)
+        final_hidden_state = hidden_states[-1]
+        token_embeddings = final_hidden_state.squeeze(0)  # Remove batch dimension
+        # just get embeddings for actual tokens
+        # (ignore [CLS], [SEP] which are special tokens)
+        attention_mask = attention_mask.squeeze(0)
+        valid_token_embeddings = token_embeddings[attention_mask == 1]
+        return valid_token_embeddings
+
+    def _extract_table(self, output_dict):
         """Extract a structured table from a set of inference predictions.
 
         This function essentially works by stacking bounding boxes and predictions
@@ -404,9 +449,9 @@ class LayoutLMInferencePipeline(Pipeline):
         """
         # TODO: when model more mature, break this into sub functions to make it
         # clearer what's going on
-        predictions = all_outputs["predictions"]
-        encoding = all_outputs["raw_encoding"]
-        doc_dict = all_outputs["doc_dict"]
+        predictions = output_dict["predictions"]
+        encoding = output_dict["raw_encoding"]
+        doc_dict = output_dict["doc_dict"]
 
         token_boxes_tensor = encoding["bbox"].flatten(start_dim=0, end_dim=1)
         predictions_tensor = torch.tensor(predictions)
@@ -437,6 +482,7 @@ class LayoutLMInferencePipeline(Pipeline):
         df = df.merge(words_df, how="left", on=BBOX_COLS).drop_duplicates(
             subset=BBOX_COLS + ["pred", "word"]
         )
+        df = df.sort_values(by=["top_left_y", "top_left_x"])
         # rows that are the first occurrence in a new group (subsidiary, loc, own_per)
         # should always have a B entity label. Manually override labels so this is true.
         first_in_group_df = df[
@@ -447,8 +493,10 @@ class LayoutLMInferencePipeline(Pipeline):
         )
         df.update(first_in_group_df)
         # filter for just words that were labeled with non "other" entities
-        entities_df = df.sort_values(by=["top_left_y", "top_left_x"])
-        entities_df = entities_df[entities_df["pred"] != "other"]
+        entities_df = df[df["pred"] != "other"]
+        # boxes that have the same group label but are on different rows
+        # should be updated to have two different B labels
+        entities_df = separate_entities_by_row(entities_df)
         # words are labeled with IOB format which stands for inside, outside, beginning
         # merge B and I entities to form one entity group
         # (i.e. "B-Subsidiary" and "I-Subsidiary" become just "subsidiary"), assign a group ID
@@ -467,3 +515,48 @@ class LayoutLMInferencePipeline(Pipeline):
             return output_df
         output_df.loc[:, "id"] = doc_dict["id"]
         return output_df
+
+
+def separate_entities_by_row(df):
+    """Separate entities that span multiple rows and should be distinct.
+
+    Sometimes LayoutLM groups multiple entities that span multiple rows
+    into one entity. This function makes an attempt to break these out
+    into multiple entities, by taking the average distance between rows
+    and separating a grouped entity if the distance between y values
+    is greater than the third quantile of y value spacing.
+    """
+    threshold = 1.0
+    for entity in ["subsidiary", "loc", "own_per"]:
+        entity_df = df[df["pred"] == entity]
+        entity_df["line_group"] = entity_df["top_left_y"].transform(
+            lambda y: (y // threshold).astype(int)
+        )
+        # Get the unique y-values for each line (group) per file
+        line_positions = (
+            entity_df.groupby(["line_group"])["top_left_y"].mean().reset_index()
+        )
+        # Calculate the difference between adjacent y-values (i.e., distance between lines)
+        line_positions["y_diff"] = line_positions["top_left_y"].diff()
+        # Filter out NaN values and take the mean of the valid distances
+        y_diffs = line_positions["y_diff"].dropna()
+        avg_y_diff = y_diffs.apply(np.floor).mean()
+        # if an I labeled entity is more than avg_y_diff from it's previoius box then make it a B entity
+        entity_df["prev_y"] = entity_df["top_left_y"].shift(1)
+        entity_df["prev_iob"] = entity_df["iob_pred"].shift(1)
+
+        # If the current prediction is an I label
+        # and y distance exceeds the average y difference
+        # update to a B label and make it the start of a new entity
+        entity_df["iob_pred"] = np.where(
+            (entity_df["iob_pred"].str[0] == "I")
+            & ((entity_df["top_left_y"] - entity_df["prev_y"]) >= avg_y_diff),
+            "B" + entity_df["iob_pred"].str[1:],  # Update to 'B'
+            entity_df["iob_pred"],  # Keep as is
+        )
+
+        # Drop temporary columns
+        entity_df = entity_df.drop(columns=["prev_y", "prev_iob"])
+        df.update(entity_df, overwrite=True)
+
+    return df
