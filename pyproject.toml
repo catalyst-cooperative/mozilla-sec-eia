@@ -18,7 +18,7 @@ requires-python = ">=3.10,<3.12"
 dynamic = ["version"]
 license = {file = "LICENSE.txt"}
 dependencies = [
-    "accelerate>=0.21.0,<1.0", # Hugging Face dependency for PyTorch models
+    "accelerate>=0.21.0,<2.0", # Hugging Face dependency for PyTorch models
     "cloud-sql-python-connector[pg8000]",
     "dagster>=1.7.15", # 1.7.13 & 1.7.14 were both breaking things
     "dagster-mlflow",
