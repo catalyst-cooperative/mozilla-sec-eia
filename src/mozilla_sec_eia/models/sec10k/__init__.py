@@ -107,7 +107,7 @@ defs = Definitions(
         "mlflow_interface": mlflow_interface_resource,
         "layoutlm_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource,
-            uri="runs:/1d84be1656864f82b7b990a64fd113e3/exhibit21_extractor",
+            uri="runs:/426dd1b67cbd4677b6fa22b6b9d9173a/exhibit21_extractor",
         ),
         "ex21_classifier_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource,
