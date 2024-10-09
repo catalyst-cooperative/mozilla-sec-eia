@@ -110,7 +110,7 @@ def collect_extracted_chunks(
     extracted_dfs = [df for df in extracted_dfs if not df.empty]
     metadata_df = pd.concat(metadata_dfs)
     extracted_df = pd.concat(extracted_dfs)
-    layout_df = (pd.concat(layout_dfs),)
+    layout_df = pd.concat(layout_dfs)
     return (
         Sec10kExtractionMetadata.validate(metadata_df),
         Ex21CompanyOwnership.validate(extracted_df),
