@@ -111,7 +111,7 @@ defs = Definitions(
         ),
         "ex21_classifier_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource,
-            uri="runs:/cbdd906766b2427c93e9c957be6ea9c8/exhibit21_layout_classifier",
+            uri="runs:/1d84be1656864f82b7b990a64fd113e3/exhibit21_layout_classifier",
         ),
         "pandas_parquet_io_manager": PandasParquetIOManager(
             base_path=UPath("gs://sec10k-outputs/v2")
