@@ -107,11 +107,11 @@ defs = Definitions(
         "mlflow_interface": mlflow_interface_resource,
         "layoutlm_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource,
-            uri="runs:/582fcebbd4cf4d8b8a8f995406ddc560/exhibit21_extractor",
+            uri="runs:/1d84be1656864f82b7b990a64fd113e3/exhibit21_extractor",
         ),
         "ex21_classifier_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource,
-            uri="runs:/1d84be1656864f82b7b990a64fd113e3/exhibit21_layout_classifier",
+            uri="runs:/cbdd906766b2427c93e9c957be6ea9c8/exhibit21_layout_classifier",
         ),
         "pandas_parquet_io_manager": PandasParquetIOManager(
             base_path=UPath("gs://sec10k-outputs/v2")
