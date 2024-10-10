@@ -69,12 +69,22 @@ def classify_chunk_layouts(
 ) -> pd.DataFrame:
     """Extract a set of filings and return results."""
     _, inference_dataset = parsed_chunk
-    return pd.DataFrame(
-        {
-            "filename": inference_dataset["id"],
-            "paragraph": exhibit21_layout_classifier.predict(inference_dataset),
-        }
-    ).set_index("filename")
+    try:
+        df = pd.DataFrame(
+            {
+                "filename": inference_dataset["id"],
+                "paragraph": exhibit21_layout_classifier.predict(inference_dataset),
+            }
+        ).set_index("filename")
+    except ValueError:
+        df = pd.DataFrame(
+            {
+                "filename": inference_dataset["id"],
+                "paragraph": [None] * len(inference_dataset),
+            }
+        ).set_index("filename")
+
+    return df
 
 
 @op(
