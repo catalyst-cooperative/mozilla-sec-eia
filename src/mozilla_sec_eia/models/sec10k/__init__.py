@@ -9,6 +9,7 @@ from dagster import (
     load_assets_from_modules,
     load_assets_from_package_module,
 )
+from dagster_gcp.gcs import GCSPickleIOManager, GCSResource
 from dagstermill import (
     ConfigurableLocalOutputNotebookIOManager,
     define_dagstermill_asset,
@@ -112,6 +113,11 @@ defs = Definitions(
             mlflow_interface=mlflow_interface_resource
         ),
         "output_notebook_io_manager": ConfigurableLocalOutputNotebookIOManager(),
+        "io_manager": GCSPickleIOManager(
+            gcs_bucket="sec10k-outputs",
+            gcs_prefix="dagster_storage",
+            gcs=GCSResource(project="catalyst-cooperative-mozilla"),
+        ),
     }
     | mlflow_train_test_io_managers,
 )

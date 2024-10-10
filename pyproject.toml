@@ -24,6 +24,7 @@ dependencies = [
     "dagster-mlflow",
     "dagster-webserver",
     "dagster-pandera",
+    "dagster-gcp",
     "dagstermill",
     "datasets>=2.1,<3", # Access Hugging Face datasets
     "seqeval>=1.2,<2", # Sequence labeling evaluation
