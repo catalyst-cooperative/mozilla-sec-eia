@@ -52,7 +52,7 @@ ex21_production_job = model_jobs.create_production_model_job(
 
 
 exhibit21_extractor = define_dagstermill_asset(
-    name="exhibit21_extractor",
+    name="train_exhibit21_extractor",
     notebook_path=file_relative_path(__file__, "notebooks/exhibit21_extractor.ipynb"),
     config_schema=ex_21.data.Ex21TrainConfig.to_config_schema(),
     ins={
@@ -71,7 +71,7 @@ ex21_training_job = define_asset_job(
 
 
 exhibit21_layout_classifier = define_dagstermill_asset(
-    name="exhibit21_layout_classifier",
+    name="train_exhibit21_layout_classifier",
     notebook_path=file_relative_path(
         __file__, "notebooks/exhibit21_layout_classifier.ipynb"
     ),
@@ -105,16 +105,11 @@ defs = Definitions(
     resources={
         "cloud_interface": cloud_interface_resource,
         "mlflow_interface": mlflow_interface_resource,
-        "layoutlm_io_manager": MlflowPyfuncModelIOManager(
-            mlflow_interface=mlflow_interface_resource,
-            uri="runs:/426dd1b67cbd4677b6fa22b6b9d9173a/exhibit21_extractor",
-        ),
-        "ex21_classifier_io_manager": MlflowPyfuncModelIOManager(
-            mlflow_interface=mlflow_interface_resource,
-            uri="runs:/cbdd906766b2427c93e9c957be6ea9c8/exhibit21_layout_classifier",
-        ),
         "pandas_parquet_io_manager": PandasParquetIOManager(
             base_path=UPath("gs://sec10k-outputs/v2")
+        ),
+        "pyfunc_model_io_manager": MlflowPyfuncModelIOManager(
+            mlflow_interface=mlflow_interface_resource
         ),
         "output_notebook_io_manager": ConfigurableLocalOutputNotebookIOManager(),
     }

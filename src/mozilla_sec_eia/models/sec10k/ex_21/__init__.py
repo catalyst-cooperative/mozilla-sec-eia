@@ -6,12 +6,13 @@ import traceback
 import pandas as pd
 from dagster import (
     AssetOut,
-    In,
     Out,
     graph_multi_asset,
     op,
 )
 from mlflow.pyfunc import PyFuncModel
+
+from mozilla_sec_eia.library.mlflow import pyfunc_model_asset_factory
 
 from ..entities import (
     Ex21CompanyOwnership,
@@ -33,7 +34,6 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
         "metadata": Out(dagster_type=sec10k_extract_metadata_type),
         "extracted": Out(dagster_type=ex21_extract_type),
     },
-    ins={"exhibit21_extractor": In(input_manager_key="layoutlm_io_manager")},
     tags={"model": "exhibit21_extractor"},
 )
 def extract_filing_chunk(
@@ -62,14 +62,7 @@ def extract_filing_chunk(
     return metadata, extracted
 
 
-@op(
-    out={"layout": Out(dagster_type=ex21_layout_type)},
-    ins={
-        "exhibit21_layout_classifier": In(
-            input_manager_key="ex21_classifier_io_manager"
-        )
-    },
-)
+@op(out={"layout": Out(dagster_type=ex21_layout_type)})
 def classify_chunk_layouts(
     parsed_chunk: tuple[pd.DataFrame, pd.DataFrame],
     exhibit21_layout_classifier: PyFuncModel,
@@ -129,6 +122,17 @@ def create_dataset(
     )
 
 
+exhibit21_extractor = pyfunc_model_asset_factory(
+    name="exhibit21_extractor",
+    mlflow_run_uri="runs:/426dd1b67cbd4677b6fa22b6b9d9173a/exhibit21_extractor",
+)
+
+exhibit21_layout_classifier = pyfunc_model_asset_factory(
+    name="exhibit21_layout_classifier",
+    mlflow_run_uri="runs:/cbdd906766b2427c93e9c957be6ea9c8/exhibit21_layout_classifier",
+)
+
+
 @graph_multi_asset(
     outs={
         "ex21_extraction_metadata": AssetOut(
@@ -143,15 +147,26 @@ def create_dataset(
 )
 def ex21_extract(
     sec10k_filing_metadata: pd.DataFrame,
+    exhibit21_extractor: PyFuncModel,
+    exhibit21_layout_classifier: PyFuncModel,
 ):
     """Extract ownership info from exhibit 21 docs."""
     filing_chunks = chunk_filings(sec10k_filing_metadata)
     parsed_chunks = filing_chunks.map(create_dataset)
-    layout_chunks = parsed_chunks.map(classify_chunk_layouts)
-    metadata_chunks, extracted_chunks = parsed_chunks.map(extract_filing_chunk)
+    layout_chunks = parsed_chunks.map(
+        lambda chunk: classify_chunk_layouts(chunk, exhibit21_layout_classifier)
+    )
+    metadata_chunks, extracted_chunks = parsed_chunks.map(
+        lambda chunk: extract_filing_chunk(chunk, exhibit21_extractor)
+    )
     return collect_extracted_chunks(
         metadata_chunks.collect(), extracted_chunks.collect(), layout_chunks.collect()
     )
 
 
-production_assets = [sec10k_filing_metadata, ex21_extract]
+production_assets = [
+    sec10k_filing_metadata,
+    ex21_extract,
+    exhibit21_extractor,
+    exhibit21_layout_classifier,
+]
