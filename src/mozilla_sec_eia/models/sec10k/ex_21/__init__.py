@@ -121,7 +121,13 @@ def collect_extracted_chunks(
     )
 
 
-@op
+@op(
+    out={
+        "dataset": Out(
+            io_manager_key="pickle_gcs_io_manager",
+        ),
+    }
+)
 def create_dataset(
     cloud_interface: GCSArchive, filings: pd.DataFrame
 ) -> tuple[pd.DataFrame, pd.DataFrame]:

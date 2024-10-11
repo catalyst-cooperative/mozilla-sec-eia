@@ -9,7 +9,6 @@ from dagster import (
     load_assets_from_modules,
     load_assets_from_package_module,
 )
-from dagster_gcp.gcs import GCSPickleIOManager, GCSResource
 from dagstermill import (
     ConfigurableLocalOutputNotebookIOManager,
     define_dagstermill_asset,
@@ -17,7 +16,10 @@ from dagstermill import (
 from upath import UPath
 
 from mozilla_sec_eia.library import model_jobs
-from mozilla_sec_eia.library.generic_io_managers import PandasParquetIOManager
+from mozilla_sec_eia.library.generic_io_managers import (
+    PandasParquetIOManager,
+    PickleUPathIOManager,
+)
 from mozilla_sec_eia.library.mlflow import (
     MlflowPyfuncModelIOManager,
     mlflow_interface_resource,
@@ -109,15 +111,13 @@ defs = Definitions(
         "pandas_parquet_io_manager": PandasParquetIOManager(
             base_path=UPath("gs://sec10k-outputs/v2")
         ),
+        "pickle_gcs_io_manager": PickleUPathIOManager(
+            base_path=UPath("gs://sec10k-outputs/dagster_storage")
+        ),
         "pyfunc_model_io_manager": MlflowPyfuncModelIOManager(
             mlflow_interface=mlflow_interface_resource
         ),
         "output_notebook_io_manager": ConfigurableLocalOutputNotebookIOManager(),
-        "io_manager": GCSPickleIOManager(
-            gcs_bucket="sec10k-outputs",
-            gcs_prefix="dagster_storage",
-            gcs=GCSResource(project="catalyst-cooperative-mozilla"),
-        ),
     }
     | mlflow_train_test_io_managers,
 )
