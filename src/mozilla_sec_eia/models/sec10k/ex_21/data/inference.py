@@ -14,9 +14,6 @@ from .common import BBOX_COLS_PDF, format_label_studio_output, normalize_bboxes
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-logger = logging.getLogger(f"catalystcoop.{__name__}")
-
-
 def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
     """Read and format PDFs into a dataframe (without labels)."""
     inference_df = pd.DataFrame()
