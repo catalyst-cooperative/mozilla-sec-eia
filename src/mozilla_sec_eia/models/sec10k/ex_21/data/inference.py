@@ -110,7 +110,7 @@ def create_inference_dataset(
         image_dict = {
             filename: image
             for filename, image in image_dict.items()
-            if filename not in extraction_metadata
+            if filename not in extraction_metadata.index
         }
 
     annotations = []
