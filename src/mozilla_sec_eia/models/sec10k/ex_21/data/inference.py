@@ -18,7 +18,7 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
     """Read and format PDFs into a dataframe (without labels)."""
     inference_df = pd.DataFrame()
-    failed_format_metadata = Sec10kExtractionMetadata.example(0)
+    failed_format_metadata = Sec10kExtractionMetadata.example(size=0)
     for pdf_filename in os.listdir(pdfs_dir):
         if not pdf_filename.endswith(".pdf"):
             continue
