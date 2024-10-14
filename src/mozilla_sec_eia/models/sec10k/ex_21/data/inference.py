@@ -38,7 +38,7 @@ def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
                 False,
                 "Failed to normalize bounding boxes",
             ]
-    return inference_df
+    return inference_df, failed_format_metadata
 
 
 def _cache_pdfs(
@@ -100,8 +100,18 @@ def create_inference_dataset(
                 labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
             )
         else:
-            inference_df = format_unlabeled_pdf_dataframe(pdfs_dir=pdfs_dir)
+            inference_df, failed_format_metadata = format_unlabeled_pdf_dataframe(
+                pdfs_dir=pdfs_dir
+            )
+            extraction_metadata = pd.concat(
+                [extraction_metadata, failed_format_metadata]
+            )
         image_dict = get_image_dict(pdfs_dir)
+        image_dict = {
+            filename: image
+            for filename, image in image_dict.items()
+            if filename not in extraction_metadata
+        }
 
     annotations = []
     for filename, image in image_dict.items():
