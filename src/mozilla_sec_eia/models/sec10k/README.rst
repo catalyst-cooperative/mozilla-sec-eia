@@ -3,6 +3,62 @@ sec10k: Extracting company ownership data from sec10k documents
 
 This repo contains exploratory development for an SEC-EIA linkage.
 
+Models
+------
+Basic 10k
+^^^^^^^^^
+The extraction model for basic 10k company information is very simple and requires no
+training. This model is implemented as a simple rules based parser that finds key-value
+pairs containing company information, which is embedded in a header for all 10k filings.
+
+Exhibit 21
+^^^^^^^^^^
+Exhibit 21 extraction is much more complicated and requires pretrained models that are
+cached with our mlflow tracking server. Currently, there are 2 models which are
+implemented in the ``notebooks/`` directory. These notebooks use
+`Dagstermill <https://docs.dagster.io/integrations/dagstermill/using-notebooks-with-dagster>`_
+so they can be run interactively like any normal Jupyter Notebook, or run in a Dagster
+job.
+
+Extraction
+""""""""""
+The primary extraction model is implemented in the ``notebooks/exhibit21_extractor.ipynb``.
+This model is based on
+`layoutlm <https://huggingface.co/microsoft/layoutlmv3-base>`_ with custom inference logic
+to construct a table of ownership information from an exhibit 21 document. Both the
+layoutlm model and the inference model are logged separately with mlflow. This
+separation between the models allows for testing minor modifications to the inference
+portion with the same pretrained layoutlm model.
+
+There are currently two configuration parameters that used by the extraction model
+notebook:
+
+* ``layoutlm_training_run``: This should be an existing mlflow run name, which was used
+  to train layoutlm, and has a logged model associated with it. If ``None`` layoutlm
+  will be trained when the notebook is run, and the new training run will be used for
+  inference and validation.
+* ``training_data_version``: This should point to a GCS folder containing training
+  data to use with layoutlm. If ``layoutlm_training_run`` is set, then this parameter
+  doesn't matter, as layoutlm will not be re-trained when the notebook is executed.
+
+The notebook also depends on several upstream dagster assets, which produce training and
+validation datasets. Using upstream assets allows these datasets, which are relatively
+expensive to produce, to be easily cached and reused while interating on the model.
+These upstream assets need to be produced before the notebook can be run. They should
+also be re-materialized if you want to modify the training or validation data, otherwise
+the notebook can be re-run as many times as desired with existing data.
+
+Layout Classification
+"""""""""""""""""""""
+The second model is a classifier, which labels filings as either having a 'paragraph'
+layout or not. This is done because the extraction model performs poorly on documents
+formatted as paragraphs rather than tables. For now we will likely just filter out these
+results, but we could also develop a separate extraction model which handles these
+documents better.
+
+This model also depends on upstream assets to produce training data, which will need
+to be produced before running the notebook.
+
 Usage
 -----
 
