@@ -39,7 +39,7 @@ dependencies = [
     "pg8000",
     "psutil",
     "pynvml",
-    "pillow>=10.2,<11",
+    "pillow>=10.2,<12",
     "pydantic[email]>=2,<3",
     "pydantic-settings>=2",
     "python-bidi<0.7.0",
