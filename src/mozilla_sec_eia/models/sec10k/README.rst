@@ -56,8 +56,32 @@ formatted as paragraphs rather than tables. For now we will likely just filter o
 results, but we could also develop a separate extraction model which handles these
 documents better.
 
-This model also depends on upstream assets to produce training data, which will need
+This model is located in ``notebooks/exhibit21_layout_classifier.ipynb``, and it also
+depends on upstream assets to produce training data, which will need
 to be produced before running the notebook.
+
+Training the Models
+"""""""""""""""""""
+The models are trained by running the notebooks. This can be done either interactively
+like a normal notebook or through dagster directly.
+
+Whether running interactively or with dagster, you will first need to produce the
+upstream data assets:
+
+1. Launch dagster from the repo root with the ``dagster dev`` command
+2. Locate the training Job in question using the webui
+3. Select the upstream assets by holding down the shift key and clicking on each
+   asset excluding the notebook asset
+4. Click ``Materialize all`` in the UI
+
+Once this is complete, you can simply launch ``Jupyter`` and run the notebooks
+interactively as you would any other notebook. The first cell loads the upstream
+assets and sets configuration. You can modify the configuration directly in the
+notebook as normal.
+
+To run the notebook in dagster, you simply execute it like any other normal asset.
+You can first set configuration in the dagster launchpad if desired, and when it
+completes executing, you can click on the asset to view the fully rendered notebook.
 
 Usage
 -----
