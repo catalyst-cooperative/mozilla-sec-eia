@@ -76,7 +76,7 @@ def classify_chunk_layouts(
                 "paragraph": exhibit21_layout_classifier.predict(inference_dataset),
             }
         ).set_index("filename")
-    except ValueError:
+    except ValueError | KeyError:
         df = pd.DataFrame(
             {
                 "filename": inference_dataset["id"],
