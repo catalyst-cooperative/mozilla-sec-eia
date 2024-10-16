@@ -1,4 +1,4 @@
-"""Module handling Label Studio inputs and outputs and preparing a dataset for fine-tuning."""
+"""Create training dataset for layoutlm extraction."""
 
 import json
 import logging
@@ -7,24 +7,17 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..utils.cloud import GCSArchive
-from ..utils.layoutlm import normalize_bboxes
-from ..utils.pdf import (
+from ...utils.cloud import GCSArchive
+from ...utils.pdf import (
+    get_image_dict,
     get_pdf_data_from_path,
     pil_to_cv2,
     render_page,
 )
+from .common import BBOX_COLS_PDF, format_label_studio_output
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.parent.parent.resolve()
-
-
-BBOX_COLS_PDF = [
-    "top_left_x_pdf",
-    "top_left_y_pdf",
-    "bottom_right_x_pdf",
-    "bottom_right_y_pdf",
-]
 
 
 def create_inputs_for_label_studio(
@@ -135,89 +128,9 @@ def get_bbox_dicts(
     return [box_dict, word_dict]
 
 
-def _is_cik_in_training_data(labeled_json_filename, tracking_df):
-    # TODO: for now CIK is stored as an int, update when fixed
-    cik = int(labeled_json_filename.split("/")[-1].split("-")[0])
-    return cik in tracking_df.CIK.unique()
-
-
-def format_label_studio_output(
-    labeled_json_dir=ROOT_DIR / "sec10k_filings/labeled_jsons",
-    pdfs_dir=ROOT_DIR / "sec10k_filings/pdfs",
-) -> pd.DataFrame:
-    """Format Label Studio output JSONs into dataframe."""
-    labeled_df = pd.DataFrame()
-    # TODO: make this path stuff less janky?
-    tracking_df = pd.read_csv(ROOT_DIR / "labeled_data_tracking.csv")
-    for json_filename in os.listdir(labeled_json_dir):
-        if not json_filename[0].isdigit() or json_filename.endswith(".json"):
-            continue
-        json_file_path = labeled_json_dir / json_filename
-        with Path.open(json_file_path) as j:
-            doc_dict = json.loads(j.read())
-            filename = doc_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
-            # check if old local naming schema is being used
-            if len(filename.split("-")) == 6:
-                filename = "-".join(filename.split("-")[2:])
-            if not _is_cik_in_training_data(filename, tracking_df=tracking_df):
-                continue
-            pdf_filename = filename + ".pdf"
-            src_path = pdfs_dir / pdf_filename
-            extracted, pg = get_pdf_data_from_path(src_path)
-            txt = extracted["pdf_text"]
-            pg_meta = extracted["page"]
-            # normalize bboxes between 0 and 1000 for Hugging Face
-            txt = normalize_bboxes(txt_df=txt, pg_meta_df=pg_meta)
-            # parse the output dictionary of labeled bounding boxes from Label Studio
-            doc_df = pd.DataFrame()
-            for item in doc_dict["result"]:
-                value = item["value"]
-                # sometimes Label Studio will fill in an empty list as a label
-                # when there is really no label
-                # TODO: do this without dict comprehension?
-                if ("labels" in value) and value["labels"] == []:
-                    value = {k: v for k, v in value.items() if k != "labels"}
-                ind = int(item["id"].split("_")[-1])
-                doc_df = pd.concat([doc_df, pd.DataFrame(value, index=[ind])])
-            # combine the bounding boxes for each word
-            doc_df = doc_df.groupby(level=0).first()
-            txt.loc[:, "id"] = filename
-            # TODO: probably want to filter out these empty Ex. 21 docs
-            # the doc might not have any labels in it if it was an empty Ex. 21
-            if "labels" not in doc_df:
-                doc_df.loc[:, "labels"] = pd.Series()
-            output_df = pd.concat([txt, doc_df[["labels"]]], axis=1)
-            labeled_df = pd.concat([labeled_df, output_df])
-
-    # fill in unlabeled words and clean up labeled dataframe
-    labeled_df["labels"] = labeled_df["labels"].fillna("O")
-    labeled_df = labeled_df.rename(columns={"labels": "ner_tag"})
-    non_id_columns = [col for col in labeled_df.columns if col != "id"]
-    labeled_df = labeled_df.loc[:, ["id"] + non_id_columns]
-
-    # TODO: add in sanity checks on labeled_df bounding boxes to make sure
-    # that no value is above 1000 or below 0
-
-    return labeled_df
-
-
-def get_image_dict(pdfs_dir):
-    """Create a dictionary with filenames and their Ex. 21 images."""
-    image_dict = {}
-    for pdf_filename in os.listdir(pdfs_dir):
-        if pdf_filename.split(".")[-1] != "pdf":
-            continue
-        pdf_file_path = pdfs_dir / pdf_filename
-        _, pg = get_pdf_data_from_path(pdf_file_path)
-        full_pg_img = render_page(pg)
-        filename = pdf_filename.split(".")[0]
-        image_dict[filename] = full_pg_img
-    return image_dict
-
-
 def format_as_ner_annotations(
-    labeled_json_path=ROOT_DIR / "sec10k_filings/labeled_jsons",
-    pdfs_path=ROOT_DIR / "sec10k_filings/pdfs",
+    labeled_json_path: Path,
+    pdfs_path: Path,
     gcs_folder_name: str = "labeled/",
 ) -> list[dict]:
     """Format a Label Studio output JSONs as NER annotations.
