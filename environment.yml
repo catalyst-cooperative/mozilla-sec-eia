@@ -5,7 +5,7 @@ channels:
 dependencies:
   # Packages required for setting up the environment
   - pip>=21,<24
-  - python>=3.10,<3.12
+  - python>=3.10,<=3.12
   - setuptools>=66,<69
 
   # Packages specified in setup.py that need or benefit from binary conda packages
@@ -24,8 +24,11 @@ dependencies:
   # These are not normal Python packages available on PyPI
   - nodejs # Useful for Jupyter and prettier pre-commit hook
 
-  - catalystcoop.pudl>=2023.2.5,<=2024.8.0
+  - dask>=2024
+  - gdal
 
   # Use pip to install the package defined by this repo for development:
   - pip:
-      - --editable ./[dev,docs,tests,types]
+    - git+https://github.com/catalyst-cooperative/pudl.git@main
+    # - -e /Users/katielamb/CatalystCoop/pudl[dev,docs,tests,types]
+    - --editable ./[dev,docs,tests,types]

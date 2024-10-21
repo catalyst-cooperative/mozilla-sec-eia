@@ -14,7 +14,7 @@ readme = {file = "README.rst", content-type = "text/x-rst"}
 authors = [
     {name = "Catalyst Cooperative", email = "pudl@catalyst.coop"}
 ]
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<=3.12"
 dynamic = ["version"]
 license = {file = "LICENSE.txt"}
 dependencies = [
@@ -30,6 +30,7 @@ dependencies = [
     "google-cloud-secret-manager>=2,<3",
     "google-cloud-storage>=2,<3",
     "hypothesis",
+    "jellyfish>=1.1",
     "matplotlib>=3.8,<4",
     "mlflow>=2.12",
     "opencv-python",
@@ -62,6 +63,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 keywords = [
     "template",
@@ -95,7 +97,7 @@ docs = [
     "furo>=2022.4.7",
     "sphinx>=6,<8.1",  # The default Python documentation engine
     "sphinx-autoapi>=2,<4",  # Generates documentation from docstrings
-    "sphinx-issues>=1.2,<5",  # Allows references to GitHub issues
+    "sphinx-issues>=5",  # Allows references to GitHub issues
 
 ]
 tests = [
@@ -201,8 +203,8 @@ lint.ignore = [
     "EXE002",
 ]
 
-# Assume Python 3.11
-target-version = "py311"
+# Assume Python 3.12
+target-version = "py312"
 line-length = 88
 
 # Don't automatically concatenate strings -- sometimes we forget a comma!
@@ -231,6 +233,6 @@ inline-quotes = "double"
 multiline-quotes = "double"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
