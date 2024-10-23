@@ -92,6 +92,7 @@ def strip_down_company_names(ser: pd.Series) -> pd.Series:
 
     Used to compare subsidiary name columns during validation.
     """
+    # TODO: unify with PUDL
     # this JSON is taken from PUDL package data (used for CompanyNameCleaner)
     json_source = (
         resources.files("mozilla_sec_eia.package_data") / "us_legal_forms.json"

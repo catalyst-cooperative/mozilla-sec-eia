@@ -1,7 +1,6 @@
 """Implement methods used to construct both inference and training sets."""
 
 import json
-import logging
 import os
 from pathlib import Path
 
@@ -11,8 +10,6 @@ import pandas as pd
 from mozilla_sec_eia.library import validation_helpers
 
 from ...utils.pdf import get_pdf_data_from_path
-
-logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 LABEL_PRIORITY = [
     "I-Subsidiary",
@@ -90,7 +87,6 @@ def iob_to_label(label):
 
 def _is_cik_in_training_data(labeled_json_filename, tracking_df):
     cik = int(labeled_json_filename.split("/")[-1].split("-")[0])
-    logger.warning(f"CIK: {cik}")
     return cik in tracking_df.CIK.unique()
 
 
@@ -101,7 +97,6 @@ def format_label_studio_output(
     """Format Label Studio output JSONs into dataframe."""
     labeled_df = pd.DataFrame()
     tracking_df = validation_helpers.load_training_data("ex21_labels.csv")
-    logger.warning(f"tracking_df: {tracking_df.CIK.unique()}")
 
     for json_filename in os.listdir(labeled_json_dir):
         if not json_filename[0].isdigit() or json_filename.endswith(".json"):
@@ -110,7 +105,6 @@ def format_label_studio_output(
         with Path.open(json_file_path) as j:
             doc_dict = json.loads(j.read())
             filename = doc_dict["task"]["data"]["ocr"].split("/")[-1].split(".")[0]
-            logger.warning(f"FILENAME: {filename}")
             # check if old local naming schema is being used
             if len(filename.split("-")) == 6:
                 filename = "-".join(filename.split("-")[2:])
