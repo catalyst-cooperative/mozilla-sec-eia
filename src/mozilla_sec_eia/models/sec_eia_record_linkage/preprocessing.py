@@ -166,7 +166,7 @@ def _get_metaphone(row, col_name):
 def _clean_company_name(df):
     df.loc[:, "company_name_clean"] = company_name_cleaner.apply_name_cleaning(
         df[["company_name"]]
-    )
+    ).str.strip()
     df = df[df["company_name_clean"] != ""]
     df = df.rename(columns={"company_name": "company_name_raw"}).rename(
         columns={"company_name_clean": "company_name"}

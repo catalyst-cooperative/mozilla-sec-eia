@@ -29,6 +29,6 @@ dependencies:
 
   # Use pip to install the package defined by this repo for development:
   - pip:
-    - git+https://github.com/catalyst-cooperative/pudl.git@main
-    # - -e /Users/katielamb/CatalystCoop/pudl[dev,docs,tests,types]
-    - --editable ./[dev,docs,tests,types]
+      # - git+https://github.com/catalyst-cooperative/pudl.git@main
+      - -e /Users/katielamb/CatalystCoop/pudl
+      - --editable ./[dev,docs,tests,types]
