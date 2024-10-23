@@ -69,6 +69,9 @@ def classify_chunk_layouts(
 ) -> pd.DataFrame:
     """Extract a set of filings and return results."""
     _, inference_dataset = parsed_chunk
+    if inference_dataset.empty:
+        return Ex21Layout.example(size=0)
+
     try:
         df = pd.DataFrame(
             {
@@ -76,7 +79,8 @@ def classify_chunk_layouts(
                 "paragraph": exhibit21_layout_classifier.predict(inference_dataset),
             }
         ).set_index("filename")
-    except ValueError:
+    except Exception:
+        logger.warning(traceback.format_exc())
         df = pd.DataFrame(
             {
                 "filename": inference_dataset["id"],

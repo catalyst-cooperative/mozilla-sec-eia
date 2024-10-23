@@ -86,7 +86,6 @@ def iob_to_label(label):
 
 
 def _is_cik_in_training_data(labeled_json_filename, tracking_df):
-    # TODO: for now CIK is stored as an int, update when fixed
     cik = int(labeled_json_filename.split("/")[-1].split("-")[0])
     return cik in tracking_df.CIK.unique()
 

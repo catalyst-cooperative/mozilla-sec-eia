@@ -24,7 +24,8 @@ def load_validation_data(
 ) -> pd.DataFrame:
     """Load csv with validation data from `package_data` directory."""
     df = pd.read_csv(
-        resources.files("mozilla_sec_eia.package_data.validation_data") / filename
+        resources.files("mozilla_sec_eia.package_data.validation_data") / filename,
+        comment="#",
     )
     if index_cols is not None:
         df = df.set_index(index_cols)
@@ -91,6 +92,7 @@ def strip_down_company_names(ser: pd.Series) -> pd.Series:
 
     Used to compare subsidiary name columns during validation.
     """
+    # TODO: unify with PUDL
     # this JSON is taken from PUDL package data (used for CompanyNameCleaner)
     json_source = (
         resources.files("mozilla_sec_eia.package_data") / "us_legal_forms.json"

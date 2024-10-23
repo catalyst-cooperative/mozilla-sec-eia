@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from ...entities import Sec10kExtractionMetadata
 from ...utils.cloud import GCSArchive
 from ...utils.pdf import get_image_dict, get_pdf_data_from_path
 from .common import BBOX_COLS_PDF, format_label_studio_output, normalize_bboxes
@@ -17,6 +18,7 @@ logger = logging.getLogger(f"catalystcoop.{__name__}")
 def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
     """Read and format PDFs into a dataframe (without labels)."""
     inference_df = pd.DataFrame()
+    failed_format_metadata = Sec10kExtractionMetadata.example(size=0)
     for pdf_filename in os.listdir(pdfs_dir):
         if not pdf_filename.endswith(".pdf"):
             continue
@@ -26,10 +28,17 @@ def format_unlabeled_pdf_dataframe(pdfs_dir: Path):
         txt = extracted["pdf_text"]
         pg_meta = extracted["page"]
         # normalize bboxes between 0 and 1000 for Hugging Face
-        txt = normalize_bboxes(txt_df=txt, pg_meta_df=pg_meta)
-        txt.loc[:, "id"] = filename
-        inference_df = pd.concat([inference_df, txt])
-    return inference_df
+        try:
+            txt = normalize_bboxes(txt_df=txt, pg_meta_df=pg_meta)
+            txt.loc[:, "id"] = filename
+            inference_df = pd.concat([inference_df, txt])
+        except KeyError:
+            logger.warning(f"Failed to normalize bounding boxes for filing: {filename}")
+            failed_format_metadata.loc[filename, ["success", "notes"]] = [
+                False,
+                "Failed to normalize bounding boxes",
+            ]
+    return inference_df, failed_format_metadata
 
 
 def _cache_pdfs(
@@ -91,8 +100,18 @@ def create_inference_dataset(
                 labeled_json_dir=labeled_json_dir, pdfs_dir=pdfs_dir
             )
         else:
-            inference_df = format_unlabeled_pdf_dataframe(pdfs_dir=pdfs_dir)
+            inference_df, failed_format_metadata = format_unlabeled_pdf_dataframe(
+                pdfs_dir=pdfs_dir
+            )
+            extraction_metadata = pd.concat(
+                [extraction_metadata, failed_format_metadata]
+            )
         image_dict = get_image_dict(pdfs_dir)
+        image_dict = {
+            filename: image
+            for filename, image in image_dict.items()
+            if filename not in extraction_metadata.index
+        }
 
     annotations = []
     for filename, image in image_dict.items():
