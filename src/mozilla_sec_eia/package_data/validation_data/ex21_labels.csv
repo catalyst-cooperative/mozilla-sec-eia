@@ -140,7 +140,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 61339-0001161728-17-000004,"State Energy Services, LLC",,
 107815-0000107815-17-000106,"ATC Management, Inc.",Wisconsin,26.24
 107815-0000107815-17-000106,American Transmission Company LLC,Wisconsin,23.04
-107815-0000107815-17-000106,Bostco LLC,Wisconsin,100
+107815-0000107815-17-000106,Bostco LLC,Wisconsin,100.0
 1317577-0001193125-13-356794,"Elemental Energy, Inc.",Arizona,
 1317577-0001193125-13-356794,Klondyke Construction LLC,Arizona,
 1317577-0001193125-13-356794,"Pike Electric, LLC",North Carolina,
@@ -150,61 +150,61 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 1317577-0001193125-13-356794,"Pine Valley Power, Inc.",Utah,
 1317577-0001193125-13-356794,"Synergetic Design Holdings, Inc.",Delaware,
 1317577-0001193125-13-356794,"UC Synergetic, Inc.",South Carolina,
-40545-0000040545-04-000013,"AMERICAN SILICONES, INC.",Indiana,100
-40545-0000040545-04-000013,"BENTLY NEVADA, LLC",Delaware,100
-40545-0000040545-04-000013,CARIBE GE INTERNATIONAL ELECTRIC METERS CORP,Puerto Rico,100
-40545-0000040545-04-000013,"CARDINAL COGEN, INC.",Delaware,100
-40545-0000040545-04-000013,"DATEX-OHMEDA, INC.",Delaware,100
-40545-0000040545-04-000013,ELANO CORPORATION,Ohio,100
-40545-0000040545-04-000013,"GEAE TECHNOLOGY, INC.",Delaware,100
-40545-0000040545-04-000013,GE CGR EUROPE,France,100
-40545-0000040545-04-000013,"GE DRIVES and CONTROLS, INC.",Delaware,100
-40545-0000040545-04-000013,GE DRUCK HOLDINGS LIMITED,Delaware,100
-40545-0000040545-04-000013,"GE ELECTRIC CANADA, INC.",Canada,100
-40545-0000040545-04-000013,"GE ENERGY EUROPE, BV",Netherlands,100
-40545-0000040545-04-000013,GE ENERGY PARTS INC.,Delaware,100
-40545-0000040545-04-000013,"GE ENERGY PRODUCTS, INC.",Delaware,100
-40545-0000040545-04-000013,"GE ENERGY SERVICES, INC.",Delaware,100
-40545-0000040545-04-000013,"GE ENERGY SERVICES-DALLAS, LP",Delaware,100
-40545-0000040545-04-000013,"GE ENGINE SERVICES DISTRIBUTION, LLC.",Delaware,100
-40545-0000040545-04-000013,"GE ENGINE SERVICES, INC.",Delaware,100
-40545-0000040545-04-000013,GE FANUC AUTOMATION CORPORATION,Delaware,50
-40545-0000040545-04-000013,GE GAS TURBINES (GREENVILLE) L.L.C,Delaware,100
-40545-0000040545-04-000013,"GE HUNGARY CO., LTD",Hungary,100
-40545-0000040545-04-000013,"GE INTERLOGIX, INC.",Delaware,100
-40545-0000040545-04-000013,"GE INVESTMENT, INC.",Nevada,100
-40545-0000040545-04-000013,"GE KEPPEL ENERGY SERVICES PTE, INC.",Singapore,100
-40545-0000040545-04-000013,"GE MEDICAL GLOBAL TECHNOLOGY CO., LLC",Delaware,100
-40545-0000040545-04-000013,"GE MEDICAL SYSTEMS INFORMATION TECHNOLOGIES, INC.",Wisconsin,100
-40545-0000040545-04-000013,"GE MEDICAL SYSTEMS, INC.",Delaware,100
-40545-0000040545-04-000013,GE PACKAGED POWER L.P.,Delaware,100
-40545-0000040545-04-000013,"GE PETROCHEMICALS, INC.",Delaware,100
-40545-0000040545-04-000013,"GE PLASTIC FINISHING, INC.",Delaware,100
-40545-0000040545-04-000013,GE PLASTICS ESPANA ScPA,"Spain & Canary Islands, Balearic Island",100
-40545-0000040545-04-000013,GE PLASTICS PACIFIC PTE. LTD,Singapore,100
-40545-0000040545-04-000013,"GE POLYMERLAND, INC",Delaware,100
-40545-0000040545-04-000013,GE POWER SYSTEMS LICENSING INC,Delaware,100
-40545-0000040545-04-000013,"GE QUARTZ, INC.",Delaware,100
-40545-0000040545-04-000013,"GE SILICONES WV, LLC",West Virginia,100
-40545-0000040545-04-000013,"GE SUPERABRASIVES, INC.",Delaware,100
-40545-0000040545-04-000013,"GE TRANSPORTATION PARTS, LLC",Delaware,100
-40545-0000040545-04-000013,"GE TRANSPORTATION SERVICES, LLC.",Delaware,100
-40545-0000040545-04-000013,"GE TRANSPORTATION SYSTEMS GLOBAL SIGNALING, LLC.",Delaware,100
-40545-0000040545-04-000013,GEA PRODUCTS LP,Delaware,100
-40545-0000040545-04-000013,GENERAL ELECTRIC INTERNATIONAL (BENELUX) BV,Netherlands,100
-40545-0000040545-04-000013,"GENERAL ELECTRIC INTERNATIONAL, INC.",Delaware,100
-40545-0000040545-04-000013,"GRANITE SERVICES, INC.",Delaware,100
-40545-0000040545-04-000013,NATIONAL BROADCASTING COMPANY (NBC),Delaware,100
-40545-0000040545-04-000013,"NUCLEAR FUEL HOLDING CO.,INC",Delaware,100
-40545-0000040545-04-000013,NUOVO PIGNONE HOLDING S.P.A,Italy,100
-40545-0000040545-04-000013,OEC MEDICAL SYSTEMS INC,Delaware,100
-40545-0000040545-04-000013,PII LIMITED,United Kingdom & Northern Ireland,100
-40545-0000040545-04-000013,"REUTER-STOKES, INC.",Delaware,100
-40545-0000040545-04-000013,"SENSING SOLUTIONS, INC.",Delaware,100
-40545-0000040545-04-000013,"VICEROY, INC.",Delaware,100
-40545-0000040545-04-000013,"GENERAL ELECTRIC CAPITAL SERVICES, INC.",Delaware,100
-40545-0000040545-04-000013,General Electric Capital Corporation,New York,100
-40545-0000040545-04-000013,GE Global Insurance Holding Corporation,Missouri,100
+40545-0000040545-04-000013,"AMERICAN SILICONES, INC.",Indiana,100.0
+40545-0000040545-04-000013,"BENTLY NEVADA, LLC",Delaware,100.0
+40545-0000040545-04-000013,CARIBE GE INTERNATIONAL ELECTRIC METERS CORP,Puerto Rico,100.0
+40545-0000040545-04-000013,"CARDINAL COGEN, INC.",Delaware,100.0
+40545-0000040545-04-000013,"DATEX-OHMEDA, INC.",Delaware,100.0
+40545-0000040545-04-000013,ELANO CORPORATION,Ohio,100.0
+40545-0000040545-04-000013,"GEAE TECHNOLOGY, INC.",Delaware,100.0
+40545-0000040545-04-000013,GE CGR EUROPE,France,100.0
+40545-0000040545-04-000013,"GE DRIVES and CONTROLS, INC.",Delaware,100.0
+40545-0000040545-04-000013,GE DRUCK HOLDINGS LIMITED,Delaware,100.0
+40545-0000040545-04-000013,"GE ELECTRIC CANADA, INC.",Canada,100.0
+40545-0000040545-04-000013,"GE ENERGY EUROPE, BV",Netherlands,100.0
+40545-0000040545-04-000013,GE ENERGY PARTS INC.,Delaware,100.0
+40545-0000040545-04-000013,"GE ENERGY PRODUCTS, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GE ENERGY SERVICES, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GE ENERGY SERVICES-DALLAS, LP",Delaware,100.0
+40545-0000040545-04-000013,"GE ENGINE SERVICES DISTRIBUTION, LLC.",Delaware,100.0
+40545-0000040545-04-000013,"GE ENGINE SERVICES, INC.",Delaware,100.0
+40545-0000040545-04-000013,GE FANUC AUTOMATION CORPORATION,Delaware,50.0
+40545-0000040545-04-000013,GE GAS TURBINES (GREENVILLE) L.L.C,Delaware,100.0
+40545-0000040545-04-000013,"GE HUNGARY CO., LTD",Hungary,100.0
+40545-0000040545-04-000013,"GE INTERLOGIX, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GE INVESTMENT, INC.",Nevada,100.0
+40545-0000040545-04-000013,"GE KEPPEL ENERGY SERVICES PTE, INC.",Singapore,100.0
+40545-0000040545-04-000013,"GE MEDICAL GLOBAL TECHNOLOGY CO., LLC",Delaware,100.0
+40545-0000040545-04-000013,"GE MEDICAL SYSTEMS INFORMATION TECHNOLOGIES, INC.",Wisconsin,100.0
+40545-0000040545-04-000013,"GE MEDICAL SYSTEMS, INC.",Delaware,100.0
+40545-0000040545-04-000013,GE PACKAGED POWER L.P.,Delaware,100.0
+40545-0000040545-04-000013,"GE PETROCHEMICALS, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GE PLASTIC FINISHING, INC.",Delaware,100.0
+40545-0000040545-04-000013,GE PLASTICS ESPANA ScPA,"Spain & Canary Islands, Balearic Island",100.0
+40545-0000040545-04-000013,GE PLASTICS PACIFIC PTE. LTD,Singapore,100.0
+40545-0000040545-04-000013,"GE POLYMERLAND, INC",Delaware,100.0
+40545-0000040545-04-000013,GE POWER SYSTEMS LICENSING INC,Delaware,100.0
+40545-0000040545-04-000013,"GE QUARTZ, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GE SILICONES WV, LLC",West Virginia,100.0
+40545-0000040545-04-000013,"GE SUPERABRASIVES, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GE TRANSPORTATION PARTS, LLC",Delaware,100.0
+40545-0000040545-04-000013,"GE TRANSPORTATION SERVICES, LLC.",Delaware,100.0
+40545-0000040545-04-000013,"GE TRANSPORTATION SYSTEMS GLOBAL SIGNALING, LLC.",Delaware,100.0
+40545-0000040545-04-000013,GEA PRODUCTS LP,Delaware,100.0
+40545-0000040545-04-000013,GENERAL ELECTRIC INTERNATIONAL (BENELUX) BV,Netherlands,100.0
+40545-0000040545-04-000013,"GENERAL ELECTRIC INTERNATIONAL, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GRANITE SERVICES, INC.",Delaware,100.0
+40545-0000040545-04-000013,NATIONAL BROADCASTING COMPANY (NBC),Delaware,100.0
+40545-0000040545-04-000013,"NUCLEAR FUEL HOLDING CO.,INC",Delaware,100.0
+40545-0000040545-04-000013,NUOVO PIGNONE HOLDING S.P.A,Italy,100.0
+40545-0000040545-04-000013,OEC MEDICAL SYSTEMS INC,Delaware,100.0
+40545-0000040545-04-000013,PII LIMITED,United Kingdom & Northern Ireland,100.0
+40545-0000040545-04-000013,"REUTER-STOKES, INC.",Delaware,100.0
+40545-0000040545-04-000013,"SENSING SOLUTIONS, INC.",Delaware,100.0
+40545-0000040545-04-000013,"VICEROY, INC.",Delaware,100.0
+40545-0000040545-04-000013,"GENERAL ELECTRIC CAPITAL SERVICES, INC.",Delaware,100.0
+40545-0000040545-04-000013,General Electric Capital Corporation,New York,100.0
+40545-0000040545-04-000013,GE Global Insurance Holding Corporation,Missouri,100.0
 39547-0001047469-03-024149,"Turtle Shell, Inc. (f/k/a Snapper, Inc.)","Georgia, USA",
 39547-0001047469-03-024149,Actava Financial Ltd.,Delaware,
 39547-0001047469-03-024149,"Actava SHL, Inc.",Delaware,
@@ -271,11 +271,6 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 49728-0001144204-11-070058,IEC Electronics Corp.-Albuquerque,New Mexico,
 49728-0001144204-11-070058,"Dynamic Research and Testing Laboratories, LLC",New Mexico,
 49728-0001144204-11-070058,"Southern California Braiding, Inc.",Delaware,
-200155-0000021267-99-000027,"CIG Exploration, Inc",Delaware,
-200155-0000021267-99-000027,CIG Field Services Company,Delaware,
-200155-0000021267-99-000027,"Great Divide Gas Services, LLC",Colorado,73
-200155-0000021267-99-000027,Colorado Water Supply Company,Delaware,
-200155-0000021267-99-000027,Colorado Interstate Production Company,Delaware,
 315858-0000315858-19-000023,"Woodbridge Holdings, LLC",Florida,
 315858-0000315858-19-000023,"BBX Capital Florida, LLC",Florida,
 315858-0000315858-19-000023,"Eden Services, Inc.",Florida,
@@ -382,7 +377,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 315858-0000315858-19-000023,"Hialeah Multifamily, LLC",Florida,
 315858-0000315858-19-000023,"BBX Residential Victoria Park, LLC",Florida,
 315858-0000315858-19-000023,"Premier Flagler, LLC",Florida,
-315858-0000315858-19-000023,Banc Servicing Center LLC,Florida,
+315858-0000315858-19-000023,"Banc Servicing Center, LLC",Florida,
 315858-0000315858-19-000023,"Fidelity Service, LLC",Florida,
 315858-0000315858-19-000023,"Fidelity Tax, LLC",Florida,
 315858-0000315858-19-000023,"Heartwood 3, LLC",Florida,
@@ -509,18 +504,18 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 718877-0001047469-08-007085,Treyarch Corporation,Delaware,
 718877-0001047469-08-007085,"Toys For Bob, Inc.",California,
 718877-0001047469-08-007085,"Vicarious Visions, Inc.",New York,
-811669-0000950123-05-002610,International Wine & Spirits Ltd.,Delaware,100
-811669-0000950123-05-002610,Ste. Michelle Wine Estates Ltd.,Washington,100
-811669-0000950123-05-002610,U.S. Smokeless Tobacco Company,Delaware,100
-811669-0000950123-05-002610,U.S. Smokeless Tobacco Manufacturing Limited Partnership,Delaware,100
-811669-0000950123-05-002610,U.S. Smokeless Tobacco Brands Inc.,Delaware,100
+811669-0000950123-05-002610,International Wine & Spirits Ltd.,Delaware,100.0
+811669-0000950123-05-002610,Ste. Michelle Wine Estates Ltd.,Washington,100.0
+811669-0000950123-05-002610,U.S. Smokeless Tobacco Company,Delaware,100.0
+811669-0000950123-05-002610,U.S. Smokeless Tobacco Manufacturing Limited Partnership,Delaware,100.0
+811669-0000950123-05-002610,U.S. Smokeless Tobacco Brands Inc.,Delaware,100.0
 857501-0001065949-17-000087,Jacobs & Company,West Virginia,
 857501-0001065949-17-000087,"FS Investments, Inc.",West Virginia,
 857501-0001065949-17-000087,"Triangle Surety Agency, Inc.",West Virginia,
 857501-0001065949-17-000087,First Surety Corporation,West Virginia,
 857501-0001065949-17-000087,"Crystal Mountain Water, Inc.",Arkansas,
 874501-0000874501-15-000013,Ambac Assurance Corporation,Wisconsin,
-874501-0000874501-15-000013,Ambac Assurance UK Limited,United Kingdom Insurance Company,
+874501-0000874501-15-000013,Ambac Assurance UK Limited,United Kingdom,
 874501-0000874501-15-000013,Ambac Capital Corporation,Delaware,
 874501-0000874501-15-000013,"Ambac Capital Funding, Inc.",Delaware,
 874501-0000874501-15-000013,"Ambac Credit Products, LLC",Delaware,
@@ -626,22 +621,6 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 908255-0000908255-13-000006,BorgWarner Turbo and Emissions Systems de Mexico S.A. de C.V.,,
 908255-0000908255-13-000006,BorgWarner (Thailand) Limited,,
 908255-0000908255-13-000006,"BorgWarner (China) Research & Development Co., Ltd.",,
-913614-0000930661-01-502777,Bactolac Pharmaceutical Inc.,Delaware,
-913614-0000930661-01-502777,"ANI Pharmaceuticals, Inc.",Mississippi,
-913614-0000930661-01-502777,NL Acquisition Company,Delaware,
-923472-0000892569-97-000821,Samantha Hotel Corporation,Delaware,
-923472-0000892569-97-000821,"RFS, Inc.",Tennessee,
-923472-0000892569-97-000821,Doubletree Partners,Delaware,
-923472-0000892569-97-000821,Doubletree Hotels Corporation,Arizona,
-923472-0000892569-97-000821,"Doubletree of Phoenix, Inc.",Delaware,
-923472-0000892569-97-000821,INNCO Corporation,Arizona,
-923472-0000892569-97-000821,HOSCO Corporation,Arizona,
-923472-0000892569-97-000821,"DT Management, Inc.",Arizona,
-923472-0000892569-97-000821,"DT Real Estate, Inc.",Arizona,
-923472-0000892569-97-000821,"Doubletree Hotel Systems, Inc.",Arizona,
-923472-0000892569-97-000821,Harbor Hotels Corporation,Delaware,
-923472-0000892569-97-000821,"DTM Burlingame, Inc.",Arizona,
-923472-0000892569-97-000821,"Red Lion Hotels, Inc.",Delaware,
 1484565-0001564590-20-008705,Soleno Therapeutics UK Ltd.,United Kingdom,
 1484565-0001564590-20-008705,Soleno Therapeutics Europe Ltd.,Ireland,
 1484565-0001564590-20-008705,"Essentialis, Inc.",Delaware,
@@ -715,9 +694,9 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 354707-0000354707-19-000043,"Hawaii Electric Light Company, Inc.",Hawaii,
 354707-0000354707-19-000043,"Renewable Hawaii, Inc.",Hawaii,
 354707-0000354707-19-000043,Uluwehiokama Biofuels Corp.,Hawaii,
-354707-0000354707-19-000043,HECO Capital Trust III,Delaware,
+354707-0000354707-19-000043,HECO Capital Trust III (a statutory trust),Delaware,
 354707-0000354707-19-000043,"ASB Hawaii, Inc.",Hawaii,
-354707-0000354707-19-000043,"American Savings Bank, F.S.B.",,
+354707-0000354707-19-000043,"American Savings Bank, F.S.B.",federally chartered,
 354707-0000354707-19-000043,"The Old Oahu Tug Service, Inc. ",Hawaii,
 354707-0000354707-19-000043,"Pacific Current, LLC",Hawaii,
 354707-0000354707-19-000043,"Hamakua Holdings, LLC",Hawaii,
@@ -739,7 +718,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 84557-0001046861-06-000007,The Southern Connecticut Gas Company,Connecticut,
 100826-0001193125-09-042636,Ameren Corporation,Missouri,
 100826-0001193125-09-042636,Ameren Development Company,Missouri,
-100826-0001193125-09-042636,"Enporion, Inc.",Delaware,21
+100826-0001193125-09-042636,"Enporion, Inc.",Delaware,21.0
 100826-0001193125-09-042636,Missouri Central Railroad Company,Delaware,
 100826-0001193125-09-042636,CIPSCO Leasing Company,Illinois,
 100826-0001193125-09-042636,"Gateway Energy Systems, L.C.",Missouri,89.1
@@ -749,7 +728,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 100826-0001193125-09-042636,Coffeen and Western Railroad Company,Illinois,
 100826-0001193125-09-042636,Ameren Energy Marketing Company,Illinois,
 100826-0001193125-09-042636,Illinois Materials Supply Co.,Illinois,
-100826-0001193125-09-042636,"Electric Energy, Inc.",Illinois,80
+100826-0001193125-09-042636,"Electric Energy, Inc.",Illinois,80.0
 100826-0001193125-09-042636,Midwest Electric Power Inc.,Illinois,
 100826-0001193125-09-042636,Joppa and Eastern Railroad Company,Illinois,
 100826-0001193125-09-042636,"Met South, Inc.",Illinois,
@@ -765,76 +744,68 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 100826-0001193125-09-042636,CLC Aircraft Leasing LLC,Delaware,
 100826-0001193125-09-042636,QST Enterprises Inc.,Illinois,
 100826-0001193125-09-042636,ESE Land Corporation,Illinois,
-100826-0001193125-09-042636,California/Nevada Development L.L.C.,Delaware,15
+100826-0001193125-09-042636,California/Nevada Development L.L.C.,Delaware,15.0
 100826-0001193125-09-042636,Energy Risk Assurance Company,Vermont,
 100826-0001193125-09-042636,Missouri Energy Risk Assurance Company LLC,Missouri,
-100826-0001193125-09-042636,"Illinois Power Company, d/b/a AmerenIP",Illinois,
+100826-0001193125-09-042636,Illinois Power Company,Illinois,
 100826-0001193125-09-042636,Illinois Power Securitization Limited Liability Company,Delaware,
 100826-0001193125-09-042636,Illinois Power Special Purpose Trust,Delaware,
 100826-0001193125-09-042636,Union Electric Company,Missouri,
-100826-0001193125-09-042636,Fuelco LLC,Delaware,
-81033-0000950117-06-000927,Public Service Electric and Gas Company,New Jersey,100
-81033-0000950117-06-000927,PSEG Power LLC ,Delaware,100
-81033-0000950117-06-000927,PSEG Fossil LLC,Delaware,100
-81033-0000950117-06-000927,PSEG Energy Resources & Trade LLC,Delaware,100
-81033-0000950117-06-000927,PSEG Energy Holdings L.L.C. ,New Jersey,100
-81033-0000950117-06-000927,PSEG Resources L.L.C.,New Jersey,100
-81033-0000950117-06-000927,PSEG Global L.L.C.,New Jersey,100
-81033-0000950117-06-000927,PSEG Global International Holdings LLC,Delaware,100
-4904-0000004904-09-000040,"American Electric Power Company, Inc.",New York,100
-4904-0000004904-09-000040,American Electric Power Service Corporation,New York,100
-4904-0000004904-09-000040,"AEP C&I Company, LLC",Delaware,100
-4904-0000004904-09-000040,"AEP Coal, Inc.",Nevada,100
-4904-0000004904-09-000040,"AEP Communications, Inc.",Ohio,100
-4904-0000004904-09-000040,"AEP Credit, Inc.",Delaware,100
-4904-0000004904-09-000040,AEP Generating Company,Ohio,100
-4904-0000004904-09-000040,"AEP Investments, Inc.",Ohio,100
-4904-0000004904-09-000040,AEP Nonutility Funding LLC,Delaware,100
-4904-0000004904-09-000040,"AEP Power Marketing, Inc.",Ohio,100
-4904-0000004904-09-000040,"AEP Pro Serv, Inc.",Ohio,100
-4904-0000004904-09-000040,"AEP Resources, Inc.",Ohio,100
-4904-0000004904-09-000040,"AEP T&D Services, LLC",Delaware,100
-4904-0000004904-09-000040,"AEP Transmission Holding Company, LLC",Delaware,100
-4904-0000004904-09-000040,"AEP Utilities, Inc.",Delaware,100
-4904-0000004904-09-000040,AEP Texas Central Company,Texas,100
-4904-0000004904-09-000040,AEP Texas Central Transition Funding LLC,Delaware,100
-4904-0000004904-09-000040,AEP Texas Central Transition Funding II LLC,Delaware,100
-4904-0000004904-09-000040,AEP Texas North Company,Texas,100
-4904-0000004904-09-000040,AEP Texas North Generation Company LLC,Delaware,100
-4904-0000004904-09-000040,"CSW Energy, Inc.",Texas,100
-4904-0000004904-09-000040,"CSW Energy Services, Inc.",Delaware,100
-4904-0000004904-09-000040,"CSW International, Inc.",Delaware,100
-4904-0000004904-09-000040,"Electric Transmission Texas, LLC",Delaware,50
-4904-0000004904-09-000040,AEP Utility Funding LLC,Delaware,100
+100826-0001193125-09-042636,Fuelco LLC,Delaware,33.33
+4904-0000004904-09-000040,"American Electric Power Company, Inc.",New York,
+4904-0000004904-09-000040,American Electric Power Service Corporation,New York,100.0
+4904-0000004904-09-000040,"AEP C&I Company, LLC",Delaware,100.0
+4904-0000004904-09-000040,"AEP Coal, Inc.",Nevada,100.0
+4904-0000004904-09-000040,"AEP Communications, Inc.",Ohio,100.0
+4904-0000004904-09-000040,"AEP Credit, Inc.",Delaware,100.0
+4904-0000004904-09-000040,AEP Generating Company,Ohio,100.0
+4904-0000004904-09-000040,"AEP Investments, Inc.",Ohio,100.0
+4904-0000004904-09-000040,AEP Nonutility Funding LLC,Delaware,100.0
+4904-0000004904-09-000040,"AEP Power Marketing, Inc.",Ohio,100.0
+4904-0000004904-09-000040,"AEP Pro Serv, Inc.",Ohio,100.0
+4904-0000004904-09-000040,"AEP Resources, Inc.",Ohio,100.0
+4904-0000004904-09-000040,"AEP T&D Services, LLC",Delaware,100.0
+4904-0000004904-09-000040,"AEP Transmission Holding Company, LLC",Delaware,100.0
+4904-0000004904-09-000040,"AEP Utilities, Inc.",Delaware,100.0
+4904-0000004904-09-000040,AEP Texas Central Company,Texas,100.0
+4904-0000004904-09-000040,AEP Texas Central Transition Funding LLC,Delaware,100.0
+4904-0000004904-09-000040,AEP Texas Central Transition Funding II LLC,Delaware,100.0
+4904-0000004904-09-000040,AEP Texas North Company,Texas,100.0
+4904-0000004904-09-000040,AEP Texas North Generation Company LLC,Delaware,100.0
+4904-0000004904-09-000040,"CSW Energy, Inc.",Texas,100.0
+4904-0000004904-09-000040,"CSW Energy Services, Inc.",Delaware,100.0
+4904-0000004904-09-000040,"CSW International, Inc.",Delaware,100.0
+4904-0000004904-09-000040,"Electric Transmission Texas, LLC",Delaware,50.0
+4904-0000004904-09-000040,AEP Utility Funding LLC,Delaware,100.0
 4904-0000004904-09-000040,Appalachian Power Company,Virginia,98.7
-4904-0000004904-09-000040,Cedar Coal Co.,West Virginia,100
-4904-0000004904-09-000040,Central Appalachian Coal Company,West Virginia,100
-4904-0000004904-09-000040,Central Coal Company,West Virginia,50
-4904-0000004904-09-000040,Southern Appalachian Coal Company,West Virginia,100
-4904-0000004904-09-000040,Columbus Southern Power Company,Ohio,100
-4904-0000004904-09-000040,"Colomet, Inc.",Ohio,100
-4904-0000004904-09-000040,Conesville Coal Preparation Company ,Ohio,100
+4904-0000004904-09-000040,Cedar Coal Co.,West Virginia,100.0
+4904-0000004904-09-000040,Central Appalachian Coal Company,West Virginia,100.0
+4904-0000004904-09-000040,Central Coal Company,West Virginia,50.0
+4904-0000004904-09-000040,Southern Appalachian Coal Company,West Virginia,100.0
+4904-0000004904-09-000040,Columbus Southern Power Company,Ohio,100.0
+4904-0000004904-09-000040,"Colomet, Inc.",Ohio,100.0
+4904-0000004904-09-000040,Conesville Coal Preparation Company ,Ohio,100.0
 4904-0000004904-09-000040,Ohio Valley Electric Corporation,Ohio,4.3
-4904-0000004904-09-000040,Indiana-Kentucky Electric Corporation,Indiana,100
-4904-0000004904-09-000040,Franklin Real Estate Company,Pennsylvania,100
-4904-0000004904-09-000040,Indiana Michigan Power Company,Indiana,100
-4904-0000004904-09-000040,Blackhawk Coal Company,Utah,100
-4904-0000004904-09-000040,Price River Coal Company ,Indiana,100
-4904-0000004904-09-000040,Kentucky Power Company,Kentucky,100
-4904-0000004904-09-000040,Kingsport Power Company,Virginia,100
+4904-0000004904-09-000040,Indiana-Kentucky Electric Corporation,Indiana,100.0
+4904-0000004904-09-000040,Franklin Real Estate Company,Pennsylvania,100.0
+4904-0000004904-09-000040,Indiana Michigan Power Company,Indiana,100.0
+4904-0000004904-09-000040,Blackhawk Coal Company,Utah,100.0
+4904-0000004904-09-000040,Price River Coal Company ,Indiana,100.0
+4904-0000004904-09-000040,Kentucky Power Company,Kentucky,100.0
+4904-0000004904-09-000040,Kingsport Power Company,Virginia,100.0
 4904-0000004904-09-000040,Ohio Power Company ,Ohio,99.4
-4904-0000004904-09-000040,Cardinal Operating Company,Ohio,50
-4904-0000004904-09-000040,Central Coal Company,West Virginia,50
+4904-0000004904-09-000040,Cardinal Operating Company,Ohio,50.0
+4904-0000004904-09-000040,Central Coal Company,West Virginia,50.0
 4904-0000004904-09-000040,Ohio Valley Electric Corporation,Ohio,39.2
-4904-0000004904-09-000040,Indiana-Kentucky Electric Corporation,Indiana,100
+4904-0000004904-09-000040,Indiana-Kentucky Electric Corporation,Indiana,100.0
 4904-0000004904-09-000040,"Power Tree Carbon Company, LLC",Delaware,9.2
-4904-0000004904-09-000040,Public Service Company of Oklahoma,Oklahoma,100
-4904-0000004904-09-000040,Southwestern Electric Power Company,Delaware,100
-4904-0000004904-09-000040,"Dolet Hills Lignite Company, LLC ",Delaware,100
-4904-0000004904-09-000040,Southwestern Arkansas Utilities Corporation,Arkansas,100
-4904-0000004904-09-000040,SWEPCo Capital Trust I,Delaware,100
+4904-0000004904-09-000040,Public Service Company of Oklahoma,Oklahoma,100.0
+4904-0000004904-09-000040,Southwestern Electric Power Company,Delaware,100.0
+4904-0000004904-09-000040,"Dolet Hills Lignite Company, LLC ",Delaware,100.0
+4904-0000004904-09-000040,Southwestern Arkansas Utilities Corporation,Arkansas,100.0
+4904-0000004904-09-000040,SWEPCo Capital Trust I,Delaware,100.0
 4904-0000004904-09-000040,The Arklahoma Corporation,Arkansas,47.6
-4904-0000004904-09-000040,Wheeling Power Company,West Virginia,100
+4904-0000004904-09-000040,Wheeling Power Company,West Virginia,100.0
 46207-0001104659-13-011461,"Hawaiian Electric Company, Inc.",Hawaii,
 46207-0001104659-13-011461,"Maui Electric Company, Limited",Hawaii,
 46207-0001104659-13-011461,"Hawaii Electric Light Company, Inc.",Hawaii,
@@ -842,46 +813,11 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 46207-0001104659-13-011461,Uluwehiokama Biofuels Corp.,Hawaii,
 46207-0001104659-13-011461,HECO Capital Trust III,Delaware,
 46207-0001104659-13-011461,"American Savings Holdings, Inc.",Hawaii,
-46207-0001104659-13-011461,"American Savings Bank, F.S.B.",,
+46207-0001104659-13-011461,"American Savings Bank, F.S.B.",federally chartered,
 46207-0001104659-13-011461,"HEI Properties, Inc.",Hawaii,
 46207-0001104659-13-011461,Hawaiian Electric Industries Capital Trust II ,Delaware,
 46207-0001104659-13-011461,Hawaiian Electric Industries Capital Trust III,Delaware,
 46207-0001104659-13-011461,"The Old Oahu Tug Service, Inc.",Hawaii,
-205402-0000950114-99-000043,Graybar Foreign Sales Corporation,Barbados,
-205402-0000950114-99-000043,"Graybar International, Inc.",Missouri,
-205402-0000950114-99-000043,"Graybar Financial Services, Inc.",Missouri,
-205402-0000950114-99-000043,"Graybar Electric de Mexico, S. DE R.L. DE C.V.,",Mexican,
-205402-0000950114-99-000043,Graybar Electric Limited,Nova Scotia,
-205402-0000950114-99-000043,"Graybar Foundation, Inc",Missouri,
-205402-0000950114-99-000043,"Graybar Services, Inc.",Illinois,
-205402-0000950114-99-000043,"Distribution Associates, Inc.",Missouri,
-205402-0000950114-99-000043,Graybar Electric (Ontario) Limited,Ontario,
-205402-0000950114-99-000043,Graybar International PTE LTD,Singaporean,
-205402-0000950114-99-000043,"Graybar Business Services, Inc.",Missouri,
-205402-0000950114-99-000043,Graybar International de Chile Limitada,Chile,
-9342-0000009342-95-000008,"Baldor of Arkansas, Inc.",Arkansas,100
-9342-0000009342-95-000008,"Baldor of Nevada, Inc.",Nevada,100
-9342-0000009342-95-000008,BEC Business Trust,Massachusetts,100
-9342-0000009342-95-000008,"Baldor of Texas, L.P.",Texas,100
-9342-0000009342-95-000008,"Baldor International, Inc.",U.S. Virgin Islands,100
-9342-0000009342-95-000008,"Carolina Capacitors, Inc.",South Carolina,100
-9342-0000009342-95-000008,"Southwestern Die Casting Co., Inc.",Arkansas,100
-9342-0000009342-95-000008,"Sweo Controls, Inc.",Washington,100
-9342-0000009342-95-000008,"Baldor Holdings, Inc.",Delaware,100
-9342-0000009342-95-000008,"Baldor de Mexico, S.A. de C.V.",Mexico,100
-9342-0000009342-95-000008,"Baldor ASR, AG",Switzerland,100
-9342-0000009342-95-000008,Baldor ASR GmbH fuer Antriebstechnik,Germany,100
-9342-0000009342-95-000008,Baldor ASR U.K. Limited,United Kingdom,100
-9342-0000009342-95-000008,Australian Baldor Pty. Limited,Australia,60
-9342-0000009342-95-000008,Baldor Electric (Far East) PTE. Ltd.,Singapore,60
-9342-0000009342-95-000008,Baldor Electric (Thailand) Ltd.,Thailand,100
-9342-0000009342-95-000008,Baldor Industrial Automation PTE. Ltd.,Singapore,100
-9342-0000009342-95-000008,Baldor Electric (Indonesia) Ltd.,Indonesia,100
-9342-0000009342-95-000008,Baldor of Nevada,,
-9342-0000009342-95-000008,Baldor Business Trust (LP),,
-9342-0000009342-95-000008,Baldor of Arkansas (GP),,
-9342-0000009342-95-000008,"Baldor Holdings, Inc.",,
-9342-0000009342-95-000008,Baldor Electric (Far East) PTE. Ltd.,,
 9534-0000897069-05-000574,Bandag A.G,Switzerland,
 9534-0000897069-05-000574,Bandag Canada Ltd.,Canada,
 9534-0000897069-05-000574,Bandag Europe N.V,Belgium,
@@ -897,7 +833,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 18647-0001169232-08-000603,"Phoenix Development Company, Inc.",New York,
 18647-0001169232-08-000603,Central Hudson Enterprises Corporation,New York,
 18647-0001169232-08-000603,"Griffith Energy Services, Inc.",New York,
-20947-0001031296-06-000044,Ohio Edison Company – Incorporated in Ohio,Ohio,
+20947-0001031296-06-000044,Ohio Edison Company,Ohio,
 20947-0001031296-06-000044,The Cleveland Electric Illuminating Company,Ohio,
 20947-0001031296-06-000044,The Toledo Edison Company,Ohio,
 20947-0001031296-06-000044,Centerior Service Company,Ohio,
@@ -925,94 +861,54 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 20947-0001031296-06-000044,FirstEnergy Nuclear Generation Corp.,Ohio,
 34067-0001104659-06-016592,Nobelclad Europe S.A.,"Rivesaltes, France",
 34067-0001104659-06-016592,Nitro Metall Aktiebolag,"Likenas, Sweden",
-38725-0000038725-17-000042,Bombas Leao SA,Brazil,100
-38725-0000038725-17-000042,Cookson & Zinn (PTL) Limited ,United Kingdom,100
-38725-0000038725-17-000042,Coverco S.r.l.,Italy,100
-38725-0000038725-17-000042,FE Latin America B.V.,Netherlands,100
-38725-0000038725-17-000042,FELE C.V.,Netherlands,100
-38725-0000038725-17-000042,"Franklin Control Systems, Inc.",Oregon,100
-38725-0000038725-17-000042,Franklin Electric (Australia) Pty. Ltd.,Australia,100
-38725-0000038725-17-000042,Franklin Electric (Chile) Ltda,Chile,100
-38725-0000038725-17-000042,Franklin Electric (SEA) Pty. Ltd.,Singapore,100
-38725-0000038725-17-000042,Franklin Electric (South Africa) Pty. Ltd.,South Africa,100
-38725-0000038725-17-000042,"Franklin Electric (Suzhou) Co., Ltd.",China,100
-38725-0000038725-17-000042,Franklin Electric (Zambia) Ltd.,Zambia,100
-38725-0000038725-17-000042,Franklin Electric B.V.,Netherlands,100
-38725-0000038725-17-000042,Franklin Electric Botswana Pty. Ltd.,Botswana,100
-38725-0000038725-17-000042,"Franklin Electric Canada, Inc.",Canada,100
-38725-0000038725-17-000042,Franklin Electric Colombia SAS,Colombia,100
-38725-0000038725-17-000042,Franklin Electric Europa GmbH,Germany,100
-38725-0000038725-17-000042,Franklin Electric Germany Holding GmbH,Germany,100
-38725-0000038725-17-000042,Franklin Electric Holding B.V.,Netherlands,100
-38725-0000038725-17-000042,Franklin Electric India Private Ltd.,Indiana,100
-38725-0000038725-17-000042,Franklin Electric Industria de Motobombas SA,Brazil,100
-38725-0000038725-17-000042,"Franklin Electric International, Inc.",Delaware,100
-38725-0000038725-17-000042,Franklin Electric NL BV,Netherlands,100
-38725-0000038725-17-000042,Franklin Electric spol s.r.o.,Czech Republic,100
-38725-0000038725-17-000042,"Franklin Electric Subsidiaries, LLC",Indiana,100
-38725-0000038725-17-000042,"Franklin Electric Trading (Shanghai) Co., Ltd.",China,100
-38725-0000038725-17-000042,Franklin Fueling Sistemas de Combustiveis Ltda,Brazil,100
-38725-0000038725-17-000042,Franklin Fueling Systems (Beijing) Company Ltd.,China,100
-38725-0000038725-17-000042,Franklin Fueling Systems Australia Pty. Ltd.,Australia,100
-38725-0000038725-17-000042,Franklin Fueling Systems France SARL,France,100
-38725-0000038725-17-000042,Franklin Fueling Systems India Private Ltd.,India,100
-38725-0000038725-17-000042,Franklin Fueling Systems Ltd.,United Kingdom,100
-38725-0000038725-17-000042,Franklin Fueling Systems GmbH,Germany,100
-38725-0000038725-17-000042,"Franklin Fueling Systems, Inc.",Indiana,100
-38725-0000038725-17-000042,Impo Motor Pompa Sanayi ve Ticaret A.S.,Turkey,90
-38725-0000038725-17-000042,"Intelligent Controls, LLC",Maine,100
-38725-0000038725-17-000042,Motores Electricos Sumergibles de Mexico S. de R.L de C.V.,Mexico,100
-38725-0000038725-17-000042,Motores Franklin S.A. de C.V.,Mexico,100
-38725-0000038725-17-000042,Motori Sommersi Riavvolgibili S.r.l.,Italy,75
-38725-0000038725-17-000042,Pioneer Pump Holdings Pty.,Australia,100
-38725-0000038725-17-000042,Pioneer Pump Ltd.,United Kingdom,100
-38725-0000038725-17-000042,Pioneer Pump Pty. Ltd. ,South Africa,100
-38725-0000038725-17-000042,Pioneer Pump Solutions Ltd.,United Kingdom,100
-38725-0000038725-17-000042,"Pioneer Pump, Inc.",Texas,100
-38725-0000038725-17-000042,Pluga Pumps and Motors Private Limited,India,70
-38725-0000038725-17-000042,Servicios de MESMEX S de SRL de CV,Mexico,100
-38725-0000038725-17-000042,Franklin Electric S.r.l,Italy,100
-38725-0000038725-17-000042,Franklin Wadcorpp India Private Limited,India,65
-60549-0001047469-98-012481,Louisville Gas and Electric Company,Kentucky,
-60549-0001047469-98-012481,LG&E Capital Corp.,Kentucky,
-60549-0001047469-98-012481,LG&E Power Inc.,Delaware,
-60549-0001047469-98-012481,LG&E Power Operations Inc.,California,
-60549-0001047469-98-012481,LG&E Energy Marketing Inc.,Oklahoma,
-60549-0001047469-98-012481,LG&E International Inc.,Delaware,
-60549-0001047469-98-012481,Louisville Gas and Electric Company,,
-60549-0001047469-98-012481,LG&E Capital Corp.,,
-60549-0001047469-98-012481,LG&E Power Inc.,,
-60549-0001047469-98-012481,LG&E International Inc.,,
-60549-0001047469-98-012481,LG&E Energy Marketing Inc.,,
-60549-0001047469-98-012481,LG&E Power Operations ,,
-60549-0001047469-98-012481,LG&E Energy Marketing Inc.,,
-61986-0000061986-99-000003,"Femco Machine Co., Inc.",Nevada,
-61986-0000061986-99-000003,Kolpak Manufacturing Company,Tennessee,
-61986-0000061986-99-000003,"Manitex, Inc.",Texas,
-61986-0000061986-99-000003,"Manitowoc MEC, Inc.",Nevada,
-61986-0000061986-99-000003,"Manitowoc Equipment Works PTE, Ltd.",Singapore,
-61986-0000061986-99-000003,"Manitowoc Equipment Works, Inc.",Nevada,
-61986-0000061986-99-000003,"Manitowoc Europe Holdings, Ltd.",England,
-61986-0000061986-99-000003,Manitowoc Europe Limited,England,
-61986-0000061986-99-000003,Manitowoc International Sales Corp. ,Barbados,
-61986-0000061986-99-000003,"Manitowoc Korea Company, Ltd.",Korea,
-61986-0000061986-99-000003,"Manitowoc Marine Group, Inc",Nevada,
-61986-0000061986-99-000003,"Manitowoc Re-Manufacturing, Inc.",Wisconsin,
-61986-0000061986-99-000003,"Manitowoc Western Company, Inc.",Wisconsin,
-61986-0000061986-99-000003,North Central Crane & Excavator Sales Corp.,Nevada,
-61986-0000061986-99-000003,"West Manitowoc, Inc.",Wisconsin,
-61986-0000061986-99-000003,"Manitowoc CP, Inc. ",Nevada,
-61986-0000061986-99-000003,"Manitowoc FP, Inc.",Nevada,
-61986-0000061986-99-000003,"KMT Refrigeration, Inc.",Wisconsin,
-61986-0000061986-99-000003,"Manitowoc Foodservice Group, Inc.",Nevada,
-61986-0000061986-99-000003,"Manitowoc Crane Group, Inc.",Nevada,
-61986-0000061986-99-000003,"Manitowoc Ice, Inc.",Wisconsin,
-61986-0000061986-99-000003,"Manitowoc Cranes, Inc.",Wisconsin,
-61986-0000061986-99-000003,"SerVend International, Inc.",Nevada,
-61986-0000061986-99-000003,"Manitowoc Beverage Systems, Inc. ",Nevada,
-61986-0000061986-99-000003,KMT Sales Corporation,Nevada,
-61986-0000061986-99-000003,SerVend Sales Corporation,Nevada,
-61986-0000061986-99-000003,"USTC, Inc.",Nevada,
+38725-0000038725-17-000042,Bombas Leao SA,Brazil,100.0
+38725-0000038725-17-000042,Cookson & Zinn (PTL) Limited ,United Kingdom,100.0
+38725-0000038725-17-000042,Coverco S.r.l.,Italy,100.0
+38725-0000038725-17-000042,FE Latin America B.V.,Netherlands,100.0
+38725-0000038725-17-000042,FELE C.V.,Netherlands,100.0
+38725-0000038725-17-000042,"Franklin Control Systems, Inc.",Oregon,100.0
+38725-0000038725-17-000042,Franklin Electric (Australia) Pty. Ltd.,Australia,100.0
+38725-0000038725-17-000042,Franklin Electric (Chile) Ltda,Chile,100.0
+38725-0000038725-17-000042,Franklin Electric (SEA) Pty. Ltd.,Singapore,100.0
+38725-0000038725-17-000042,Franklin Electric (South Africa) Pty. Ltd.,South Africa,100.0
+38725-0000038725-17-000042,"Franklin Electric (Suzhou) Co., Ltd.",China,100.0
+38725-0000038725-17-000042,Franklin Electric (Zambia) Ltd.,Zambia,100.0
+38725-0000038725-17-000042,Franklin Electric B.V.,Netherlands,100.0
+38725-0000038725-17-000042,Franklin Electric Botswana Pty. Ltd.,Botswana,100.0
+38725-0000038725-17-000042,"Franklin Electric Canada, Inc.",Canada,100.0
+38725-0000038725-17-000042,Franklin Electric Colombia SAS,Colombia,100.0
+38725-0000038725-17-000042,Franklin Electric Europa GmbH,Germany,100.0
+38725-0000038725-17-000042,Franklin Electric Germany Holding GmbH,Germany,100.0
+38725-0000038725-17-000042,Franklin Electric Holding B.V.,Netherlands,100.0
+38725-0000038725-17-000042,Franklin Electric India Private Ltd.,India,100.0
+38725-0000038725-17-000042,Franklin Electric Industria de Motobombas SA,Brazil,100.0
+38725-0000038725-17-000042,"Franklin Electric International, Inc.",Delaware,100.0
+38725-0000038725-17-000042,Franklin Electric NL BV,Netherlands,100.0
+38725-0000038725-17-000042,Franklin Electric spol s.r.o.,Czech Republic,100.0
+38725-0000038725-17-000042,"Franklin Electric Subsidiaries, LLC",Indiana,100.0
+38725-0000038725-17-000042,"Franklin Electric Trading (Shanghai) Co., Ltd.",China,100.0
+38725-0000038725-17-000042,Franklin Fueling Sistemas de Combustiveis Ltda,Brazil,100.0
+38725-0000038725-17-000042,Franklin Fueling Systems (Beijing) Company Ltd.,China,100.0
+38725-0000038725-17-000042,Franklin Fueling Systems Australia Pty. Ltd.,Australia,100.0
+38725-0000038725-17-000042,Franklin Fueling Systems France SARL,France,100.0
+38725-0000038725-17-000042,Franklin Fueling Systems India Private Ltd.,India,100.0
+38725-0000038725-17-000042,Franklin Fueling Systems Ltd.,United Kingdom,100.0
+38725-0000038725-17-000042,Franklin Fueling Systems GmbH,Germany,100.0
+38725-0000038725-17-000042,"Franklin Fueling Systems, Inc.",Indiana,100.0
+38725-0000038725-17-000042,Impo Motor Pompa Sanayi ve Ticaret A.S.,Turkey,90.0
+38725-0000038725-17-000042,"Intelligent Controls, LLC",Maine,100.0
+38725-0000038725-17-000042,Motores Electricos Sumergibles de Mexico S. de R.L de C.V.,Mexico,100.0
+38725-0000038725-17-000042,Motores Franklin S.A. de C.V.,Mexico,100.0
+38725-0000038725-17-000042,Motori Sommersi Riavvolgibili S.r.l.,Italy,75.0
+38725-0000038725-17-000042,Pioneer Pump Holdings Pty.,Australia,100.0
+38725-0000038725-17-000042,Pioneer Pump Ltd.,United Kingdom,100.0
+38725-0000038725-17-000042,Pioneer Pump Pty. Ltd. ,South Africa,100.0
+38725-0000038725-17-000042,Pioneer Pump Solutions Ltd.,United Kingdom,100.0
+38725-0000038725-17-000042,"Pioneer Pump, Inc.",Texas,100.0
+38725-0000038725-17-000042,Pluga Pumps and Motors Private Limited,India,70.0
+38725-0000038725-17-000042,Servicios de MESMEX S de SRL de CV,Mexico,100.0
+38725-0000038725-17-000042,Franklin Electric S.r.l,Italy,100.0
+38725-0000038725-17-000042,Franklin Wadcorpp India Private Limited,India,65.0
 71675-0001046861-02-000012,Central Maine Power Company,Maine,
 71675-0001046861-02-000012,Connecticut Natural Gas Corporation,Connecticut,
 71675-0001046861-02-000012,"Energy East Enterprises, Inc.",Maine,
@@ -1045,25 +941,18 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 77227-0001031296-09-000008,"GPU Power, Inc.",Delaware,
 77227-0001031296-09-000008,FirstEnergy Foundation,Ohio,
 77227-0001031296-09-000008,FirstEnergy Fiber Holdings Corp.,Delaware,
-78778-0000078778-97-000019,Piper Jaffray Inc.,Delaware,100
-78778-0000078778-97-000019,Piper Jaffray International Inc.,Delaware,100
-78778-0000078778-97-000019,Piper Capital Management Incorporated,Delaware,100
-78778-0000078778-97-000019,Piper Trust Company,Minnesota,100
-78778-0000078778-97-000019,Premier Acceptance Corporation,Delaware,100
-78778-0000078778-97-000019,Piper Realty Management Incorporated,Delaware,100
-78778-0000078778-97-000019,"Piper Jaffray Ventures, Inc. ",Delaware,100
 78890-0000078890-14-000004,The Pittston Company,Delaware,
 78890-0000078890-14-000004,"Glen Allen Development, Inc.",Delaware,
-78890-0000078890-14-000004,"Liberty National Development Company, LLC (32.5%)",Delaware,
-78890-0000078890-14-000004,"New Liberty Residential Urban Renewal Company, LLC (17.5%)",New Jersey,
+78890-0000078890-14-000004,"Liberty National Development Company, LLC",Delaware,32.5
+78890-0000078890-14-000004,"New Liberty Residential Urban Renewal Company, LLC",New Jersey,17.5
 78890-0000078890-14-000004,Pittston Services Group Inc.,Virginia,
 78890-0000078890-14-000004,Brink’s Holding Company,Delaware,
 78890-0000078890-14-000004,"Brink’s, Incorporated (“BI”)",Delaware,
 78890-0000078890-14-000004,"Brink’s Delaware, LLC",Delaware,
 78890-0000078890-14-000004,Brink’s Express Company,Illinois,
 78890-0000078890-14-000004,"Brink’s Global Payments, LLC",Delaware,
-78890-0000078890-14-000004,Brink’s St. Lucia Ltd.,St. Lucia,26
-78890-0000078890-14-000004,Security Services (Brink’s Jordan) Company Ltd,Jordan,95
+78890-0000078890-14-000004,Brink’s St. Lucia Ltd.,St. Lucia,26.0
+78890-0000078890-14-000004,Security Services (Brink’s Jordan) Company Ltd,Jordan,95.0
 78890-0000078890-14-000004,"Servicio Pan Americano de Protección S.A. de C.V. (“Serpaprosa”) (by Trust, BI is Settlor of Trust)",Mexico,99.75
 78890-0000078890-14-000004,"Aeroflash Mensajeria, S.A. de C.V.",Mexico,99.75
 78890-0000078890-14-000004,"Inmobiliaria, A.J., S.A. de C.V.",Mexico,99.75
@@ -1111,15 +1000,15 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 78890-0000078890-14-000004,Inversiones Petra S.A.,Chile,
 78890-0000078890-14-000004,"Brink’s Chile, S.A. (BICV is beneficial owner)",Chile,
 78890-0000078890-14-000004,Organismo Tecnico de Capacitacion Brink’s SpA,Chile,
-78890-0000078890-14-000004,Brink’s de Colombia S.A.,Colombia,58
-78890-0000078890-14-000004,Domesa de Colombia S.A.,Colombia,70
-78890-0000078890-14-000004,Procesos & Canje S.A.,Colombia,58
+78890-0000078890-14-000004,Brink’s de Colombia S.A.,Colombia,58.0
+78890-0000078890-14-000004,Domesa de Colombia S.A.,Colombia,70.0
+78890-0000078890-14-000004,Procesos & Canje S.A.,Colombia,58.0
 78890-0000078890-14-000004,Sistema Integrado Multiple de Pago Electronicos S.A. (“SIMPLE S.A.”),Colombia,14.5
 78890-0000078890-14-000004,"Brink’s Canada Holdings, B.V. (BICV is beneficial owner)",Netherlands,
 78890-0000078890-14-000004,Brink’s Canada Limited,Canada,
 78890-0000078890-14-000004,"Brink’s Security Services, B.V.",Netherlands,
 78890-0000078890-14-000004,"Centro Americana de Inversiones Balboa, C.A. (BICV is beneficial owner)",Panama,
-78890-0000078890-14-000004,Hermes Transporte Blindados S.A.,Peru,36
+78890-0000078890-14-000004,Hermes Transporte Blindados S.A.,Peru,36.0
 78890-0000078890-14-000004,"Brink’s Dutch Holdings, B.V. (BICV is beneficial owner)",Netherlands,
 78890-0000078890-14-000004,"Brink’s Hellenic Holdings, B.V. (“BHH”)",Netherlands,
 78890-0000078890-14-000004,"Athena Marathon Holdings, B.V. (“AMH”)",Netherlands,
@@ -1131,33 +1020,33 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 78890-0000078890-14-000004,Brink’s Hermes Cash & Valuable Services S.A. (“Brink’s Cash & Valuable Services SA”),Greece,
 78890-0000078890-14-000004,Brink's Hellas Guarding & Cash Services Joint VentureAnonymi Etairia,Greece,
 78890-0000078890-14-000004,Brink’s Hermes Security Services SA (“Brink’s Security Services S.A.”),Greece,
-78890-0000078890-14-000004,Brink’s Hermes Aviation Security Services S.A.,Greece,70
-78890-0000078890-14-000004,Hellenic Central Station SA - Reception & Processing Centre of Electronic Signals (“Hellenic Central Station”),Greece,10
+78890-0000078890-14-000004,Brink’s Hermes Aviation Security Services S.A.,Greece,70.0
+78890-0000078890-14-000004,Hellenic Central Station SA - Reception & Processing Centre of Electronic Signals (“Hellenic Central Station”),Greece,10.0
 78890-0000078890-14-000004,"BHM Human Resources Mexico Holding, S.A. de C.V.",Mexico,
 78890-0000078890-14-000004,"Servicios Administrativos Consolidados BM de Mexico, S.A. de C.V.",Mexico,
 78890-0000078890-14-000004,"BM Control y Administracion de Personal, S.A. de C.V.",Mexico,
 78890-0000078890-14-000004,BHM Human Resources Solutions B.V.,Netherlands,
 78890-0000078890-14-000004,Brink’s Argentina S.A.,Argentina,
-78890-0000078890-14-000004,Brink’s Seguridad Corporativa S.A.,Argentina,98
+78890-0000078890-14-000004,Brink’s Seguridad Corporativa S.A.,Argentina,98.0
 78890-0000078890-14-000004,Brink’s India Private Limited,India,
-78890-0000078890-14-000004,Brinks Mongolia LLC,Mongolia,51
-78890-0000078890-14-000004,Brink’s RUS Holding B.V.,Netherlands,70
-78890-0000078890-14-000004,Limited Liability Company Brink’s Management,Russian Federation,70
-78890-0000078890-14-000004,Limited Liability Company Brink’s Management,Russian Federation,70
-78890-0000078890-14-000004,Non Banking Credit Organization BRINKS,Russian Federation,70
-78890-0000078890-14-000004,Servicio Pan Americano de Proteccion C.A.,Venezuela,61
-78890-0000078890-14-000004,"Aeropanamericano, C.A.",Venezuela,61
-78890-0000078890-14-000004,"Aero Sky Panama, S.A.",Panama,61
-78890-0000078890-14-000004,"Artes Graficas Avanzadas 98, C.A.",Venezuela,61
-78890-0000078890-14-000004,"Blindados de Zulia Occidente, C.A.",Venezuela,61
-78890-0000078890-14-000004,"Blindados de Oriente, S.A.",Venezuela,61
-78890-0000078890-14-000004,"Blindados Panamericanos, S.A.",Venezuela,61
-78890-0000078890-14-000004,"Blindados Centro Occidente, S.A.",Venezuela,61
-78890-0000078890-14-000004,"Documentos Mercantiles, S.A.",Venezuela,61
-78890-0000078890-14-000004,"Instituto Panamericano, C.A.",Venezuela,61
-78890-0000078890-14-000004,"Intergraficas Panama, S.A.",Panama,61
-78890-0000078890-14-000004,"Panamericana de Vigilancia, S.A. ",Venezuela,61
-78890-0000078890-14-000004,"Transportes Expresos, C.A. ",Venezuela,61
+78890-0000078890-14-000004,Brinks Mongolia LLC,Mongolia,51.0
+78890-0000078890-14-000004,Brink’s RUS Holding B.V.,Netherlands,70.0
+78890-0000078890-14-000004,Limited Liability Company Brink’s Management,Russian Federation,70.0
+78890-0000078890-14-000004,Limited Liability Company Brink’s Management,Russian Federation,70.0
+78890-0000078890-14-000004,Non Banking Credit Organization BRINKS,Russian Federation,70.0
+78890-0000078890-14-000004,Servicio Pan Americano de Proteccion C.A.,Venezuela,61.0
+78890-0000078890-14-000004,"Aeropanamericano, C.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Aero Sky Panama, S.A.",Panama,61.0
+78890-0000078890-14-000004,"Artes Graficas Avanzadas 98, C.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Blindados de Zulia Occidente, C.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Blindados de Oriente, S.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Blindados Panamericanos, S.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Blindados Centro Occidente, S.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Documentos Mercantiles, S.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Instituto Panamericano, C.A.",Venezuela,61.0
+78890-0000078890-14-000004,"Intergraficas Panama, S.A.",Panama,61.0
+78890-0000078890-14-000004,"Panamericana de Vigilancia, S.A. ",Venezuela,61.0
+78890-0000078890-14-000004,"Transportes Expresos, C.A. ",Venezuela,61.0
 78890-0000078890-14-000004,Brink’s Panama S.A.,Panama,
 78890-0000078890-14-000004,Inmobiliaria Brink’s Panama S.A.,Panama,
 78890-0000078890-14-000004,Brink’s Global Services Poland Sp.zo.o.,Poland,
@@ -1179,9 +1068,9 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 78890-0000078890-14-000004,Brink’s Évolution S.A.R.L.,France,
 78890-0000078890-14-000004,Est Valeurs SAS,France,
 78890-0000078890-14-000004,Brink’s Formation S.A.R.L.,France,
-78890-0000078890-14-000004,Brink’s Madagascar S.A.,Madagascar,60
+78890-0000078890-14-000004,Brink’s Madagascar S.A.,Madagascar,60.0
 78890-0000078890-14-000004,Brink’s Maroc S.A.S.,Morocco,
-78890-0000078890-14-000004,Brink’s Qatar L.L.C.,Qatar,49
+78890-0000078890-14-000004,Brink’s Qatar L.L.C.,Qatar,49.0
 78890-0000078890-14-000004,Brink’s Réunion S.A.R.L.,St. Denis,
 78890-0000078890-14-000004,Brink’s Security Services SAS,France,
 78890-0000078890-14-000004,Brink’s Teleservices SAS,France,
@@ -1207,7 +1096,7 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 78890-0000078890-14-000004,Brink’s Diamond (Shanghai) Company Limited,China,
 78890-0000078890-14-000004,Brink’s Jewellery Trading (Shanghai) Company Limited,China,
 78890-0000078890-14-000004,Brink’s Security Transportation (Shanghai) Company Limited,China,
-78890-0000078890-14-000004,Brink’s Global Services Korea Limited – Yunan Hoesa Brink’s Global,Korea,80
+78890-0000078890-14-000004,Brink’s Global Services Korea Limited – Yunan Hoesa Brink’s Global,Korea,80.0
 78890-0000078890-14-000004,Brink’s Nederland B.V.,Netherlands,
 78890-0000078890-14-000004,Brink’s Geldverwerking B.V.,Netherlands,
 78890-0000078890-14-000004,Brink’s Regional Services B.V.,Netherlands,
@@ -1218,12 +1107,12 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 78890-0000078890-14-000004,Redetrel – Rede Transacoes Eletronicas Ltda.,Brazil,
 78890-0000078890-14-000004,ePago International Inc.,Panama,
 78890-0000078890-14-000004,"Corporación ePago de Venezuela, C.A.",Venezuela,
-78890-0000078890-14-000004,e-Pago de Colombia S.A. ,Colombia,75
+78890-0000078890-14-000004,e-Pago de Colombia S.A. ,Colombia,75.0
 78890-0000078890-14-000004,Brink’s ePago S.A. de C.V.,Mexico,
 78890-0000078890-14-000004,Brink’s Global Services (BGS) Botswana (Proprietary) Limited,Botswana,
 78890-0000078890-14-000004,Brink’s Macau Limited,Macao,
 78890-0000078890-14-000004,Brink’s Taiwan Security Limited,Taiwan,
-78890-0000078890-14-000004,Brink’s (Thailand) Limited,Thailand,40
+78890-0000078890-14-000004,Brink’s (Thailand) Limited,Thailand,40.0
 78890-0000078890-14-000004,Brink’s Global Technology Limited,Thailand,
 78890-0000078890-14-000004,Brink’s Guvenlik Hizmetleri Anonim Sirketi,Turkey,
 78890-0000078890-14-000004,Brink’s (UK) Limited,U.K.,
@@ -1269,7 +1158,6 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 78890-0000078890-14-000004,PMV Gold Company,Delaware,
 78890-0000078890-14-000004,Pittston Mineral Ventures International Ltd.,Delaware,
 78890-0000078890-14-000004,Mineral Ventures of Australia Pty Ltd,Australia,
-80812-0000927016-98-004349,"ProvEnergy Investments, Ltd.",Rhode Island,
 86521-0000086521-10-000019,Enova Corporation,California,
 86521-0000086521-10-000019,Pacific Enterprises,California,
 86521-0000086521-10-000019,Pacific Enterprises International,California,
@@ -1341,26 +1229,6 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 96271-0001193125-07-042781,"TPS International Power, Inc.",Cayman Islands,
 96271-0001193125-07-042781,"TPS de Ultramar, LTD",Cayman Islands,
 96271-0001193125-07-042781,"TPS de Ultramar Guatemala, S.A.",Guatemalan,
-99250-0000099250-00-000002,Cardinal Operating Company,Delaware,100
-99250-0000099250-00-000002,Cross Bay Operating Company,Delaware,100
-99250-0000099250-00-000002,Cumberland Operating Company,Delaware,100
-99250-0000099250-00-000002,Independence Operating Company,Delaware,100
-99250-0000099250-00-000002,"Marsh Resources, Inc.",Delaware,100
-99250-0000099250-00-000002,Pine Needle Operating Company,Delaware,100
-99250-0000099250-00-000002,"TGPL Enterprises, Inc.",Delaware,100
-99250-0000099250-00-000002,Transco Cross Bay Company,Delaware,100
-99250-0000099250-00-000002,TransCardinal Company,Delaware,100
-99250-0000099250-00-000002,TransCarolina LNG Company,Delaware,100
-99250-0000099250-00-000002,TransCumberland Pipeline Company,Delaware,100
-99250-0000099250-00-000002,Transco Independence Pipeline Company ,Delaware,100
-99250-0000099250-00-000002,"Delaware WGP Enterprises, Inc",Delaware,100
-99250-0000099250-00-000002,"Williams Gas Processing - Gulf Coast Company, L.P.",Delaware,99
-100122-0000941138-03-000007,Tucson Electric Power Company (TEP),Arizona,
-100122-0000941138-03-000007,San Carlos Resources Inc.,Arizona,
-100122-0000941138-03-000007,"Millennium Energy Holdings, Inc. (Millennium)",Arizona,
-100122-0000941138-03-000007,"Advanced Energy Technologies, Inc.",Arizona,
-100122-0000941138-03-000007,"Global Solar Energy, Inc.",Arizona,
-100122-0000941138-03-000007,UniSource Energy Development (UED),Arizona,
 103872-0001193125-13-444053,14011 So. Normandie Ave. Realty Corp.,Nevada,
 103872-0001193125-13-444053,500 South Douglas Realty Corp.,Delaware,
 103872-0001193125-13-444053,Arctern Consulting Private Limited (2),India,
@@ -1462,7 +1330,1097 @@ Filename,Subsidiary,Location of Incorporation,Ownership Percentage
 103872-0001193125-13-444053,"Volt Telecommunications Group, Inc.",Delaware,
 103872-0001193125-13-444053,"Volt Temporary Services, Inc.",Delaware,
 103872-0001193125-13-444053,"Volt Workforce Solutions, Inc.",Delaware,
-320575-0001193125-07-117419,PDC MGMT. CO. (formerly SOTEX Exploration Company),Texas,100
-320575-0001193125-07-117419,"PDC Investment Corp.,",Delaware,100
-320575-0001193125-07-117419,"Pioneer Drilling Services, Ltd. (formerly Pioneer Drilling Co., Ltd.)",Texas,100
-320575-0001193125-07-117419,South Texas Drilling Company,Texas,100
+320575-0001193125-07-117419,PDC MGMT. CO. (formerly SOTEX Exploration Company),Texas,100.0
+320575-0001193125-07-117419,"PDC Investment Corp.,",Delaware,100.0
+320575-0001193125-07-117419,"Pioneer Drilling Services, Ltd. (formerly Pioneer Drilling Co., Ltd.)",Texas,100.0
+320575-0001193125-07-117419,South Texas Drilling Company,Texas,100.0
+3499-0000003499-08-000003,731 Commercial Holding LLC,,
+3499-0000003499-08-000003,731 Commercial LLC,,
+3499-0000003499-08-000003,731 Office One Holding LLC,,
+3499-0000003499-08-000003,731 Office One LLC,,
+3499-0000003499-08-000003,731 Office Two Holding LLC,,
+3499-0000003499-08-000003,731 Office Two LLC,,
+3499-0000003499-08-000003,731 Residential Holding LLC,,
+3499-0000003499-08-000003,731 Residential LLC,,
+3499-0000003499-08-000003,731 Restaurant LLC,,
+3499-0000003499-08-000003,731 Retail One LLC,,
+3499-0000003499-08-000003,"Alexander’s Department Stores of Brooklyn, Inc.",,
+3499-0000003499-08-000003,"Alexander’s Department Stores of New Jersey, Inc.",,
+3499-0000003499-08-000003,"Alexander’s Kings Plaza, LLC",,
+3499-0000003499-08-000003,"Alexander’s of Kings, LLC",,
+3499-0000003499-08-000003,Alexander’s Management LLC,,
+3499-0000003499-08-000003,Alexander’s of Brooklyn II LLC,,
+3499-0000003499-08-000003,"Alexander’s of Brooklyn, Inc.",,
+3499-0000003499-08-000003,"Alexander’s of Flushing, Inc.",,
+3499-0000003499-08-000003,"Alexander’s of Rego Park II, Inc.",,
+3499-0000003499-08-000003,"Alexander’s of Rego Park III, Inc.",,
+3499-0000003499-08-000003,"ALX of Paramus, LLC",,
+3499-0000003499-08-000003,"Alexander’s Personnel Providers, Inc.",,
+3499-0000003499-08-000003,"Alexander’s Rego Park Center, Inc.",,
+3499-0000003499-08-000003,"Alexander’s Rego Shopping Center, Inc.",,
+3499-0000003499-08-000003,Alexander’s Restaurant LLC,,
+3499-0000003499-08-000003,"Kings Parking, LLC",,
+3499-0000003499-08-000003,Kings Plaza Lender LLC,,
+3499-0000003499-08-000003,Ownreal Inc.,,
+3499-0000003499-08-000003,Rego Park Comercial LLC,,
+3499-0000003499-08-000003,Rego Park Residential LLC,,
+3499-0000003499-08-000003,"Sakraf Wine & Liquor Store, Inc.",,
+3570-0000003570-17-000052,Caldera LNG Holdings SpA,Chile,
+3570-0000003570-17-000052,Cheniere Chile SpA,Chile,
+3570-0000003570-17-000052,"Cheniere CCH HoldCo I, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere CCH HoldCo II, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Corpus Christi Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Corpus Christi Pipeline, L.P.",Delaware,
+3570-0000003570-17-000052,"Cheniere Corpus Christi Pipeline Stage III, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Creole Trail Pipeline, L.P.",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Investments, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Operating Co., Inc",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Partners GP, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Partners LP Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Partners, L.P.",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Shared Services Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Energy Shared Services, Inc.",Delaware,
+3570-0000003570-17-000052,"Cheniere Field Services, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere GP Holding Company, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Ingleside Marine Terminal, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere International Investments Holdings, S.à.r.l",Luxembourg,
+3570-0000003570-17-000052,"Cheniere International Investments, S.à.r.l",Luxembourg,
+3570-0000003570-17-000052,"Cheniere Land Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Liquids, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere LNG Holdings GP, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere LNG O&M Services, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere LNG Terminals, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Marketing International HoldCo I, L.P.",Bermuda,
+3570-0000003570-17-000052,"Cheniere Marketing International HoldCo II, Ltd.",Bermuda,
+3570-0000003570-17-000052,"Cheniere Marketing International, LLP",United Kingdom,
+3570-0000003570-17-000052,"Cheniere Marketing, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Marketing, Ltd.",United Kingdom,
+3570-0000003570-17-000052,Cheniere Marketing PTE Ltd.,Singapore,
+3570-0000003570-17-000052,"Cheniere Midship Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Midstream Holdings, Inc.",Delaware,
+3570-0000003570-17-000052,"Cheniere Pipeline GP Interests, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Pipeline Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere San Patricio Processing Hub, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Southern Trail GP, Inc.",Delaware,
+3570-0000003570-17-000052,"Cheniere SPH Pipeline, LLC",Delaware,
+3570-0000003570-17-000052,"Cheniere Supply & Marketing, Inc.",Delaware,
+3570-0000003570-17-000052,Concepción LNG Holding SpA,Chile,
+3570-0000003570-17-000052,"Corpus Christi Liquefaction, LLC",Delaware,
+3570-0000003570-17-000052,"Corpus Christi Liquefaction Stage III, LLC",Delaware,
+3570-0000003570-17-000052,"Corpus Christi LNG, LLC",Delaware,
+3570-0000003570-17-000052,"Corpus Christi Pipeline GP, LLC",Delaware,
+3570-0000003570-17-000052,"Corpus Christi Tug Services, LLC",Delaware,
+3570-0000003570-17-000052,"CQH Holdings Company, LLC",Delaware,
+3570-0000003570-17-000052,"CUI I, LLC",Delaware,
+3570-0000003570-17-000052,"Johnson Bayou Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Live Oak LNG Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Louisiana LNG Holdings, LLC",Delaware,
+3570-0000003570-17-000052,"Nordheim Eagle Ford Gathering, LLC",Delaware,
+3570-0000003570-17-000052,"Sabine Pass Liquefaction, LLC",Delaware,
+3570-0000003570-17-000052,"Sabine Pass LNG-GP, LLC",Delaware,
+3570-0000003570-17-000052,"Sabine Pass LNG-LP, LLC",Delaware,
+3570-0000003570-17-000052,"Sabine Pass LNG, L.P.",Delaware,
+3570-0000003570-17-000052,"Sabine Pass Tug Services, LLC",Delaware,
+4127-0000004127-17-000033,"Skyworks Filter Solutions Japan Co., Ltd.",Japan,
+4127-0000004127-17-000033,Skyworks Global Pte. Ltd.,Singapore,
+4127-0000004127-17-000033,"Skyworks International Investments, LLC",Delaware,
+4127-0000004127-17-000033,Skyworks Ireland Limited,Ireland,
+4127-0000004127-17-000033,Skyworks Luxembourg S.a r.l,Luxembourg,
+4127-0000004127-17-000033,Skyworks Semiconductor,France,
+4127-0000004127-17-000033,Skyworks Solutions Canada Inc.,Canada,
+4127-0000004127-17-000033,"Skyworks Solutions Commercial Co., Ltd. (Shenzhen)",Peoples Republic of China,
+4127-0000004127-17-000033,"Skyworks Solutions Commercial Co., Ltd. (Shenzhen) - Beijing Branch",Beijing,
+4127-0000004127-17-000033,"Skyworks Solutions Commercial Co., Ltd. (Shenzhen) - Shanghai Branch",Shanghai,
+4127-0000004127-17-000033,"Skyworks Solutions Co, Limited",Japan,
+4127-0000004127-17-000033,"Skyworks Solutions de Mexico, S de R.L. de C.V.",Mexico,
+4127-0000004127-17-000033,Skyworks Solutions (Hong Kong) Limited,Hong Kong,
+4127-0000004127-17-000033,Skyworks Solutions Ireland Limited,Ireland,
+4127-0000004127-17-000033,Skyworks Solutions Korea Limited,Korea,
+4127-0000004127-17-000033,Skyworks Solutions Limited,United Kingdom,
+4127-0000004127-17-000033,Skyworks Solutions Oy,Finland,
+4127-0000004127-17-000033,"Skyworks Solutions Worldwide, Inc.",Delaware,
+4127-0000004127-17-000033,"Skyworks Solutions Worldwide, Inc., Taiwan Branch",Taiwan,
+4127-0000004127-17-000033,"Skyworks Solutions Worldwide, Inc., Malaysia Branch",Malaysia,
+4127-0000004127-17-000033,Advanced Analogic Technologies Incorporated,Delaware,
+4127-0000004127-17-000033,"Advanced Analogic Technologies (China), Inc.",Peoples Republic of China,
+4127-0000004127-17-000033,"Axiom Microdevices, Inc.",Delaware,
+4127-0000004127-17-000033,"ICWave, LLC",Massachusetts,
+4127-0000004127-17-000033,"Isolink, Inc.",California,
+4127-0000004127-17-000033,"MEMS Solutions, Inc.",Korea,
+4127-0000004127-17-000033,"Quantance, Inc.",Delaware,
+4127-0000004127-17-000033,"SiGe Semiconductor, Inc.",Delaware,
+4127-0000004127-17-000033,"SiGe Semiconductor (U.S.), Corp.",Delaware,
+4127-0000004127-17-000033,SiGe Semiconductor (Europe) Limited,United Kingdom,
+4127-0000004127-17-000033,"Trans-Tech, Inc.",Maryland,
+4962-0001193125-10-041232,American Express Company,(USA) New York,
+4962-0001193125-10-041232,56th Street AXP Campus LLC,(USA) Arizona,
+4962-0001193125-10-041232,American Express Austria Bank GmbH,Austria,
+4962-0001193125-10-041232,American Express Bank LLC,Russian Federation,
+4962-0001193125-10-041232,American Express Bank Ltd. S.A,Argentina,
+4962-0001193125-10-041232,American Express Banking Corp.,(USA) New York,
+4962-0001193125-10-041232,"American Express Travel Related Services Company, Inc.",(USA) New York,
+4962-0001193125-10-041232,American Express Bank (Mexico) S.A Institucion de Banca Multiple,Mexico,
+4962-0001193125-10-041232,"American Express Bank Services, S.A. de C.V.",Mexico,
+4962-0001193125-10-041232,American Express Bank FSB,United States,
+4962-0001193125-10-041232,American Express Receivables Financing Corporation IV LLC,(USA) Delaware,
+4962-0001193125-10-041232,American Express Business Loan Corporation,(USA) Utah,
+4962-0001193125-10-041232,American Express Centurion Bank,(USA) Utah,
+4962-0001193125-10-041232,American Express Receivables Financing Corporation III LLC,(USA) Delaware,
+4962-0001193125-10-041232,American Express Company (Mexico) S.A. de C.V.,Mexico,
+4962-0001193125-10-041232,"American Express Insurance Services, Agente de Seguros, S.A. de C.V.",Mexico,
+4962-0001193125-10-041232,"American Express Servicios Profesionales, S.A. de C.V.",Mexico,
+4962-0001193125-10-041232,American Express Credit Corporation,(USA) Delaware,
+4962-0001193125-10-041232,American Express Capital Australia,Australia,
+4962-0001193125-10-041232,"American Express Credit Mexico, LLC",(USA) Delaware,
+4962-0001193125-10-041232,Fideicomiso Empresarial American Express No.232033,Mexico,
+4962-0001193125-10-041232,American Express Euro Funding Limited Partnership,United Kingdom,
+4962-0001193125-10-041232,American Express Overseas Credit Corporation Limited,Jersey,
+4962-0001193125-10-041232,AEOCC Management Company Limited,Jersey,
+4962-0001193125-10-041232,American Express Overseas Credit Corporation N.V.,Netherlands Antilles,
+4962-0001193125-10-041232,AE Hungary Holdings Limited Liability Company,Hungary,
+4962-0001193125-10-041232,American Express Canada Credit Corporation,Canada,
+4962-0001193125-10-041232,American Express Canada Finance Limited,Canada,
+4962-0001193125-10-041232,American Express Sterling Funding Limited Partnership,United Kingdom,
+4962-0001193125-10-041232,American Express Funding (Luxembourg) S.a.r.l,Luxembourg,
+4962-0001193125-10-041232,Credco Receivables Corp.,(USA) Delaware,
+4962-0001193125-10-041232,"American Express Dutch Capital, LLC",(USA) Delaware,
+4962-0001193125-10-041232,American Express Europe Limited,(USA) Delaware,
+4962-0001193125-10-041232,Sceptre Nominees Limited,United Kingdom,
+4962-0001193125-10-041232,"American Express Global Financial Services, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,American Express Holdings Netherlands CV,Netherlands,
+4962-0001193125-10-041232,"American Express Insurance Agency of Puerto Rico, Inc.",Puerto Rico,
+4962-0001193125-10-041232,"American Express International (NZ), Inc.",(USA) Delaware,
+4962-0001193125-10-041232,American Express Limited,(USA) Delaware,
+4962-0001193125-10-041232,Alpha Card SCRL,Belgium,
+4962-0001193125-10-041232,Alpha Card Merchant Services SCRL,Belgium,
+4962-0001193125-10-041232,BCC Corporate NV/SA,Belgium,
+4962-0001193125-10-041232,American Express (Malaysia) SDN. BHD.,Malaysia,
+4962-0001193125-10-041232,American Express (Thai) Co. Ltd,Thailand,
+4962-0001193125-10-041232,American Express Brasil Assessoria Empresarial Ltda.,Brazil,
+4962-0001193125-10-041232,American Express International (B) SDN.BHD,Brunei Darussalam,
+4962-0001193125-10-041232,"American Express International Holdings, LLC",(USA) Delaware,
+4962-0001193125-10-041232,American Express Argentina S.A.,Argentina,
+4962-0001193125-10-041232,American Express Holdings (France) SAS,France,
+4962-0001193125-10-041232,American Express France SAS,France,
+4962-0001193125-10-041232,American Express Carte France SA,France,
+4962-0001193125-10-041232,American Express Change SAS,France,
+4962-0001193125-10-041232,American Express Paris SAS,France,
+4962-0001193125-10-041232,American Express Services SA,France,
+4962-0001193125-10-041232,American Express Voyages SAS,France,
+4962-0001193125-10-041232,American Express Management,France,
+4962-0001193125-10-041232,American Express France Finance SNC,France,
+4962-0001193125-10-041232,South Pacific Credit Card Limited,New Zealand,
+4962-0001193125-10-041232,Centurion Finance Limited,New Zealand,
+4962-0001193125-10-041232,"American Express International, Inc",(USA) Delaware,
+4962-0001193125-10-041232,AE Exposure Management Limited,Jersey,
+4962-0001193125-10-041232,American Express (India) Private Limited,India,
+4962-0001193125-10-041232,American Express Asia Network Consulting (Beijing) Limited Company,China,
+4962-0001193125-10-041232,American Express Australia Limited,Australia,
+4962-0001193125-10-041232,American Express Company AS,Norway,
+4962-0001193125-10-041232,American Express Corporate Travel SA,Belgium,
+4962-0001193125-10-041232,American Express Denmark A/S,Denmark,
+4962-0001193125-10-041232,American Express Group Services Limited,United Kingdom,
+4962-0001193125-10-041232,American Express Holding AB,Sweden,
+4962-0001193125-10-041232,American Express Business Travel A/S,Denmark,
+4962-0001193125-10-041232,American Express Business Travel AB,Sweden,
+4962-0001193125-10-041232,American Express Business Travel AS,Norway,
+4962-0001193125-10-041232,Forsakringsaktiebolaget Viator,Sweden,
+4962-0001193125-10-041232,American Express Holdings Limited,United Kingdom,
+4962-0001193125-10-041232,American Express Insurance Services Europe Limited,United Kingdom,
+4962-0001193125-10-041232,American Express Services Europe Limited,United Kingdom,
+4962-0001193125-10-041232,American Express Hungary Financial Services Closed Company Limited by Shares,Hungary,
+4962-0001193125-10-041232,American Express Hungary Travel Services Ltd.,Hungary,
+4962-0001193125-10-041232,"American Express International (Taiwan), Inc.","Taiwan, Province of China",
+4962-0001193125-10-041232,American Express International SA,Greece,
+4962-0001193125-10-041232,Key Tours SA,Greece,
+4962-0001193125-10-041232,"American Express Japan Co., Ltd",Japan,
+4962-0001193125-10-041232,American Express Locazioni Finanziarie s.r.l,Italy,
+4962-0001193125-10-041232,American Express Payment Services Limited,United Kingdom,
+4962-0001193125-10-041232,American Express Poland S.A.,Poland,
+4962-0001193125-10-041232,American Express Reisebüro GmbH,Austria,
+4962-0001193125-10-041232,American Express Services India Limited,India,
+4962-0001193125-10-041232,American Express spol. s.r.o.,Czech Republic,
+4962-0001193125-10-041232,American Express Swiss Holdings GmbH,Switzerland,
+4962-0001193125-10-041232,Swisscard AECS AG,Switzerland,
+4962-0001193125-10-041232,American Express Travel (Singapore) Pte. Ltd.,Singapore,
+4962-0001193125-10-041232,American Express Travel Holdings (Hong Kong) Limited,Hong Kong,
+4962-0001193125-10-041232,CITS American Express Air Services Ltd,China,
+4962-0001193125-10-041232,CITS American Express Southern Air Services Ltd,China,
+4962-0001193125-10-041232,CITS American Express Travel Services Ltd,China,
+4962-0001193125-10-041232,Farrington American Express Travel Services Limited,Hong Kong,
+4962-0001193125-10-041232,American Express Travel Holdings (M) Company SDN. BHD.,Malaysia,
+4962-0001193125-10-041232,Mayflower American Express Travel Services SDN. BHD.,Malaysia,
+4962-0001193125-10-041232,"American Express Travel Services Vostok, LLC",Russian Federation,
+4962-0001193125-10-041232,ZAO “American Express International Services”,Russian Federation,
+4962-0001193125-10-041232,American Express Wholesale Currency Services Pty Limited,Australia,
+4962-0001193125-10-041232,Amex Broker Assicurativo s.r.l.,Italy,
+4962-0001193125-10-041232,"Amex General Insurance Agency, Inc.","Taiwan, Province of China",
+4962-0001193125-10-041232,"Amex Life Insurance Marketing, Inc.","Taiwan, Province of China",
+4962-0001193125-10-041232,Amex Travel Holding (Japan) Ltd.,Japan,
+4962-0001193125-10-041232,"American Express Nippon Travel Agency, Inc.",Japan,
+4962-0001193125-10-041232,Interactive Transaction Solutions Limited,United Kingdom,
+4962-0001193125-10-041232,Interactive Transactions Solutions SAS,France,
+4962-0001193125-10-041232,Sociedad Internacional de Servicios de Panama S.A.,Panama,
+4962-0001193125-10-041232,TransUnion Limited,Hong Kong,
+4962-0001193125-10-041232,American Express Service (Thailand) Company Limited,Thailand,
+4962-0001193125-10-041232,"TRS Card International, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,"American Express de Espana, S.A. (Sociedad Unipersonal)",Spain,
+4962-0001193125-10-041232,"American Express E.F.C., S.A. (Sociedad Unipersonal)",Spain,
+4962-0001193125-10-041232,"American Express Foreign Exchange, S.A. (Sociedad Unipersonal)",Spain,
+4962-0001193125-10-041232,"American Express Viajes, S.A. (Sociedad Unipersonal)",Spain,
+4962-0001193125-10-041232,American Express Barcelo Viajes SL,Spain,
+4962-0001193125-10-041232,"Amex Asesores de Seguros, S.A. (Sociedad Unipersonal)",Spain,
+4962-0001193125-10-041232,American Express Marketing & Development Corp.,(USA) Delaware,
+4962-0001193125-10-041232,American Express Prepaid Card Management Corporation,(USA) Arizona,
+4962-0001193125-10-041232,American Express Publishing Corporation,(USA) New York,
+4962-0001193125-10-041232,American Express Receivables Financing Corporation II,(USA) Delaware,
+4962-0001193125-10-041232,American Express Receivables Financing Corporation V LLC,(USA) Delaware,
+4962-0001193125-10-041232,Amex (Middle East) B.S.C. (c),Bahrain,
+4962-0001193125-10-041232,Amex Al Omania LLC,Oman,
+4962-0001193125-10-041232,Amex Egypt LLC,Egypt,
+4962-0001193125-10-041232,ASAL (American Express Saudi Arabia Ltd),Bahrain,
+4962-0001193125-10-041232,Amex Bank of Canada,Canada,
+4962-0001193125-10-041232,Amex Canada Inc.,Canada,
+4962-0001193125-10-041232,Amex Card Services Company,(USA) Delaware,
+4962-0001193125-10-041232,Asesorías e Inversiones American Express Chile Limitada,Chile,
+4962-0001193125-10-041232,Amex Inmobiliaria Limitada,Chile,
+4962-0001193125-10-041232,"Bansamex, S.A.",Spain,
+4962-0001193125-10-041232,Cardmember Financial Services Limited,Jersey,
+4962-0001193125-10-041232,"Cavendish Holdings, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,"Drillamex, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,FRC West Property. LLC,(USA) Arizona,
+4962-0001193125-10-041232,"Harbor Payments, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,"Fiware Holdings, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,Harbor Payments Corporation,(USA) Georgia,
+4962-0001193125-10-041232,Southern Africa Travellers Cheque Company (Pty) Ltd,South Africa,
+4962-0001193125-10-041232,Swiss Bankers Prepaid Services AG,Switzerland,
+4962-0001193125-10-041232,"Travel Impressions, Ltd.",(USA) Delaware,
+4962-0001193125-10-041232,Travellers Cheque Associates Limited,United Kingdom,
+4962-0001193125-10-041232,AMEX Assurance Company,(USA) Illinois,
+4962-0001193125-10-041232,Amexco Insurance Company,(USA) Vermont,
+4962-0001193125-10-041232,"National Express Company, Inc.",(USA) New York,
+4962-0001193125-10-041232,"The Balcor Company Holdings, Inc.",(USA) Delaware,
+4962-0001193125-10-041232,The Balcor Company,(USA) Delaware,
+4962-0001193125-10-041232,"Rexport, Inc.",(USA) Delaware,
+5981-0001193125-12-106666,AMVAC Chemical Corporation,California,
+5981-0001193125-12-106666,"GemChem, Inc.",California,
+5981-0001193125-12-106666,2110 Davie Corporation (formerly ABSCO Distributing),California,
+5981-0001193125-12-106666,AMVAC Chemical UK Ltd.*,"Surrey, England",
+5981-0001193125-12-106666,AMVAC Chemical GmbH,Switzerland,
+5981-0001193125-12-106666,AMVAC do Brasil Representácoes Ltda,Brasil,
+5981-0001193125-12-106666,"Agroservicios Amvac, SA de CV",Mexico,
+5981-0001193125-12-106666,Quimica Amvac de Mexico SA de CV,Mexico,
+5981-0001193125-12-106666,AMVAC de Costa Rica Sociedad Anonima,Costa Rica,
+5981-0001193125-12-106666,"Environmental Mediation, Inc.",California,
+5981-0001193125-12-106666,Calhart Corporation,California,
+5981-0001193125-12-106666,"Manufacturers Mirror & Glass Co., Inc.",California,
+5981-0001193125-12-106666,Todagco (80%)*,California,
+5981-0001193125-12-106666,American Vanguard Corporation of Imperial Valley (90%)*,California,
+5981-0001193125-12-106666,AMVAC Ag-Chem*,California,
+5981-0001193125-12-106666,AMVAC Chemical Corporation-Nevada*,Nevada,
+11199-0001104659-06-016718,"Bemis Company, Inc. (the “Registrant”)",Missouri,
+11199-0001104659-06-016718,"Banner Packaging, Inc.",Wisconsin,100.0
+11199-0001104659-06-016718,"Bemis Clysar, Inc.",Minnesota,100.0
+11199-0001104659-06-016718,"Bemis Czech Republic, s.r.o.",Czech Republic,100.0
+11199-0001104659-06-016718,Bemis Deutschland Holdings GmbH,Germany,100.0
+11199-0001104659-06-016718,Bemis Packaging Deutschland GmbH,Germany,100.0
+11199-0001104659-06-016718,"Bemis Europe Holdings, S.A.",Belgium,100.0
+11199-0001104659-06-016718,Bemis Monceau S.A.,Belgium,100.0
+11199-0001104659-06-016718,Techy France S.A.R.L.,France,100.0
+11199-0001104659-06-016718,"Bemis Flexible Packaging de Mexico, S.A. de C.V.",Mexico,87.0
+11199-0001104659-06-016718,"Bemis Flexible Packaging Mexico Servicios, S.A. de C.V.",Mexico,86.0
+11199-0001104659-06-016718,Bemis France Holdings S.A.S.,France,100.0
+11199-0001104659-06-016718,Bemis Packaging France S.A.S.,France,100.0
+11199-0001104659-06-016718,Bemis Le Trait S.A.S.,France,100.0
+11199-0001104659-06-016718,Bemis Epernon S.A.S.,France,100.0
+11199-0001104659-06-016718,Bemis Hungary Trading Limited Liability Company,Hungary,100.0
+11199-0001104659-06-016718,Bemis Packaging Danmark ApS,Denmark,100.0
+11199-0001104659-06-016718,Bemis Packaging Italia S.r.l,Italy,100.0
+11199-0001104659-06-016718,Bemis Packaging Sverige A.B.,Sweden,100.0
+11199-0001104659-06-016718,Bemis Packaging U.K. Ltd.,United Kingdom,100.0
+11199-0001104659-06-016718,Bemis Valkeakoski Oy,Finland,100.0
+11199-0001104659-06-016718,Bolsas Bemis S.A. de C.V.,Mexico,51.0
+11199-0001104659-06-016718,Bolsas Bemis Servicios Mexico S.A. de C.V.,Mexico,51.0
+11199-0001104659-06-016718,"Curwood, Inc.",Delaware,100.0
+11199-0001104659-06-016718,Curwood Packaging (Canada) Limited,Canada,100.0
+11199-0001104659-06-016718,Bemis Packaging Ireland Limited,Ireland,100.0
+11199-0001104659-06-016718,Bemis Swansea Limited,United Kingdom,100.0
+11199-0001104659-06-016718,Bemis Packaging Espana sl,Spain,100.0
+11199-0001104659-06-016718,Itap Bemis Ltda.,Brazil,22.0
+11199-0001104659-06-016718,"Perfecseal, Inc.",Delaware,100.0
+11199-0001104659-06-016718,"Perfecseal Internacional de Puerto Rico, Inc.",Delaware,100.0
+11199-0001104659-06-016718,Perfecseal International Ltd.,Delaware,100.0
+11199-0001104659-06-016718,Perfecseal Limited,United Kingdom,100.0
+11199-0001104659-06-016718,Bemis Asia Pacific Sdn Bhd,Malaysia,100.0
+11199-0001104659-06-016718,"DEMF DT Holdings I, LLC",Delaware,100.0
+11199-0001104659-06-016718,Itap Bemis Ltda.,Brazil,23.0
+11199-0001104659-06-016718,Hayco Liquidation Company,Delaware,100.0
+11199-0001104659-06-016718,Bemis U.K. Limited,United Kingdom,50.0
+11199-0001104659-06-016718,"MacKay, Inc.",Kentucky,100.0
+11199-0001104659-06-016718,"Milprint, Inc.",Wisconsin,100.0
+11199-0001104659-06-016718,"Curwood Specialty Films – Lebanon, Inc.",Delaware,100.0
+11199-0001104659-06-016718,Misbe Participacoes Ltda.,Brazil,100.0
+11199-0001104659-06-016718,SH Participacoes S.A.,Brazil,100.0
+11199-0001104659-06-016718,DT Participacoes S.A.,Brazil,76.0
+11199-0001104659-06-016718,Dixie Toga S.A.,Brazil,92.0
+11199-0001104659-06-016718,DT Participacoes S.A.,Brazil,24.0
+11199-0001104659-06-016718,Dixie Toga S.A.,Brazil,8.0
+11199-0001104659-06-016718,American Packaging S.A.,Argentina,98.0
+11199-0001104659-06-016718,American Plast S.A.,Argentina,60.0
+11199-0001104659-06-016718,Dixie Toga International Ltd.,Cayman Islands,100.0
+11199-0001104659-06-016718,Dixie Toga Centro-Oeste Embalagens S.A.,Brazil,100.0
+11199-0001104659-06-016718,Dixie Toga Nordeste S.A.,Brazil,100.0
+11199-0001104659-06-016718,Impressora Paranaense S.A.,Brazil,100.0
+11199-0001104659-06-016718,Insit Embalagens Ltda.,Brazil,90.0
+11199-0001104659-06-016718,Itap Bemis Ltda.,Brazil,55.0
+11199-0001104659-06-016718,Itap Bemis Centro Oeste-Industria e Comércio de Embalagens Ltda.,Brazil,100.0
+11199-0001104659-06-016718,Curwood Chile Ltda.,Chile,100.0
+11199-0001104659-06-016718,Laminor S.A.,Brazil,50.0
+11199-0001104659-06-016718,M&W Toga Industria e Comércio S.A.,Brazil,60.0
+11199-0001104659-06-016718,Morgan Adhesives Company,Ohio,100.0
+11199-0001104659-06-016718,Bemis Coordination Center S.A.,Belgium,33.0
+11199-0001104659-06-016718,Bemis U.K. Limited,United Kingdom,50.0
+11199-0001104659-06-016718,MACtac U.K. Limited,United Kingdom,100.0
+11199-0001104659-06-016718,"Electronic Printing Products, Inc.",Ohio,100.0
+11199-0001104659-06-016718,Enterprise Software Inc.,Ohio,100.0
+11199-0001104659-06-016718,"MACtac Engineered Products, Inc.",Ohio,100.0
+11199-0001104659-06-016718,MACtac Europe S.A.,Belgium,89.0
+11199-0001104659-06-016718,Bemis Coordination Center S.A.,Belgium,67.0
+11199-0001104659-06-016718,Bemis Polska Sp. z o.o.,Poland,100.0
+11199-0001104659-06-016718,MACtac Asia-Pacific Self-Adhesive Products Pte Ltd.,Singapore,100.0
+11199-0001104659-06-016718,MACtac Deutschland GmbH,Germany,100.0
+11199-0001104659-06-016718,MACtac France E.U.R.L.,France,100.0
+11199-0001104659-06-016718,Multi-Fix N.V.,Belgium,100.0
+11199-0001104659-06-016718,MACtac Scandinavia A.B.,Sweden,100.0
+11199-0001104659-06-016718,MACtac Canada Limited/Limitee,Canada,100.0
+11199-0001104659-06-016718,MACtac Europe S.A.,Belgium,11.0
+11199-0001104659-06-016718,MACtac A.G.,Switzerland,100.0
+11199-0001104659-06-016718,"MACtac Mexico, S.A. de C.V.",Mexico,51.0
+11199-0001104659-06-016718,"MACtac Mexico Servicios, S.A. de C.V.",Mexico,51.0
+11199-0001104659-06-016718,"Morgan Adhesives America do Sul, Ltda.",Brazil,100.0
+11199-0001104659-06-016718,Paramount Packaging Corporation,Delaware,100.0
+11199-0001104659-06-016718,Bemis Elsham Limited,United Kingdom,100.0
+11199-0001104659-06-016718,"Bemis Shelbyville, Inc.",Tennessee,100.0
+11199-0001104659-06-016718,"Bemis Longview, Inc.",Texas,100.0
+11199-0001104659-06-016718,"PPC Royalty, Inc.",Delaware,100.0
+11199-0001104659-06-016718,"Pervel Industries, Inc.",Delaware,100.0
+29644-0001628280-16-019746,"Aerospace Filtration Systems, Inc.","Chesterfield, MO USA",
+29644-0001628280-16-019746,ASHC LLC,"Minneapolis, MN USA",
+29644-0001628280-16-019746,DLX Capital S.a.r.l.,"Luxembourg City, Luxembourg",
+29644-0001628280-16-019746,DLX USD FIN CO. S.a.r.l.,"Luxembourg City, Luxembourg",
+29644-0001628280-16-019746,"Donaldson (China) Holding Co., Ltd","Shanghai, China",
+29644-0001628280-16-019746,"Donaldson (China) Trading Co., Ltd","Wuxi, China",
+29644-0001628280-16-019746,Donaldson (Thailand) Ltd.,"Rayong, Thailand",
+29644-0001628280-16-019746,"Donaldson (Wuxi) Filters Co., Ltd.","Wuxi, China",
+29644-0001628280-16-019746,Donaldson (Xuzhou) Filters Co. Ltd.,"Xuzhou, China",
+29644-0001628280-16-019746,Donaldson Australasia Pty. Ltd,"Wyong, Australia",
+29644-0001628280-16-019746,"Donaldson Belgie, b.v.b.a.","Leuven, Belgium",
+29644-0001628280-16-019746,"Donaldson Canada, Inc","Brockville, Ontario, Canada",
+29644-0001628280-16-019746,"Donaldson Capital, Inc.","Minneapolis, MN USA",
+29644-0001628280-16-019746,"Donaldson Chile, Ltd.","Santiago, Chile",
+29644-0001628280-16-019746,Donaldson Columbia S.A.S.,"Bogotá, Columbia",
+29644-0001628280-16-019746,Donaldson Czech Republic s.r.o,"Klasterec nad Ohri, Czech Republic",
+29644-0001628280-16-019746,Donaldson do Brasil Equipamentos Industriais Ltda,"Atibaia, São Paulo, Brazil",
+29644-0001628280-16-019746,"Donaldson Europe, b.v.b.a.","Leuven, Belgium",
+29644-0001628280-16-019746,Donaldson Far East Ltd.,"Hong Kong, S.A.R., China",
+29644-0001628280-16-019746,Donaldson Filter Components Ltd.,"Hull, United Kingdom",
+29644-0001628280-16-019746,Donaldson Filtration (Asia Pacific) Pte. Ltd.,"Changi, Singapore",
+29644-0001628280-16-019746,Donaldson Filtration (GB) Ltd.,"Leicester, United Kingdom",
+29644-0001628280-16-019746,Donaldson Filtration (Malaysia) Sdn. Bhd.,"Selangor Darul Ehsan, Malaysia",
+29644-0001628280-16-019746,Donaldson Filtration (Thailand) Ltd.,"Nonthaburi, Thailand",
+29644-0001628280-16-019746,Donaldson Filtration Deutschland GmbH,"Haan, Germany",
+29644-0001628280-16-019746,Donaldson Filtration Magyarorszag Kft,"Budapest, Hungary",
+29644-0001628280-16-019746,Donaldson Filtration Norway a.s.,"Moss, Norway",
+29644-0001628280-16-019746,"Donaldson Filtration Österreich, GmbH","Vienna, Austria",
+29644-0001628280-16-019746,Donaldson Filtration Slovensko s.r.o.,"Bratislava, Slovakia",
+29644-0001628280-16-019746,Donaldson Filtration Systems (Pty) Ltd.,"Cape Town, South Africa",
+29644-0001628280-16-019746,Donaldson Filtre Sistemleri,"Istanbul, Turkey",
+29644-0001628280-16-019746,"Donaldson France, s.a.s.","Paris, France",
+29644-0001628280-16-019746,Donaldson Ibèrica Soluciones,"Barcelona, Spain",
+29644-0001628280-16-019746,Donaldson India Filter Systems Pvt. Ltd.,"New Delhi, India",
+29644-0001628280-16-019746,Donaldson Industrial CR - Konzern s.r.o.,"Kadan, Czech Republic",
+29644-0001628280-16-019746,Donaldson Italia s.r.l.,"Ostiglia, Italy",
+29644-0001628280-16-019746,"Donaldson Korea Co., Ltd.","Seoul, South Korea",
+29644-0001628280-16-019746,Donaldson Luxembourg S.a.r.l,"Luxembourg City, Luxembourg",
+29644-0001628280-16-019746,Donaldson Nederland B.V.,"Almere, Netherlands",
+29644-0001628280-16-019746,Donaldson Overseas Holding S.a.r.l.,"Luxembourg City, Luxembourg",
+29644-0001628280-16-019746,Donaldson Peru SAC,"Lima, Peru",
+29644-0001628280-16-019746,Donaldson Polska Sp. z.o.o.,"Warsaw, Poland",
+29644-0001628280-16-019746,Donaldson Scandinavia a.p.s.,"Hørsholm, Denmark",
+29644-0001628280-16-019746,Donaldson Schweiz GmbH,"Zurich, Switzerland",
+29644-0001628280-16-019746,Donaldson Taiwan Ltd.,"Taipei, Taiwan",
+29644-0001628280-16-019746,Donaldson UK Holding Ltd.,"Hull, United Kingdom",
+29644-0001628280-16-019746,"Donaldson, S.A. de C.V.","Aguascalientes, Mexico",
+29644-0001628280-16-019746,"Donaldson, s.a.s.","Domjean, France",
+29644-0001628280-16-019746,"Le Bozec Filtration et Systèmes, s.a.s.","Paris, France",
+29644-0001628280-16-019746,Filtros Partmo S.A.S.,"Bogotá, Columbia",
+29644-0001628280-16-019746,Nippon Donaldson Ltd.,"Tachikawa, Tokyo, Japan",
+29644-0001628280-16-019746,"Northern Technical, L.L.C.","Abu Dhabi, United Arab Emirates",
+29644-0001628280-16-019746,P.T. Donaldson Filtration Indonesia,"Jakarta, Indonesia",
+29644-0001628280-16-019746,"Prestadora de Servicios Aguascalientes, S. de R.L. de C.V.","Aguascalientes, Mexico",
+29644-0001628280-16-019746,Ultrafilter s.a.s.,"Vigny, France",
+29644-0001628280-16-019746,Advanced Filtration Systems Inc.,"Champaign, IL USA",
+29644-0001628280-16-019746,AFSI Europe s.r.o.,"Most, Czech Republic",
+29644-0001628280-16-019746,"IFIL.USA, L.L.C.","Harrisonville, MO USA",
+29644-0001628280-16-019746,P.T. Panata Jaya Mandiri,"Jakarta, Indonesia",
+29644-0001628280-16-019746,Rashed Al-Rashed & Sons - Donaldson Company Ltd.,"Dammam, Saudi Arabia",
+38723-0000038723-09-000029,"Franklin Securities, Inc.",Georgia,
+38723-0000038723-09-000029,Frandisco Property and Casualty Insurance Company,Georgia,
+38723-0000038723-09-000029,Frandisco Life Insurance Company,Georgia,
+38723-0000038723-09-000029,"T&T, Inc.",Georgia,
+320340-0000950123-10-027168,ChemFree Corporation,Georgia,
+320340-0000950123-10-027168,"CoreCard Software, Inc.",Delaware,
+320340-0000950123-10-027168,CoreCard SRL,Romania,
+320340-0000950123-10-027168,ISC Software Pvt. Ltd.,India,
+716646-0000950135-06-004150,Clinical Data BV,The Netherlands,
+716646-0000950135-06-004150,Clinical Data Incorporated,Massachusetts,
+716646-0000950135-06-004150,"Clinical Data Sales & Service, Inc.",Delaware,
+716646-0000950135-06-004150,Electa Lab s.r.l.,Italy,
+716646-0000950135-06-004150,"Genaissance Pharmaceuticals, Inc.",Delaware,
+716646-0000950135-06-004150,Genome Express S.A.,France,
+716646-0000950135-06-004150,"GPSI Acquisition, Inc.",Delaware,
+716646-0000950135-06-004150,"Icoria, Inc.",Delaware,
+716646-0000950135-06-004150,"Lark Technologies, Inc.",Delaware,
+716646-0000950135-06-004150,NovaChem BV,The Netherlands,
+716646-0000950135-06-004150,Spectronetics NV,"Curaçao, Netherlands Antilles",
+716646-0000950135-06-004150,Vital Scientific NV,The Netherlands,
+716646-0000950135-06-004150,Vital Diagnostics Pty. Ltd.,Australia,
+716646-0000950135-06-004150,Vital Diagnostics Ltd,New Zealand,
+719402-0001193125-14-113892,"First Bank, Inc.",Virginia,
+719402-0001193125-14-113892,"First Bank Financial Services, Inc.",Virginia,
+719402-0001193125-14-113892,"Shen-Valley Land Holdings, LLC",Virginia,
+719402-0001193125-14-113892,First National (VA) Statutory Trust II,Delaware,
+719402-0001193125-14-113892,First National (VA) Statutory Trust III,Delaware,
+749660-0001193125-12-104800,"Xoft, Inc.",Delaware,
+56679-0001193125-16-634657,Korn Ferry International S.A.,Argentina,
+56679-0001193125-16-634657,Korn Ferry Futurestep Argentina S.R.L.,Argentina,
+56679-0001193125-16-634657,Korn/Ferry International Pty Limited,Australia,
+56679-0001193125-16-634657,Futurestep (Australia) Pty Ltd,Australia,
+56679-0001193125-16-634657,Korn/Ferry International GmbH,Austria,
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (Belgium) BVBA,Belgium,
+56679-0001193125-16-634657,"Personnel Decisions International Belgium, BVBA",Belgium,
+56679-0001193125-16-634657,Korn/Ferry International Consultoria Ltda.,Brazil,
+56679-0001193125-16-634657,"Korn/Ferry Canada, Inc.",Canada,
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (Canada) Inc.,Canada,
+56679-0001193125-16-634657,Korn/Ferry International S.A.,Chile,
+56679-0001193125-16-634657,Korn/Ferry International Human Capital Consulting (Beijing) Limited,"Beijing, China",
+56679-0001193125-16-634657,Guangzhou Korn/Ferry Human Capital Company Ltd.,"Guangzhou, China",
+56679-0001193125-16-634657,"Korn/Ferry (Shanghai) Human Capital Consulting Co., Ltd.","Shanghai, China",
+56679-0001193125-16-634657,PuDe Management Consulting Co. Ltd.,"Shanghai, China",
+56679-0001193125-16-634657,Futurestep (Shanghai) Talent Consulting Company Limited,China,
+56679-0001193125-16-634657,Korn/Ferry International — Colombia,Colombia,
+56679-0001193125-16-634657,Korn/Ferry International A/S,Denmark,
+56679-0001193125-16-634657,Korn/Ferry International SAS,France,
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (France) SARL,France,
+56679-0001193125-16-634657,Personnel Decisions International France SAS,France,
+56679-0001193125-16-634657,Korn/Ferry International GmbH,Germany,
+56679-0001193125-16-634657,Futurestep Germany GmbH,Germany,
+56679-0001193125-16-634657,Korn/Ferry International SA,Greece,
+56679-0001193125-16-634657,Korn/Ferry International (H.K.) Limited,Hong Kong,
+56679-0001193125-16-634657,Futurestep (Hong Kong) Ltd.,Hong Kong,
+56679-0001193125-16-634657,Korn/Ferry International Budapest Personnel Consulting and Service Ltd.,Hungary,
+56679-0001193125-16-634657,"PDI Hungary, Kft.",Hungary,
+56679-0001193125-16-634657,Korn/Ferry International Private Limited,India,
+56679-0001193125-16-634657,Futurestep Recruitment Services Private Limited.,India,
+56679-0001193125-16-634657,Personnel Decisions International India Pvt. Limited,India,
+56679-0001193125-16-634657,PT. Korn/Ferry International,Indonesia,
+56679-0001193125-16-634657,Korn/Ferry International S.R.L.,Italy,
+56679-0001193125-16-634657,Futurestep (Italia) S.r.l.,Italy,
+56679-0001193125-16-634657,Nihon Korn/Ferry International K.K.,Japan,
+56679-0001193125-16-634657,Futurestep (Japan) K.K.,Japan,
+56679-0001193125-16-634657,Korn Ferry Consulting — Japan,Japan,
+56679-0001193125-16-634657,Korn/Ferry International (Korea) Limited,Korea,
+56679-0001193125-16-634657,Agensi Pekerjaan Futurestep Worldwide (M) Sdn. Bhd.,Malaysia,
+56679-0001193125-16-634657,Korn/Ferry International (M) Sdn. Bhd.,Malaysia,
+56679-0001193125-16-634657,Korn/Ferry Investment India Limited (Mauritius OCB),Mauritius,
+56679-0001193125-16-634657,Korn/Ferry Mexico S.C.,Mexico,
+56679-0001193125-16-634657,Korn Ferry International B.V.,Netherlands,
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (Holdings) B.V.,Netherlands,
+56679-0001193125-16-634657,Korn Ferry International NZ Limited,New Zealand,
+56679-0001193125-16-634657,Futurestep (New Zealand) Ltd.,New Zealand,
+56679-0001193125-16-634657,Korn/Ferry International A/S,Norway,
+56679-0001193125-16-634657,Korn/Ferry International — Peru S.A.,Peru,
+56679-0001193125-16-634657,Korn/Ferry International Sp.z.o.o.,Poland,
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (POLSKA) Sp.z.o.o.,Poland,
+56679-0001193125-16-634657,Korn/Ferry International Pte. Ltd.,Singapore,
+56679-0001193125-16-634657,Futurestep (Singapore) Pte Limited,Singapore,
+56679-0001193125-16-634657,"PDI Slovensko, sro",Slovakia,
+56679-0001193125-16-634657,Korn/Ferry International S.A.,Spain,
+56679-0001193125-16-634657,"Futurestep (Espana), S.L.",Spain,
+56679-0001193125-16-634657,Korn/Ferry International AB,Sweden,
+56679-0001193125-16-634657,Personnel Decisions International Scandinavia A.B.,Sweden,
+56679-0001193125-16-634657,Korn-Ferry (Schweiz) AG,Switzerland,
+56679-0001193125-16-634657,Korn/Ferry International (Taiwan) Co. Limited,Taiwan,
+56679-0001193125-16-634657,Korn/Ferry International Musavirlik Limited Sirketi,Turkey,
+56679-0001193125-16-634657,Futurestep (UK) Limited,United Kingdom,
+56679-0001193125-16-634657,Korn/Ferry International Limited,United Kingdom,
+56679-0001193125-16-634657,KFI (UK) Limited,United Kingdom,
+56679-0001193125-16-634657,The Whitehead Mann Partnership LLP,United Kingdom,
+56679-0001193125-16-634657,Whitehead Mann Limited,United Kingdom,
+56679-0001193125-16-634657,"Personnel Decisions International, Europe Limited",United Kingdom,
+56679-0001193125-16-634657,Personnel Decisions International UK Ltd,United Kingdom,
+56679-0001193125-16-634657,Korn Ferry Global Holdings (UK) Limited,United Kingdom,
+56679-0001193125-16-634657,Korn Ferry GH1 Limited,United Kingdom,
+56679-0001193125-16-634657,"Pivot Learning, Limited",United Kingdom,
+56679-0001193125-16-634657,Continental American Management Corp.,"United States, California",
+56679-0001193125-16-634657,Korn/Ferry International Holding India,"United States, California",
+56679-0001193125-16-634657,"Korn/Ferry International Futurestep, Inc.","United States, Delaware",
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (Holdings) Inc.,"United States, Delaware",
+56679-0001193125-16-634657,"Korn/Ferry International Worldwide, Inc.","United States, Delaware",
+56679-0001193125-16-634657,"K/FI Canada Holdings, LLC","United States, Delaware",
+56679-0001193125-16-634657,Korn Ferry Leadership Consulting Corporation,"United States, Delaware",
+56679-0001193125-16-634657,"Ninth House, Inc.","United States, Delaware",
+56679-0001193125-16-634657,"Korn Ferry Global Holdings, Inc.","United States, Delaware",
+56679-0001193125-16-634657,Personnel Decisions International Greater China Corporation,"United States, Minnesota",
+56679-0001193125-16-634657,Personnel Decisions International Singapore Corporation,"United States, Minnesota",
+56679-0001193125-16-634657,"Sensa Solutions, Inc.","United States, Virginia",
+56679-0001193125-16-634657,"Korn/Ferry International Consultores Asociados, C.A.",Venezuela,
+56679-0001193125-16-634657,"Hay Group Holdings, Inc.","United States, Delaware",
+56679-0001193125-16-634657,"Hay Group International, Inc.","United States, Delaware",
+56679-0001193125-16-634657,"Hay Group, Inc.","United States, Delaware",
+56679-0001193125-16-634657,"Hay Group Management, Inc.","United States, Delaware",
+56679-0001193125-16-634657,Hay Group Limited,Canada,
+56679-0001193125-16-634657,Hay Group N.V./S.A.,Belgium,
+56679-0001193125-16-634657,Hay Group Czech s.r.o.,Czech Republic,
+56679-0001193125-16-634657,Hay Group Oy,Finland,
+56679-0001193125-16-634657,Hay Group S.A.,France,
+56679-0001193125-16-634657,Hay France S.A.,France,
+56679-0001193125-16-634657,Hay Group GmbH,Germany,
+56679-0001193125-16-634657,Hay Group S.A.,Greece,
+56679-0001193125-16-634657,Hay Group Management Consultants Ltd.,Hungary,
+56679-0001193125-16-634657,Hay Group (Ireland) Limited,Ireland,
+56679-0001193125-16-634657,Hay Management Consultants Ireland Ltd.,Ireland,
+56679-0001193125-16-634657,Hay Group S.r.l.,Italy,
+56679-0001193125-16-634657,Hay Group UAB,Lithuania,
+56679-0001193125-16-634657,HG (Luxembourg) S.a.r.l.,Luxembourg,
+56679-0001193125-16-634657,Talent Q International Ltd.,Malta,
+56679-0001193125-16-634657,Talent Q Distribution Ltd.,Malta,
+56679-0001193125-16-634657,Hay Group B.V.,Netherlands,
+56679-0001193125-16-634657,Hay Group Investment Holding B.V.,Netherlands,
+56679-0001193125-16-634657,Hay Management International B.V.,Netherlands,
+56679-0001193125-16-634657,Hay Group Partners Holding B.V.,Netherlands,
+56679-0001193125-16-634657,Hay Group AS,Norway,
+56679-0001193125-16-634657,Hay Group Sp.Z o.o,Poland,
+56679-0001193125-16-634657,Hay Group S.A.,Portugal,
+56679-0001193125-16-634657,Hay Group LLC,Qatar,
+56679-0001193125-16-634657,Hay Group Management Consultants SRL,Romania,
+56679-0001193125-16-634657,OOO Hay Group (Hay Group Ltd.),Russia,
+56679-0001193125-16-634657,Hay Group Saudi Arabia Ltd.,Saudi Arabia,
+56679-0001193125-16-634657,Hay Group s.r.o.,Slovakia,
+56679-0001193125-16-634657,Hay Group South Africa (Pty) Ltd.,South Africa,
+56679-0001193125-16-634657,Hay Group S.A.,Spain,
+56679-0001193125-16-634657,Hay Group AB,Sweden,
+56679-0001193125-16-634657,Hay Group Danismanlik Limited Sirketi,Turkey,
+56679-0001193125-16-634657,Hay Group LLC,Ukraine,
+56679-0001193125-16-634657,The Hay Group Management Limited,United Kingdom,
+56679-0001193125-16-634657,Hay Group UK Holdings Limited,United Kingdom,
+56679-0001193125-16-634657,Hay Group Intermediary Limited,United Kingdom,
+56679-0001193125-16-634657,Talent Q Services Limited,United Kingdom,
+56679-0001193125-16-634657,Talent Q Limited,United Kingdom,
+56679-0001193125-16-634657,Hay Group Pty. Limited,Australia,
+56679-0001193125-16-634657,"Hay Group Co., (Shanghai) Ltd.",China,
+56679-0001193125-16-634657,Hay Group Limited,Hong Kong,
+56679-0001193125-16-634657,Hay Group Asia Limited,Hong Kong,
+56679-0001193125-16-634657,Hay Consultants India Private Ltd.,India,
+56679-0001193125-16-634657,Talent Q India Private Ltd.,India,
+56679-0001193125-16-634657,PT Hay Group,Indonesia,
+56679-0001193125-16-634657,"Hay Group (Japan), Ltd.",Japan,
+56679-0001193125-16-634657,Hay Group Sdn. Bhd.,Malaysia,
+56679-0001193125-16-634657,Hay Group Limited,New Zealand,
+56679-0001193125-16-634657,Hay Group Pte Ltd.,Singapore,
+56679-0001193125-16-634657,Hay Group Ltd.,South Korea,
+56679-0001193125-16-634657,Hay Group Limited,Thailand,
+56679-0001193125-16-634657,Hay Group Consulting Limited Liability,Vietnam,
+56679-0001193125-16-634657,Hay Argentina S.A.,Argentina,
+56679-0001193125-16-634657,Hay do Brasil Consultores Ltda.,Brazil,
+56679-0001193125-16-634657,Hay GroupLimitada,Chile,
+56679-0001193125-16-634657,Hay Group Ltda,Colombia,
+56679-0001193125-16-634657,"Hay Group, S.R.L.",Costa Rica,
+56679-0001193125-16-634657,Hay Financial Corporation N.V.,Curacao,
+56679-0001193125-16-634657,Hay Group S.A. de C.V.,Mexico,
+56679-0001193125-16-634657,Hay Group S.A.,Peru,
+56679-0001193125-16-634657,"Hay Group Venezuela, S.A.",Venezuela,
+56679-0001193125-16-634657,Hay Management Consultants Limited,Bermuda,
+56679-0001193125-16-634657,HG (Bermuda) Holding Limited,Bermuda,
+56679-0001193125-16-634657,Korn Ferry GP Ventures LLC,"United States, Delaware",
+56679-0001193125-16-634657,Korn Ferry Global Ventures LP,United Kingdom,
+56679-0001193125-16-634657,Korn/Ferry International Futurestep (the Netherlands) BV,Netherlands,
+75829-0001206774-11-002167,Medsep Corporation,Delaware,
+75829-0001206774-11-002167,Pall Acquisition LLC,Delaware,
+75829-0001206774-11-002167,Pall Aeropower Corporation,Delaware,
+75829-0001206774-11-002167,"Pall Biomedical, Inc.",Delaware,
+75829-0001206774-11-002167,Pall Industrial Membranes LLC,Delaware,
+75829-0001206774-11-002167,"Pall Life Sciences Puerto Rico, LLC",Puerto Rico,
+75829-0001206774-11-002167,"Pall – PASS US, LLC",Delaware,
+75829-0001206774-11-002167,Russell Associates Inc.,Maryland,
+75829-0001206774-11-002167,"Gelman Sciences, Inc.",Michigan,
+75829-0001206774-11-002167,Pall Austria Filter GesmbH,Austria,
+75829-0001206774-11-002167,Pall (Canada) Limited,Canada,
+75829-0001206774-11-002167,Pall Do Brasil,Brazil,
+75829-0001206774-11-002167,Pall Europe Limited,England,
+75829-0001206774-11-002167,Pall France S.A.S.,France,
+75829-0001206774-11-002167,Pall Deutschland Beteiligungs GmbH,Germany,
+75829-0001206774-11-002167,Pall Deutschland Holding GmbH & Co. KG Partnership (c),Germany,
+75829-0001206774-11-002167,Pall Italia S.R.L.,Italy,
+75829-0001206774-11-002167,Pall Manufacturing UK Limited,England,
+75829-0001206774-11-002167,Gelman Ireland Ltd.,Ireland,
+75829-0001206774-11-002167,Pall Netherlands B.V.,The Netherlands,
+75829-0001206774-11-002167,PLLN C.V. Partnership,The Netherlands,
+75829-0001206774-11-002167,Pall Norge AS,Norway,
+75829-0001206774-11-002167,Pall Espana S.A.U.,Spain,
+75829-0001206774-11-002167,Pall Norden AB,Sweden,
+75829-0001206774-11-002167,Pall (Schweiz) A.G.,Switzerland,
+75829-0001206774-11-002167,Argentaurum A.G.,Switzerland,
+75829-0001206774-11-002167,Pall Asia International Ltd.,Hong Kong,
+75829-0001206774-11-002167,Pall India Private Ltd.,India,
+75829-0001206774-11-002167,PT Pall Filtration Indonesia,Indonesia,
+75829-0001206774-11-002167,Nihon Pall Ltd.,Japan,
+75829-0001206774-11-002167,Pall New Zealand Limited,New Zealand,
+75829-0001206774-11-002167,Pall Filtration Pte. Ltd.,Singapore,
+75829-0001206774-11-002167,Pall Singapore Taiwan Branch Holding Company Pte. Ltd.,Singapore,
+75829-0001206774-11-002167,Pall Korea Ltd.,South Korea,
+75829-0001206774-11-002167,Pall Corporation Filtration and Separations (Thailand) Ltd.,Thailand,
+75829-0001206774-11-002167,Pall Australia Pty LTD,Australia,
+89800-0000089800-18-000004,"Acquire Sourcing, LLC",DE,
+89800-0000089800-18-000004,"Comex North America, Inc.",DE,
+89800-0000089800-18-000004,Contract Transportation Systems Co.,DE,
+89800-0000089800-18-000004,CTS National Corporation,DE,
+89800-0000089800-18-000004,Omega Specialty Products & Services LLC,OH,
+89800-0000089800-18-000004,"Plasti-Kote Co., Inc.",OH,
+89800-0000089800-18-000004,"Sherwin-Williams Realty Holdings, Inc.",IL,
+89800-0000089800-18-000004,SWIMC LLC,DE,
+89800-0000089800-18-000004,The Sherwin-Williams Acceptance Corporation,NV,
+89800-0000089800-18-000004,The Sherwin-Williams Headquarters Company,OH,
+89800-0000089800-18-000004,The Sherwin-Williams Manufacturing Company,OH,
+89800-0000089800-18-000004,The Sherwin-Williams US Licensing Company,DE,
+89800-0000089800-18-000004,"Valspar Specialty Paints, LLC",DE,
+89800-0000089800-18-000004,"Compania Sherwin-Williams, S.A. de C.V.",Mexico,
+89800-0000089800-18-000004,Deep Pride Limited,Ireland,
+89800-0000089800-18-000004,Dongguan Lilly Paint Industries Ltd,China,
+89800-0000089800-18-000004,EPS B.V.,Netherlands,
+89800-0000089800-18-000004,EPS Polidrox Industria e Comercio de Resinas Ltda,Brazil,
+89800-0000089800-18-000004,"EPS (Shanghai) Trading Co., Ltd.",China,
+89800-0000089800-18-000004,Geocel Limited,UK,
+89800-0000089800-18-000004,Guangdong Valspar Paints Manufacturing Co Ltd.,China,
+89800-0000089800-18-000004,Guangdong Yuegang Dadi Paints Company Limited,China,
+89800-0000089800-18-000004,Guardsman Australia Pty Limited,Australia,
+89800-0000089800-18-000004,Guardsman Industries Limited,UK,
+89800-0000089800-18-000004,Invercolor Bologna Srl,Italy,
+89800-0000089800-18-000004,Invercolor Ltd,UK,
+89800-0000089800-18-000004,Invercolor Roma Srl,Italy,
+89800-0000089800-18-000004,Invercolor Torino Srl,Italy,
+89800-0000089800-18-000004,Invercolor Toscana Srl,Italy,
+89800-0000089800-18-000004,Inver East Med S.A.,Greece,
+89800-0000089800-18-000004,Inver France SAS,France,
+89800-0000089800-18-000004,Inver GmbH,Germany,
+89800-0000089800-18-000004,Inver Industrial Coating SRL,Romania,
+89800-0000089800-18-000004,Inver Polska Spóika Z O.O,Poland,
+89800-0000089800-18-000004,Inver Spa,Italy,
+89800-0000089800-18-000004,Isocoat Tintas e Vernizes Ltda,Brazil,
+89800-0000089800-18-000004,Isva Vernici Srl,Italy,
+89800-0000089800-18-000004,"Jiangsu Pulanna Coating Co., Ltd.",China,
+89800-0000089800-18-000004,Oy Sherwin-Williams Finland Ab,Finland,
+89800-0000089800-18-000004,Pinturas Condor S.A.,Ecuador,
+89800-0000089800-18-000004,Pinturas Industriales S.A.,Uruguay,
+89800-0000089800-18-000004,Plasti-kote Limited,UK,
+89800-0000089800-18-000004,"Productos Quimicos y Pinturas, S.A. de C.V.",Mexico,
+89800-0000089800-18-000004,PT Sherwin-Williams Indonesia,Indonesia,
+89800-0000089800-18-000004,PT Valspar Indonesia,Indonesia,
+89800-0000089800-18-000004,Quest Automotive Products UK Limited,UK,
+89800-0000089800-18-000004,"Quetzal Pinturas, S.A. de C.V.",Mexico,
+89800-0000089800-18-000004,Resin Surfaces Limited,UK,
+89800-0000089800-18-000004,Ronseal (Ireland) Limited,Ireland,
+89800-0000089800-18-000004,Sherwin-Williams Argentina I.y C.S.A.,Argentina,
+89800-0000089800-18-000004,Sherwin-Williams Aruba VBA,Aruba,
+89800-0000089800-18-000004,Sherwin-Williams (Australia) Pty. Ltd.,AU,
+89800-0000089800-18-000004,Sherwin-Williams Automotive Mexico S.de R.L.de C.V.,Mexico,
+89800-0000089800-18-000004,Sherwin-Williams Balkan S.R.L.,Romania,
+89800-0000089800-18-000004,Sherwin-Williams Bel,Belarus,
+89800-0000089800-18-000004,Sherwin-Williams (Belize) Limited,Belize,
+89800-0000089800-18-000004,Sherwin-Williams Benelux NV,Belgium,
+89800-0000089800-18-000004,Sherwin-Williams Canada Inc.,Canada,
+89800-0000089800-18-000004,Sherwin-Williams (Caribbean) N.V.,Curacao,
+89800-0000089800-18-000004,Sherwin-Williams Cayman Islands Limited,Grand Cayman,
+89800-0000089800-18-000004,Sherwin-Williams Chile S.A.,Chile,
+89800-0000089800-18-000004,Sherwin-Williams Coatings India Private Limited,India,
+89800-0000089800-18-000004,Sherwin-Williams Coatings S.a r.l.,Luxembourg,
+89800-0000089800-18-000004,Sherwin Williams Colombia S.A.S.,Columbia,
+89800-0000089800-18-000004,Sherwin-Williams Czech Republic spol. s r.o,Czech Republic,
+89800-0000089800-18-000004,Sherwin-Williams Denmark A/S,Denmark,
+89800-0000089800-18-000004,Sherwin-Williams Deutschland GmbH,Germany,
+89800-0000089800-18-000004,Sherwin-Williams Diversified Brands (Australia) Pty Ltd,Australia,
+89800-0000089800-18-000004,Sherwin-Williams Diversified Brands Limited,UK,
+89800-0000089800-18-000004,Sherwin-Williams do Brasil Industria e Comercio Ltda.,Brazil,
+89800-0000089800-18-000004,Sherwin-Williams France Finishes SAS,France,
+89800-0000089800-18-000004,Sherwin-Williams (Ireland) Limited,Ireland,
+89800-0000089800-18-000004,Sherwin-Williams Italy S.r.l.,Italy,
+89800-0000089800-18-000004,Sherwin-Williams Luxembourg Investment Management Company S.a r.l.,Luxembourg,
+89800-0000089800-18-000004,Sherwin-Williams (Malaysia) Sdn. Bhd.,Malaysia,
+89800-0000089800-18-000004,Sherwin-Williams (Nantong) Company Limited,China,
+89800-0000089800-18-000004,Sherwin-Williams Norway AS,Norway,
+89800-0000089800-18-000004,Sherwin-Williams Paints Limited Liability Company,Russia,
+89800-0000089800-18-000004,Sherwin-Williams Peru S.R.L.,Peru,
+89800-0000089800-18-000004,Sherwin-Williams Pinturas de Venezuela S.A.,Venezuela,
+89800-0000089800-18-000004,Sherwin-Williams Poland Sp. z o.o,Poland,
+89800-0000089800-18-000004,Sherwin-Williams Protective & Marine Coatings,UK,
+89800-0000089800-18-000004,Sherwin-Williams (S) Pte. Ltd.,Singapore,
+89800-0000089800-18-000004,Sherwin-Williams Services (Malaysia) Sdn. Bhd.,Malaysia,
+89800-0000089800-18-000004,Sherwin-Williams (Shanghai) Limited,China,
+89800-0000089800-18-000004,"Sherwin-Williams (South China) Co., Ltd.",China,
+89800-0000089800-18-000004,Sherwin-Williams Spain Coatings S.L.,Spain,
+89800-0000089800-18-000004,Sherwin-Williams Sweden AB,Sweden,
+89800-0000089800-18-000004,"Sherwin-Williams (Thailand) Co., Ltd.",Thailand,
+89800-0000089800-18-000004,Sherwin-Williams Uruguay S.A.,Uruguay,
+89800-0000089800-18-000004,Sherwin-Williams (Vietnam) Limited,Vietnam,
+89800-0000089800-18-000004,Sherwin-Williams (West Indies) Limited,Jamaica,
+89800-0000089800-18-000004,Spanyc Paints Joint Stock Company,Vietnam,
+89800-0000089800-18-000004,SWIPCO – Sherwin Williams do Brasil Propriedade,Brazil,
+89800-0000089800-18-000004,Syntema I Vaggeryd AB,Sweden,
+89800-0000089800-18-000004,"Taiwan Valspar Co., Ltd.",Taiwan,
+89800-0000089800-18-000004,The Valspar (Asia) Corporation Limited,Hong Kong,
+89800-0000089800-18-000004,The Valspar (Australia) Corporation Pty. Ltd.,Australia,
+89800-0000089800-18-000004,The Valspar Corporation Limitada,Brazil,
+89800-0000089800-18-000004,The Valspar (Finland) Corporation Oy,Finland,
+89800-0000089800-18-000004,The Valspar (France) Corporation S.A.S.,France,
+89800-0000089800-18-000004,The Valspar (France) Research Corporation SAS,France,
+89800-0000089800-18-000004,The Valspar (Germany) GmbH,Germany,
+89800-0000089800-18-000004,The Valspar (Malaysia) Corporation Sdn Bhd,Malaysia,
+89800-0000089800-18-000004,The Valspar (Nantes) Corporation S.A.S.,France,
+89800-0000089800-18-000004,The Valspar (Singapore) Corporation Pte. Ltd,Singapore,
+89800-0000089800-18-000004,The Valspar (South Africa) Corporation (Pty) Ltd,South Africa,
+89800-0000089800-18-000004,The Valspar (Spain) Corporation S.R.L.,Spain,
+89800-0000089800-18-000004,The Valspar (Switzerland) Corporation AG,Switzerland,
+89800-0000089800-18-000004,The Valspar (Thailand) Corporation Ltd.,Thailand,
+89800-0000089800-18-000004,The Valspar (UK) Corporation Limited,UK,
+89800-0000089800-18-000004,The Valspar (Vietnam) Corporation Ltd.,Vietnam,
+89800-0000089800-18-000004,TOB Becker Acroma Ukraine,Ukraine,
+89800-0000089800-18-000004,UAB Sherwin-Williams Baltic,Lithuania,
+89800-0000089800-18-000004,"Valspar Aries Coatings, S. de R.L. de C.V.",Mexico,
+89800-0000089800-18-000004,Valspar Automotive Australia Pty Limited,Australia,
+89800-0000089800-18-000004,Valspar Automotive (UK) Corporation Limited,UK,
+89800-0000089800-18-000004,Valspar B.V.,Netherlands,
+89800-0000089800-18-000004,"Valspar Coatings (Guangdong) Co., Ltd.",China,
+89800-0000089800-18-000004,Valspar Coatings (Shanghai) Co. Ltd.,China,
+89800-0000089800-18-000004,"Valspar Coatings (Tianjin) Co., Ltd",China,
+89800-0000089800-18-000004,Valspar D.o.o Beograd,Serbia,
+89800-0000089800-18-000004,Valspar Inc.,Canada,
+89800-0000089800-18-000004,Valspar (India) Coatings Corporation Private Limited,India,
+89800-0000089800-18-000004,Valspar Industries GmbH,Germany,
+89800-0000089800-18-000004,Valspar Industries (Ireland) Ltd.,Ireland,
+89800-0000089800-18-000004,Valspar Industries (Italy) S.r.l.,Italy,
+89800-0000089800-18-000004,Valspar LLC,Russia,
+89800-0000089800-18-000004,"Valspar Mexicana, S.A. de C.V.",Mexico,
+89800-0000089800-18-000004,Valspar Paint (Australia) Pty Ltd,Australia,
+89800-0000089800-18-000004,Valspar Paint (NZ) Limited,New Zealand,
+89800-0000089800-18-000004,Valspar Powder Coatings Limited,UK,
+89800-0000089800-18-000004,Valspar Rock Company Limited,Japan,
+89800-0000089800-18-000004,"Valspar (Shanghai) Management Co., Ltd.",China,
+89800-0000089800-18-000004,Vantaco Oy,Finland,
+89800-0000089800-18-000004,Valspar (Uruguay) Corporation S.A.,Uruguay,
+89800-0000089800-18-000004,Valspar (WPC) Pty Ltd,Australia,
+89800-0000089800-18-000004,ZAO Sherwin-Williams,Russia,
+799233-0000799233-13-000013,"Heartland Express, Inc.",NV,
+799233-0000799233-13-000013,"A&M Express, Inc.",TN,
+799233-0000799233-13-000013,"Heartland Express, Inc. of Iowa",IA,
+799233-0000799233-13-000013,"Heartland Express Maintenance Services, Inc.",NV,
+799233-0000799233-13-000013,"Heartland Express Services, Inc.",NV,
+804328-0001234452-15-000271,"Qualcomm Technologies, Inc.",Delaware,
+804328-0001234452-15-000271,Qualcomm Global Trading Pte. Ltd.,Singapore,
+804328-0001234452-15-000271,Qualcomm CDMA Technologies Asia-Pacific Pte. Ltd.,Singapore,
+804328-0001234452-15-000271,Qualcomm Asia Pacific Pte. Ltd.,Singapore,
+804328-0001234452-15-000271,"Qualcomm Atheros, Inc.",Delaware,
+804328-0001234452-15-000271,"Qualcomm Technologies International, Ltd.",United Kingdom,
+821127-0000821127-11-000003,Borel Private Bank & Trust Company,California,
+821127-0000821127-11-000003,Boston Private Bank & Trust Company,Massachusetts,
+821127-0000821127-11-000003,Charter Private Bank,Washington,
+821127-0000821127-11-000003,First Private Bank & Trust,California,
+821127-0000821127-11-000003,"Anchor Capital Holdings, LLC",Delaware,
+821127-0000821127-11-000003,"Bingham, Osborn, & Scarborough, LLC",California,
+821127-0000821127-11-000003,"Dalton, Greiner, Hartman, Maher & Co. LLC",Delaware,
+821127-0000821127-11-000003,"KLS Professional Advisors Group, LLC",Delaware,
+821127-0000821127-11-000003,"Davidson Trust Company, LLC",Pennsylvania,
+869495-0001213900-18-002720,Deep Well Oil & Gas (Alberta) Ltd.,"Alberta, Canada",
+869495-0001213900-18-002720,Northern Alberta Oil Ltd.,"Alberta, Canada",
+860546-0001104659-07-015618,"COPT Aerotech, LLC",,
+860546-0001104659-07-015618,"COPT Interquest, LLC",,
+860546-0001104659-07-015618,"COPT Interquest III, LLC",,
+860546-0001104659-07-015618,"COPT Interquest IV, LLC",,
+860546-0001104659-07-015618,"COPT Newport, LLC",,
+860546-0001104659-07-015618,"COPT Newport C, LLC",,
+860546-0001104659-07-015618,"COPT Newport D, LLC",,
+860546-0001104659-07-015618,"COPT Northcreek, LLC",,
+860546-0001104659-07-015618,"COPT Patriot Park at Galley, LLC",,
+860546-0001104659-07-015618,"COPT Patriot Park I, LLC",,
+860546-0001104659-07-015618,"COPT Patriot Park II, LLC",,
+860546-0001104659-07-015618,"Patriot Park, LLC",,
+860546-0001104659-07-015618,"Airport Square Holdings VI and VII, LLC",,
+860546-0001104659-07-015618,"Blue Bell Investment Company, LP",,
+860546-0001104659-07-015618,"COPT Acquisitions, Inc.",,
+860546-0001104659-07-015618,"COPT Colgate General, LLC",,
+860546-0001104659-07-015618,"COPT Concourse, LLC",,
+860546-0001104659-07-015618,"COPT Gateway, LP",,
+860546-0001104659-07-015618,"COPT Gateway Commerce, LLC",,
+860546-0001104659-07-015618,"Corporate Gateway, LP",,
+860546-0001104659-07-015618,"Corporate Office Properties, LP",,
+860546-0001104659-07-015618,"Corporate Office Properties Holdings, Inc.",,
+860546-0001104659-07-015618,"Crown Point, L.L.C.",,
+860546-0001104659-07-015618,"Delaware Airport III, LLC",,
+860546-0001104659-07-015618,"Delaware Airport VIII, LLC",,
+860546-0001104659-07-015618,"Delaware Airport IX, LLC",,
+860546-0001104659-07-015618,"Great Mills I, L.L.C.",,
+860546-0001104659-07-015618,"Great Mills II, L.L.C.",,
+860546-0001104659-07-015618,"Great Mills III, L.L.C.",,
+860546-0001104659-07-015618,"Great Mills IV, L.L.C.",,
+860546-0001104659-07-015618,"Great Mills V, L.L.C.",,
+860546-0001104659-07-015618,"Harrisburg Corporate Gateway Partners, LP",,
+860546-0001104659-07-015618,"Opportunity Invest Ventures, LLC",,
+860546-0001104659-07-015618,"Sterling York, LLC",,
+860546-0001104659-07-015618,"South Brunswick Investors, LP",,
+860546-0001104659-07-015618,"11800 Tech Road, LLC",,
+860546-0001104659-07-015618,"Aerotech Manager, LLC",,
+860546-0001104659-07-015618,"Airport Square, LLC",,
+860546-0001104659-07-015618,"Airport Square II, LLC",,
+860546-0001104659-07-015618,"Airport Square IV, LLC",,
+860546-0001104659-07-015618,"Airport Square V, LLC",,
+860546-0001104659-07-015618,"Airport Square X, LLC",,
+860546-0001104659-07-015618,"Airport Square XI, LLC",,
+860546-0001104659-07-015618,"Airport Square XIII, LLC",,
+860546-0001104659-07-015618,"Airport Square XIV, LLC",,
+860546-0001104659-07-015618,"Airport Square XV, LLC",,
+860546-0001104659-07-015618,"Airport Square XIX, LLC",,
+860546-0001104659-07-015618,"Airport Square XX, LLC",,
+860546-0001104659-07-015618,"Airport Square XX Parking, LLC",,
+860546-0001104659-07-015618,"Airport Square XXI, LLC",,
+860546-0001104659-07-015618,"Airport Square XXII, LLC",,
+860546-0001104659-07-015618,"Airport Square Partners, LLC",,
+860546-0001104659-07-015618,"Airport Square Storms, LLC",,
+860546-0001104659-07-015618,"Ambassador Center, LLC",,
+860546-0001104659-07-015618,"ASI, LLC",,
+860546-0001104659-07-015618,"Atrium Building, LLC",,
+860546-0001104659-07-015618,"Brown’s Wharf, LLC",,
+860546-0001104659-07-015618,Centerpointe Limited Partnership,,
+860546-0001104659-07-015618,"Clarks Hundred, LLC",,
+860546-0001104659-07-015618,"Columbia Gateway S-28, LLC",,
+860546-0001104659-07-015618,"Commons Office Research, LLC",,
+860546-0001104659-07-015618,"Commons Office 6-B, LLC",,
+860546-0001104659-07-015618,"Concourse 1304, LLC",,
+860546-0001104659-07-015618,"COPT Arundel Preserve, LLC",,
+860546-0001104659-07-015618,"COPT Baltimore County I, LLC",,
+860546-0001104659-07-015618,"COPT Baltimore County II, LLC",,
+860546-0001104659-07-015618,"COPT Development & Construction Services, LLC",,
+860546-0001104659-07-015618,COPT Environmental Systems LLC,,
+860546-0001104659-07-015618,"COPT Gate 63, LLC",,
+860546-0001104659-07-015618,"COPT Gate 6700-6708-6724, LLC",,
+860546-0001104659-07-015618,"COPT General, LLC",,
+860546-0001104659-07-015618,"COPT Hunt Valley GP, LLC",,
+860546-0001104659-07-015618,"COPT Montpelier, LLC",,
+860546-0001104659-07-015618,"COPT Opportunity Invest I, LLC",,
+860546-0001104659-07-015618,"COPT Property Management Services, LLC",,
+860546-0001104659-07-015618,"COPT Renovation, LLC",,
+860546-0001104659-07-015618,"COPT Riverwood, LLC",,
+860546-0001104659-07-015618,"COPT T-11, LLC",,
+860546-0001104659-07-015618,"COPT-FD Indian Head, LLC",,
+860546-0001104659-07-015618,"Corporate Development Services, LLC",,
+860546-0001104659-07-015618,"Corporate Gatespring, LLC",,
+860546-0001104659-07-015618,"Corporate Gatespring II, LLC",,
+860546-0001104659-07-015618,"Corporate Office Management, Inc.",,
+860546-0001104659-07-015618,"Corporate Office Services, LLC",,
+860546-0001104659-07-015618,"Corporate Paragon, LLC",,
+860546-0001104659-07-015618,"Corporate Property, LLC",,
+860546-0001104659-07-015618,"Cornucopia Holdings, LLC",,
+860546-0001104659-07-015618,"Cornucopia Holdings II, LLC",,
+860546-0001104659-07-015618,"Enterprise Campus Developer, LLC",,
+860546-0001104659-07-015618,"Fourth Exploration, L.L.C.",,
+860546-0001104659-07-015618,"Fifth Exploration, L.L.C.",,
+860546-0001104659-07-015618,"Ft. Ritchie I, LLC",,
+860546-0001104659-07-015618,"Ft. Ritchie II, LLC",,
+860546-0001104659-07-015618,"Ft. Ritchie III, LLC",,
+860546-0001104659-07-015618,"Ft. Ritchie IV, LLC",,
+860546-0001104659-07-015618,"Ft. Ritchie Holding, LLC",,
+860546-0001104659-07-015618,"Gateway 44, LLC",,
+860546-0001104659-07-015618,"Gateway 67, LLC",,
+860546-0001104659-07-015618,"Gateway 70, LLC",,
+860546-0001104659-07-015618,"Gateway 70 Holdings, LLC",,
+860546-0001104659-07-015618,"Gateway Crossing 95, LLC",,
+860546-0001104659-07-015618,"Governors Court, LLC",,
+860546-0001104659-07-015618,"Governors Court 21, LLC",,
+860546-0001104659-07-015618,"Honeyland 108, LLC",,
+860546-0001104659-07-015618,Hunt Valley 75 Limited Partnership,,
+860546-0001104659-07-015618,"Jolly COPT I, LLC",,
+860546-0001104659-07-015618,"Jolly COPT II, LLC",,
+860546-0001104659-07-015618,"M Square NOAA, LLC",,
+860546-0001104659-07-015618,"MOR Forbes, LLC",,
+860546-0001104659-07-015618,"MOR Forbes 2, LLC",,
+860546-0001104659-07-015618,"NBP One, LLC",,
+860546-0001104659-07-015618,"NBP Huff & Puff, LLC",,
+860546-0001104659-07-015618,"NBP Lot 3-A, LLC",,
+860546-0001104659-07-015618,"NBP Retail, LLC",,
+860546-0001104659-07-015618,"NBP 131-133-141, LLC",,
+860546-0001104659-07-015618,"NBP 132, LLC",,
+860546-0001104659-07-015618,"NBP 134, LLC",,
+860546-0001104659-07-015618,"NBP 135, LLC",,
+860546-0001104659-07-015618,"NBP 140, LLC",,
+860546-0001104659-07-015618,"NBP 191, LLC",,
+860546-0001104659-07-015618,"NBP 201, LLC",,
+860546-0001104659-07-015618,"NBP 201 Holdings, LLC",,
+860546-0001104659-07-015618,"NBP 211, LLC",,
+860546-0001104659-07-015618,"NBP 211 Holdings, LLC",,
+860546-0001104659-07-015618,"NBP 220, LLC",,
+860546-0001104659-07-015618,"NBP 220 Holdings, LLC",,
+860546-0001104659-07-015618,"NBP 221, LLC",,
+860546-0001104659-07-015618,"NBP 302, LLC",,
+860546-0001104659-07-015618,"NBP 304, LLC",,
+860546-0001104659-07-015618,"NBP 306, LLC",,
+860546-0001104659-07-015618,"NBP 318, LLC",,
+860546-0001104659-07-015618,"NBP 320, LLC",,
+860546-0001104659-07-015618,"NBP 322, LLC",,
+860546-0001104659-07-015618,"Northcreek Manager, LLC",,
+860546-0001104659-07-015618,"Pecan Court, L.L.C.",,
+860546-0001104659-07-015618,"Red Cedar Building, LLC",,
+860546-0001104659-07-015618,"RIVA Trustee, LLC",,
+860546-0001104659-07-015618,"Rockville Corporate Center, LLC",,
+860546-0001104659-07-015618,Rutherford 2 Limited Partnership,,
+860546-0001104659-07-015618,"Tech Park I, LLC",,
+860546-0001104659-07-015618,"Tech Park II, LLC",,
+860546-0001104659-07-015618,"Tech Park IV, LLC",,
+860546-0001104659-07-015618,"Third Exploration, L.L.C.",,
+860546-0001104659-07-015618,"67 Financing, LLC",,
+860546-0001104659-07-015618,"110 Thomas Johnson, LLC",,
+860546-0001104659-07-015618,"134, LLC",,
+860546-0001104659-07-015618,201 International Associates Limited Partnership,,
+860546-0001104659-07-015618,"226 Schilling Circle, LLC",,
+860546-0001104659-07-015618,"230 Schilling Circle, LLC",,
+860546-0001104659-07-015618,"304 Sentinel, LLC",,
+860546-0001104659-07-015618,"800 International, LLC",,
+860546-0001104659-07-015618,"849 International, LLC",,
+860546-0001104659-07-015618,"881 Elkridge Landing, LLC",,
+860546-0001104659-07-015618,"900 International, LLC",,
+860546-0001104659-07-015618,"930 International, LLC",,
+860546-0001104659-07-015618,"999 Corporate, LLC",,
+860546-0001104659-07-015618,"1099 Winterson, LLC",,
+860546-0001104659-07-015618,"1190 Winterson, LLC",,
+860546-0001104659-07-015618,"1199 Winterson, LLC",,
+860546-0001104659-07-015618,"1460 Dorsey Road, LLC",,
+860546-0001104659-07-015618,2500 Riva Trust,,
+860546-0001104659-07-015618,"2691 Technology, LLC",,
+860546-0001104659-07-015618,"2900 Lord Baltimore Drive, LLC",,
+860546-0001104659-07-015618,"6700 Alexander Bell, LLC",,
+860546-0001104659-07-015618,"6711 Gateway, LLC",,
+860546-0001104659-07-015618,"6711 Gateway Funding, LLC",,
+860546-0001104659-07-015618,"6721 Gateway, LLC",,
+860546-0001104659-07-015618,"6731 Gateway, LLC",,
+860546-0001104659-07-015618,"6741 Gateway, LLC",,
+860546-0001104659-07-015618,"6940 CGD, LLC",,
+860546-0001104659-07-015618,"7000 CG, LLC",,
+860546-0001104659-07-015618,"7000 Honeys, LLC",,
+860546-0001104659-07-015618,"7015 Albert Einstein Drive, LLC",,
+860546-0001104659-07-015618,"7130 Columbia Gateway, LLC",,
+860546-0001104659-07-015618,"7200 Riverwood, LLC",,
+860546-0001104659-07-015618,"7210 Ambassador Road, LLC",,
+860546-0001104659-07-015618,"7240 Parkway Drive Enterprises, LLC",,
+860546-0001104659-07-015618,"7253 Ambassador Road, LLC",,
+860546-0001104659-07-015618,"7318 Parkway Drive Enterprises, LLC",,
+860546-0001104659-07-015618,"7320 Parkway Drive Enterprises, LLC",,
+860546-0001104659-07-015618,"7320 PD, LLC",,
+860546-0001104659-07-015618,"7321 Parkway Drive Enterprises, LLC",,
+860546-0001104659-07-015618,"7468 Candlewood Road, LLC",,
+860546-0001104659-07-015618,"8621 RFD, LLC",,
+860546-0001104659-07-015618,"8661 RFD, LLC",,
+860546-0001104659-07-015618,"9690 Deereco Road, LLC",,
+860546-0001104659-07-015618,"11011 McCormick Road, LLC",,
+860546-0001104659-07-015618,"11101 McCormick Road, LLC",,
+860546-0001104659-07-015618,"COPT Princeton South, LLC",,
+860546-0001104659-07-015618,"Cuaba Associates, L.L.C.",,
+860546-0001104659-07-015618,"68 Culver, LLC",,
+860546-0001104659-07-015618,Route 46 Partners,,
+860546-0001104659-07-015618,"Route 46 Partners, L.L.C.",,
+860546-0001104659-07-015618,"Bolivar Associates, LLC",,
+860546-0001104659-07-015618,"Colgatedrive Associates, L.P.",,
+860546-0001104659-07-015618,"COPT Pennlyn, L.P.",,
+860546-0001104659-07-015618,"COPT San Antonio General, LLC",,
+860546-0001104659-07-015618,"COPT San Antonio, LP",,
+860546-0001104659-07-015618,"COPT Chantilly, LLC",,
+860546-0001104659-07-015618,"COPT Chantilly II, LLC",,
+860546-0001104659-07-015618,"COPT Dahlgren, LLC",,
+860546-0001104659-07-015618,"COPT Dahlgren I, LLC",,
+860546-0001104659-07-015618,"COPT Dahlgren II, LLC",,
+860546-0001104659-07-015618,"COPT Dahlgren IV, LLC",,
+860546-0001104659-07-015618,"COPT Dahlgren Land, LLC",,
+860546-0001104659-07-015618,"COPT Greens I, LLC",,
+860546-0001104659-07-015618,"COPT Greens II, LLC",,
+860546-0001104659-07-015618,"COPT Greens III, LLC",,
+860546-0001104659-07-015618,"COPT Park Meadow, LLC",,
+860546-0001104659-07-015618,"COPT Parkstone, LLC",,
+860546-0001104659-07-015618,"COPT Richmond I, LLC",,
+860546-0001104659-07-015618,"COPT Ridgeview I, LLC",,
+860546-0001104659-07-015618,"COPT Ridgeview II & III, LLC",,
+860546-0001104659-07-015618,"COPT Southwest VA, LLC",,
+860546-0001104659-07-015618,"COPT Stonecroft, LLC",,
+860546-0001104659-07-015618,"COPT Sunrise, LLC",,
+860546-0001104659-07-015618,"COPT Waterview I, LLC",,
+860546-0001104659-07-015618,"COPT Waterview III, LLC",,
+860546-0001104659-07-015618,"TRC Pinnacle Towers, L.L.C.",,
+860546-0001104659-07-015618,"2900 Towerview Road, LLC",,
+875622-0001140361-17-012337,Advance Biofactures Corp.,New York,
+891014-0000891014-11-000007,APP China Specialty Minerals Pte Ltd.,Singapore,
+891014-0000891014-11-000007,ASMAS Agir Sanayi Malzemeleri Imal ve Tic. A.S.,Turkey,
+891014-0000891014-11-000007,Barretts Minerals Inc.,Delaware,
+891014-0000891014-11-000007,ComSource Trading Ltd.,Delaware,
+891014-0000891014-11-000007,Gold Lun Chemicals (Zhenjiang).,China,
+891014-0000891014-11-000007,"Gold Sheng Chemicals (Zhenjiang) Co., Ltd.",China,
+891014-0000891014-11-000007,"Gold Zuan Chemicals (Suzhou) Co., Ltd.",China,
+891014-0000891014-11-000007,"Hi-Tech Specialty Minerals Company, Limited",Thailand,
+891014-0000891014-11-000007,Minerals Technologies do Brasil Comercio é Industria de Minerais Ltda.,Brazil,
+891014-0000891014-11-000007,Minerals Technologies Europe N.V.,Belgium,
+891014-0000891014-11-000007,Minerals Technologies Holdings Inc.,Delaware,
+891014-0000891014-11-000007,Minerals Technologies Holdings Ltd.,United Kingdom,
+891014-0000891014-11-000007,Minerals Technologies India Private Limited,India,
+891014-0000891014-11-000007,"Minerals Technologies Mexico Holdings, S. de R. L. de C.V.",Mexico,
+891014-0000891014-11-000007,Minerals Technologies South Africa (Pty) Ltd.,South Africa,
+891014-0000891014-11-000007,Mintech Canada Inc.,Canada,
+891014-0000891014-11-000007,Mintech Japan K.K.,Japan,
+891014-0000891014-11-000007,Minteq Australia Pty Ltd.,Australia,
+891014-0000891014-11-000007,Minteq B.V.,The Netherlands,
+891014-0000891014-11-000007,Minteq Europe Limited.,Ireland,
+891014-0000891014-11-000007,Minteq International GmbH,Germany,
+891014-0000891014-11-000007,Minteq International Inc.,Delaware,
+891014-0000891014-11-000007,"Minteq International (Suzhou) Co., Ltd.",China,
+891014-0000891014-11-000007,Minteq Italiana S.p.A.,Italy,
+891014-0000891014-11-000007,Minteq Korea Inc.,Korea,
+891014-0000891014-11-000007,Minteq Kosovo LLC.,Kosovo,
+891014-0000891014-11-000007,Minteq Magnesite Limited,Ireland,
+891014-0000891014-11-000007,"Minteq Metallurgical Materials (Suzhou) Co., Ltd.",China,
+891014-0000891014-11-000007,Minteq Shapes and Services Inc.,Delaware,
+891014-0000891014-11-000007,Minteq UK Limited.,United Kingdom,
+891014-0000891014-11-000007,MTI Bermuda L.P.,Bermuda,
+891014-0000891014-11-000007,MTI Holdings GmbH,Germany,
+891014-0000891014-11-000007,MTI Holding Singapore Pte. Ltd.,Singapore,
+891014-0000891014-11-000007,MTI Holdco I LLC,Delaware,
+891014-0000891014-11-000007,MTI Holdco II LLC,Delaware,
+891014-0000891014-11-000007,MTI Netherlands B.V.,Netherlands,
+891014-0000891014-11-000007,MTX Finance Inc.,Delaware,
+891014-0000891014-11-000007,MTX Finance Ireland,Ireland,
+891014-0000891014-11-000007,Performance Minerals Netherlands C.V.,Netherlands,
+891014-0000891014-11-000007,PT Sinar Mas Specialty Minerals,Indonesia,
+891014-0000891014-11-000007,"Rijnstaal U.S.A., Inc.",Pennsylvania,
+891014-0000891014-11-000007,SMI NewQuest India Private Limited SMI Poland Sp. z o.o.,India,
+891014-0000891014-11-000007,Specialty Minerals Benelux,Poland,
+891014-0000891014-11-000007,Specialty Minerals FMT K.K.,Belgium,
+891014-0000891014-11-000007,Specialty Minerals France s.p.a.s.,Japan,
+891014-0000891014-11-000007,Specialty Minerals GmbH,France,
+891014-0000891014-11-000007,Specialty Minerals Inc.,Germany,
+891014-0000891014-11-000007,Specialty Minerals India Holding Inc.,Delaware,
+891014-0000891014-11-000007,Specialty Minerals International Inc.,Delaware,
+891014-0000891014-11-000007,Specialty Minerals Malaysia Sdn. Bhd.,Malaysia,
+891014-0000891014-11-000007,Specialty Minerals (Michigan) Inc.,Michigan,
+891014-0000891014-11-000007,Specialty Minerals Mississippi Inc.,Delaware,
+891014-0000891014-11-000007,Specialty Minerals Nordic Oy Ab,Finland,
+891014-0000891014-11-000007,"Specialty Minerals (Portugal) Especialidades Minerais, S.A.",Portugal,
+891014-0000891014-11-000007,Specialty Minerals S.A. de C.V.,Mexico,
+891014-0000891014-11-000007,Specialty Minerals Servicios S. de R.L. de C.V.,Mexico,
+891014-0000891014-11-000007,"Specialty Minerals Slovakia, spol. sr.o.",Slovakia,
+891014-0000891014-11-000007,Specialty Minerals South Africa (Pty) Limited,South Africa,
+891014-0000891014-11-000007,Specialty Minerals (Thailand) Limited,Thailand,
+891014-0000891014-11-000007,Specialty Minerals UK Limited,United Kingdom,
+891014-0000891014-11-000007,"Tecnologias Minerales de Mexico, S.A. de C.V.",Mexico,
+891014-0000891014-11-000007,Yangpu Gold Hongda Chemicals Co. Ltd.,China,
