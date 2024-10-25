@@ -3,6 +3,8 @@
 from dagster import (
     AssetIn,
     Definitions,
+    Field,
+    String,
     define_asset_job,
     file_relative_path,
     in_process_executor,
@@ -45,49 +47,81 @@ basic_10k_validation_job = model_jobs.create_validation_model_job(
 )
 
 
-ex21_production_job = model_jobs.create_production_model_job(
-    "ex21_extraction",
+exhibit21_production_job = model_jobs.create_production_model_job(
+    "exhibit21_extraction",
     ex_21.production_assets,
     tag_concurrency_limits=[
         {"key": "model", "value": "exhibit21_extractor", "limit": 2},
     ],
+    description="Run exhibit 21 extraction pipeline on archived filings.",
 )
 
 
-exhibit21_extractor = define_dagstermill_asset(
-    name="train_exhibit21_extractor",
-    notebook_path=file_relative_path(__file__, "notebooks/exhibit21_extractor.ipynb"),
-    config_schema=ex_21.data.Ex21TrainConfig.to_config_schema(),
-    ins={
-        "ex21_training_data": AssetIn(),
-        "ex21_validation_set": AssetIn(),
-        "ex21_failed_parsing_metadata": AssetIn(),
-        "ex21_inference_dataset": AssetIn(),
-    },
+finetune_layoutlm = define_dagstermill_asset(
+    name="layoutlm",
+    notebook_path=file_relative_path(__file__, "notebooks/layoutlm.ipynb"),
     save_notebook_on_failure=True,
+    config_schema={
+        "ex21_training_data": Field(
+            String,
+            default_value="v0.2",
+            is_required=False,
+            description="Folder on GCS to pull training data from.",
+        ),
+    },
 )
-ex21_training_job = define_asset_job(
-    "ex21_training",
-    selection=[exhibit21_extractor] + ex_21.data.ex21_extraction_training_assets,
+finetune_layoutlm_job = define_asset_job(
+    "finetune_layoutlm",
+    description="Execute notebook to finetune layoutlm and log to mlflow.",
+    selection=[finetune_layoutlm],
     executor_def=in_process_executor,
 )
 
 
-exhibit21_layout_classifier = define_dagstermill_asset(
-    name="train_exhibit21_layout_classifier",
+exhibit21_extraction_validation = define_dagstermill_asset(
+    name="validate_exhibit21_extractor",
+    notebook_path=file_relative_path(
+        __file__, "notebooks/exhibit21_inference_model.ipynb"
+    ),
+    ins={
+        "ex21_validation_set": AssetIn(),
+        "ex21_validation_inference_dataset": AssetIn(),
+    },
+    save_notebook_on_failure=True,
+    config_schema={
+        "layoutlm_model_uri": Field(
+            String,
+            default_value="runs:/c81cd8c91900476a8362c54fa3a020fc/layoutlm_extractor",
+            is_required=False,
+            description="Folder on GCS to pull training data from.",
+        ),
+    },
+)
+exhibit21_extraction_validation_job = define_asset_job(
+    "exhibit21_extraction_validation",
+    description="Execute full Exhibit 21 extraction and validate with labeled validation data.",
+    selection=[exhibit21_extraction_validation]
+    + ex_21.data.ex21_extraction_validation_assets,
+    executor_def=in_process_executor,
+)
+
+
+train_exhibit21_layout_classifier = define_dagstermill_asset(
+    name="exhibit21_layout_classifier_model",
     notebook_path=file_relative_path(
         __file__, "notebooks/exhibit21_layout_classifier.ipynb"
     ),
-    config_schema=ex_21.data.Ex21TrainConfig.to_config_schema(),
     ins={
         "ex21_layout_labels": AssetIn(),
         "ex21_layout_classifier_training_dataset": AssetIn(),
     },
     save_notebook_on_failure=True,
 )
-ex21_layout_classifier_training_job = define_asset_job(
-    "ex21_layout_classifier_training",
-    selection=[exhibit21_layout_classifier] + ex_21.data.ex21_layout_classifier_assets,
+exhibit21_layout_classifier_training_job = define_asset_job(
+    "train_exhibit21_layout_classifier",
+    description="Train exhibit 21 layout classifier used to filter poorly formatted filings.",
+    selection=[train_exhibit21_layout_classifier]
+    + ex_21.data.ex21_layout_classifier_assets,
     executor_def=in_process_executor,
 )
 
@@ -96,14 +130,19 @@ defs = Definitions(
     assets=basic_10k_assets
     + ex21_assets
     + shared_assets
-    + [exhibit21_extractor, exhibit21_layout_classifier]
+    + [
+        exhibit21_extraction_validation,
+        finetune_layoutlm,
+        train_exhibit21_layout_classifier,
+    ]
     + ex21_data_assets,
     jobs=[
         basic_10k_production_job,
         basic_10k_validation_job,
-        ex21_production_job,
-        ex21_training_job,
-        ex21_layout_classifier_training_job,
+        exhibit21_production_job,
+        finetune_layoutlm_job,
+        exhibit21_extraction_validation_job,
+        exhibit21_layout_classifier_training_job,
     ],
     resources={
         "cloud_interface": cloud_interface_resource,

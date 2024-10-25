@@ -1,12 +1,8 @@
 """Tools for constructing datasets used by exhibit 21 extraction model."""
 
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
 import pandas as pd
 from dagster import (
     AssetOut,
-    Config,
     asset,
     multi_asset,
 )
@@ -17,28 +13,6 @@ from ...entities import ex21_extract_type, sec10k_extract_metadata_type
 from ...utils.cloud import GCSArchive
 from ..ex21_validation_helpers import clean_ex21_validation_set
 from .inference import create_inference_dataset
-from .training import format_as_ner_annotations
-
-
-class Ex21TrainConfig(Config):
-    """Config for training notebook."""
-
-    #: mlflow run name used to train layoutlm model
-    layoutlm_training_run: str | None = "layoutlm-labeledv0.2"
-    #: training data version (doesn't matter if using pretrained model)
-    training_data_version: str = "v0.2"
-
-
-@asset
-def ex21_training_data(config: Ex21TrainConfig):
-    """Construct training dataset for ex 21 extraction."""
-    with TemporaryDirectory() as temp_dir:
-        ner_annotations = format_as_ner_annotations(
-            labeled_json_path=Path(temp_dir) / "sec10k_filings" / "labeled_jsons",
-            pdfs_path=Path(temp_dir) / "sec10k_filings" / "pdfs",
-            gcs_folder_name=f"labeled{config.training_data_version}",
-        )
-    return ner_annotations
 
 
 @asset(dagster_type=ex21_extract_type)
@@ -63,13 +37,13 @@ def ex21_validation_filing_metadata(
 
 @multi_asset(
     outs={
-        "ex21_failed_parsing_metadata": AssetOut(
+        "ex21_validation_failed_parsing_metadata": AssetOut(
             dagster_type=sec10k_extract_metadata_type,
         ),
-        "ex21_inference_dataset": AssetOut(),
+        "ex21_validation_inference_dataset": AssetOut(),
     },
 )
-def ex21_inference_dataset(
+def ex21_validation_inference_dataset(
     cloud_interface: GCSArchive,
     ex21_validation_filing_metadata: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -109,11 +83,10 @@ def ex21_layout_classifier_training_dataset(
     return dataset
 
 
-ex21_extraction_training_assets = [
-    ex21_training_data,
+ex21_extraction_validation_assets = [
     ex21_validation_set,
     ex21_validation_filing_metadata,
-    ex21_inference_dataset,
+    ex21_validation_inference_dataset,
 ]
 
 ex21_layout_classifier_assets = [
