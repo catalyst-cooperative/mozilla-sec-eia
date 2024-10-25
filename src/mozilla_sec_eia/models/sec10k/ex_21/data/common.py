@@ -96,7 +96,7 @@ def format_label_studio_output(
 ) -> pd.DataFrame:
     """Format Label Studio output JSONs into dataframe."""
     labeled_df = pd.DataFrame()
-    tracking_df = validation_helpers.load_training_data("ex21_labels.csv")
+    tracking_df = validation_helpers.load_training_data("ex21_labeled_filings.csv")
 
     for json_filename in os.listdir(labeled_json_dir):
         if not json_filename[0].isdigit() or json_filename.endswith(".json"):

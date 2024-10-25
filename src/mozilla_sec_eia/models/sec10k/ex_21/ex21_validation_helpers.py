@@ -126,6 +126,7 @@ def clean_extracted_df(extracted_df):
 
 def clean_ex21_validation_set(validation_df: pd.DataFrame):
     """Clean Ex. 21 validation data to match extracted format."""
+    validation_df = remove_paragraph_tables_from_validation_data(validation_df)
     validation_df = validation_df.rename(
         columns={
             "Filename": "id",
@@ -138,3 +139,23 @@ def clean_ex21_validation_set(validation_df: pd.DataFrame):
     validation_df["filename"] = validation_df["id"].apply(get_metadata_filename)
     validation_df = clean_extracted_df(validation_df)
     return validation_df
+
+
+def remove_paragraph_tables_from_validation_data(validation_df):
+    """Remove paragraph layout docs from the Ex. 21 validation data.
+
+    Returns a dataframe with paragraph layout docs removed from validation
+    data.
+    """
+    layout_hist_df = validation_helpers.load_validation_data(
+        "ex21_layout_histogram.csv"
+    )
+    paragraph_filenames = layout_hist_df[
+        layout_hist_df["layout"].isin(["Paragraph", "paragraph"])
+    ]["filename"].unique()
+
+    non_paragraph_df = validation_df[
+        ~validation_df["Filename"].isin(paragraph_filenames)
+    ]
+
+    return non_paragraph_df

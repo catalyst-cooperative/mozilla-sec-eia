@@ -12,7 +12,8 @@ def load_training_data(
 ) -> pd.DataFrame:
     """Load csv with validation data from `package_data` directory."""
     df = pd.read_csv(
-        resources.files("mozilla_sec_eia.package_data.training_data") / filename
+        resources.files("mozilla_sec_eia.package_data.training_data") / filename,
+        comment="#",
     )
     if index_cols is not None:
         df = df.set_index(index_cols)
