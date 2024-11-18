@@ -26,6 +26,32 @@ class MlflowBaseIOManager(ConfigurableIOManager):
         return mlflow.get_run(self.mlflow_interface.mlflow_run_id)
 
 
+class MlflowPyfuncModelIOManager(MlflowBaseIOManager):
+    """IO Manager to load pyfunc models from tracking server."""
+
+    uri: str | None = None
+
+    def handle_output(self, context: OutputContext, model_uri: str):
+        """Takes model uri as a string and caches the model locally for future use."""
+        cache_path = self.mlflow_interface.dagster_home_path / "model_cache"
+        cache_path.mkdir(exist_ok=True, parents=True)
+
+        logger.info(f"Caching {context.name} model at {cache_path}")
+        mlflow.pyfunc.load_model(
+            model_uri,
+            dst_path=cache_path,
+        )
+
+    def load_input(self, context: InputContext):
+        """Load pyfunc model with mlflow server."""
+        cache_path = (
+            self.mlflow_interface.dagster_home_path / "model_cache" / context.name
+        )
+        logger.info(f"Loading {context.name} model from {cache_path}")
+
+        return mlflow.pyfunc.load_model(cache_path)
+
+
 class MlflowPandasArtifactIOManager(MlflowBaseIOManager):
     """Implement IO manager for logging/loading dataframes as mlflow artifacts."""
 

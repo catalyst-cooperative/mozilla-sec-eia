@@ -25,6 +25,7 @@ def create_production_model_job(
     job_name: str,
     assets: list[AssetsDefinition],
     concurrency_limit: int | None = None,
+    tag_concurrency_limits: list[dict] | None = None,
     **kwargs,
 ) -> JobDefinition:
     """Construct a dagster job and supply Definitions with assets and resources."""
@@ -39,10 +40,16 @@ def create_production_model_job(
             }
         },
     }
-    if concurrency_limit is not None:
-        config["execution"] = {
-            "config": {"multiprocess": {"max_concurrent": concurrency_limit}}
-        }
+    if (concurrency_limit is not None) or (tag_concurrency_limits is not None):
+        config["execution"] = {"config": {"multiprocess": {}}}
+        if concurrency_limit is not None:
+            config["execution"]["config"]["multiprocess"][
+                "max_concurrent"
+            ] = concurrency_limit
+        else:
+            config["execution"]["config"]["multiprocess"][
+                "tag_concurrency_limits"
+            ] = tag_concurrency_limits
 
     return define_asset_job(
         job_name,

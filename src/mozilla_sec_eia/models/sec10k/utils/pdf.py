@@ -5,6 +5,7 @@ Functions include drawing bounding boxes around words.
 """
 
 import logging
+import os
 from typing import Any
 
 import cv2
@@ -418,3 +419,17 @@ def _pil_img_from_pixmap(pix: fitz.Pixmap) -> Image.Image:
 
     img = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
     return img
+
+
+def get_image_dict(pdfs_dir):
+    """Create a dictionary with filenames and their Ex. 21 images."""
+    image_dict = {}
+    for pdf_filename in os.listdir(pdfs_dir):
+        if pdf_filename.split(".")[-1] != "pdf":
+            continue
+        pdf_file_path = pdfs_dir / pdf_filename
+        _, pg = get_pdf_data_from_path(pdf_file_path)
+        full_pg_img = render_page(pg)
+        filename = pdf_filename.split(".")[0]
+        image_dict[filename] = full_pg_img
+    return image_dict
