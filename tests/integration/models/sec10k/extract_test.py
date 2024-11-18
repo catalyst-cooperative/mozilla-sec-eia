@@ -48,12 +48,13 @@ def test_ex21_validation(
         [
             sec10k.ex_21.data.ex21_validation_set,
             sec10k.ex_21.data.ex21_validation_filing_metadata,
-            sec10k.ex_21.data.ex21_inference_dataset,
+            sec10k.ex_21.data.ex21_validation_inference_dataset,
         ],
         resources={"cloud_interface": sec10k.utils.GCSArchive()},
     )
     ex21_inference_dataset = result.output_for_node(
-        "ex21_inference_dataset", output_name="ex21_inference_dataset"
+        "ex21_validation_inference_dataset",
+        output_name="ex21_validation_inference_dataset",
     )
     ex21_validation_set = result.output_for_node("ex21_validation_set")
 
