@@ -26,13 +26,14 @@ from mozilla_sec_eia.library.mlflow import (
     mlflow_train_test_io_managers,
 )
 
-from . import basic_10k, ex_21, extract
+from . import basic_10k, ex_21, extract, sec_output_table
 from .utils.cloud import cloud_interface_resource
 
 basic_10k_assets = load_assets_from_modules([basic_10k])
 ex21_assets = load_assets_from_package_module(ex_21)
 ex21_data_assets = load_assets_from_modules([ex_21.data])
 shared_assets = load_assets_from_modules([extract])
+sec_output_assets = load_assets_from_modules([sec_output_table])
 
 basic_10k_production_job = model_jobs.create_production_model_job(
     "basic_10k_extraction",
@@ -53,6 +54,9 @@ ex21_production_job = model_jobs.create_production_model_job(
     ],
 )
 
+sec_output_table_production_job = model_jobs.create_production_model_job(
+    "sec_output_table_creation", sec_output_table.production_assets
+)
 
 exhibit21_extractor = define_dagstermill_asset(
     name="train_exhibit21_extractor",
@@ -97,13 +101,15 @@ defs = Definitions(
     + ex21_assets
     + shared_assets
     + [exhibit21_extractor, exhibit21_layout_classifier]
-    + ex21_data_assets,
+    + ex21_data_assets
+    + sec_output_assets,
     jobs=[
         basic_10k_production_job,
         basic_10k_validation_job,
         ex21_production_job,
         ex21_training_job,
         ex21_layout_classifier_training_job,
+        sec_output_table_production_job,
     ],
     resources={
         "cloud_interface": cloud_interface_resource,
