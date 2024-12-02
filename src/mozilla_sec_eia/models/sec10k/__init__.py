@@ -28,14 +28,14 @@ from mozilla_sec_eia.library.mlflow import (
     mlflow_train_test_io_managers,
 )
 
-from . import basic_10k, ex_21, extract, sec_output_table
+from . import basic_10k, ex_21, extract
 from .utils.cloud import cloud_interface_resource
 
 basic_10k_assets = load_assets_from_modules([basic_10k])
 ex21_assets = load_assets_from_package_module(ex_21)
 ex21_data_assets = load_assets_from_modules([ex_21.data])
 shared_assets = load_assets_from_modules([extract])
-sec_output_assets = load_assets_from_modules([sec_output_table])
+
 
 basic_10k_production_job = model_jobs.create_production_model_job(
     "basic_10k_extraction",
@@ -57,9 +57,6 @@ exhibit21_production_job = model_jobs.create_production_model_job(
     description="Run exhibit 21 extraction pipeline on archived filings.",
 )
 
-sec_output_table_production_job = model_jobs.create_production_model_job(
-    "sec_output_table_creation", sec_output_table.production_assets
-)
 
 finetune_layoutlm = define_dagstermill_asset(
     name="layoutlm",
@@ -139,8 +136,7 @@ defs = Definitions(
         finetune_layoutlm,
         train_exhibit21_layout_classifier,
     ]
-    + ex21_data_assets
-    + sec_output_assets,
+    + ex21_data_assets,
     jobs=[
         basic_10k_production_job,
         basic_10k_validation_job,
@@ -148,7 +144,6 @@ defs = Definitions(
         finetune_layoutlm_job,
         exhibit21_extraction_validation_job,
         exhibit21_layout_classifier_training_job,
-        sec_output_table_production_job,
     ],
     resources={
         "cloud_interface": cloud_interface_resource,

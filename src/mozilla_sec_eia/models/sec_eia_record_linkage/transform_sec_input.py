@@ -9,19 +9,31 @@ import numpy as np
 import pandas as pd
 from dagster import AssetIn, AssetOut, multi_asset
 
+from mozilla_sec_eia.library.record_linkage_utils import (
+    fill_street_address_nulls,
+    transform_company_name,
+)
 from mozilla_sec_eia.models.sec10k.utils.cloud import (
     convert_ex21_id_to_filename,
 )
-from mozilla_sec_eia.models.sec_eia_record_linkage.preprocessing import (
-    company_name_cleaner,
-)
+from mozilla_sec_eia.models.sec_eia_record_linkage.sec_eia_splink_config import STR_COLS
 
-from .extract import (
+from ..sec10k.extract import (
     sec10k_filing_metadata,
     year_quarter_partitions,
 )
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
+
+
+EX21_COL_MAP = {"subsidiary": "company_name", "loc": "loc_of_incorporation"}
+SEC_COL_MAP = {
+    "company_conformed_name": "company_name",
+    "street_1": "street_address",
+    "street_2": "street_address_2",
+    "zip": "zip_code",
+    "business_phone": "phone_number",
+}
 
 INVALID_NAMES = [
     "llc",
@@ -130,29 +142,7 @@ def clean_location_of_inc(df) -> pd.DataFrame:
     return df
 
 
-def clean_company_name(df) -> pd.DataFrame:
-    """Clean company name column in SEC basic 10K or Ex. 21 dataframe.
-
-    Arguments:
-        df: Ex. 21 or SEC 10K basic info dataframe with company_name
-            column.
-    """
-    df["company_name"] = (
-        df["company_name"].fillna(pd.NA).str.strip().str.lower().replace("", pd.NA)
-    )
-    df.loc[:, "company_name_clean"] = company_name_cleaner.apply_name_cleaning(
-        df[["company_name"]]
-    ).str.strip()
-    df = df[
-        (~df["company_name"].isin(INVALID_NAMES))
-        & (~df["company_name_clean"].isin(INVALID_NAMES))
-    ]
-    df = df.fillna(np.nan)
-
-    return df
-
-
-def add_parent_company_cik(ex21_df: pd.DataFrame, md: pd.DataFrame) -> pd.DataFrame:
+def _add_parent_company_cik(ex21_df: pd.DataFrame, md: pd.DataFrame) -> pd.DataFrame:
     """Add the CIK of the parent company to Ex. 21 subsidiaries."""
     ex21_df = ex21_df.merge(md[["filename", "cik"]], how="left", on="filename").rename(
         columns={"cik": "parent_company_cik"}
@@ -276,48 +266,74 @@ def create_sec_company_id_for_ex21_subs(ex21_df: pd.DataFrame) -> pd.DataFrame:
         "ex21_df": AssetIn("ex21_company_ownership_info"),
     },
     outs={
-        "clean_ex21_subsidiary_table": AssetOut(
+        "transformed_ex21_subsidiary_table": AssetOut(
             io_manager_key="pandas_parquet_io_manager",
         )
     },
     partitions_def=year_quarter_partitions,
 )
-def clean_ex21_table(
+def transform_ex21_table(
     ex21_df: pd.DataFrame, sec10k_filing_metadata: pd.DataFrame
 ) -> pd.DataFrame:
-    """Clean Ex. 21 table of subsidiaries before combining with basic 10k table."""
+    """Transform Ex. 21 table of subsidiaries before combining with basic 10k table."""
     ex21_df.loc[:, "filename"] = convert_ex21_id_to_filename(ex21_df)
     ex21_df = ex21_df.drop(columns=["id"])
     ex21_df = _add_report_year_to_sec(ex21_df, sec10k_filing_metadata)
-    ex21_df = ex21_df.rename(
-        columns={"subsidiary": "company_name", "loc": "location_of_inc"}
-    )
+    ex21_df = ex21_df.rename(columns=EX21_COL_MAP)
     ex21_df = clean_location_of_inc(ex21_df)
-    ex21_df = clean_company_name(ex21_df)
-    ex21_df = add_parent_company_cik(ex21_df, sec10k_filing_metadata)
+    # TODO: what to do with the clean company name?
+    ex21_df = transform_company_name(ex21_df)
+    ex21_df = _add_parent_company_cik(ex21_df, sec10k_filing_metadata)
     # add an sec_company_id, ultimately this ID become the subsidiary's CIK
     # if the subsidiary is matched to an SEC filer
     ex21_df = create_sec_company_id_for_ex21_subs(ex21_df=ex21_df)
     ex21_df = _flatten_sec_companies_across_time(ex21_df)
+    ex21_df = ex21_df.fillna(np.nan)
 
     return ex21_df
+
+
+def transform_basic10k_table(
+    basic_10k_df: pd.DataFrame, sec10k_filing_metadata: pd.DataFrame
+) -> pd.DataFrame:
+    """Transformations on SEC basic 10K filer table to prepare for record linkage."""
+    basic_10k_df = basic_10k_df.reset_index().pivot_table(
+        values="value", index="filename", columns="key", aggfunc="first"
+    )
+    basic_10k_df.columns.name = None
+    # TODO: chain these function calls together
+    basic_10k_df = basic_10k_df.reset_index()
+    basic_10k_df = _remove_weird_sec_cols(basic_10k_df)
+    basic_10k_df = _add_report_year_to_sec(basic_10k_df, sec10k_filing_metadata)
+    basic_10k_df = basic_10k_df.rename(columns=SEC_COL_MAP)
+    # add a location of incorporation to better match it to Ex. 21 subsidiaries
+    basic_10k_df = clean_location_of_inc(basic_10k_df)
+    basic_10k_df = transform_company_name(basic_10k_df)
+    basic_10k_df.loc[:, "zip_code"] = basic_10k_df["zip_code"].str[:5]
+    basic_10k_df = fill_street_address_nulls(basic_10k_df)
+    basic_10k_df.loc[:, "files_10k"] = True
+    basic_10k_df.loc[:, "sec_company_id"] = basic_10k_df["central_index_key"]
+    basic_10k_df[STR_COLS] = basic_10k_df[STR_COLS].apply(
+        lambda x: x.str.strip().str.lower()
+    )
+    return basic_10k_df
 
 
 @multi_asset(
     ins={
         "basic_10k_df": AssetIn("basic_10k_company_info"),
-        "clean_ex21_df": AssetIn("clean_ex21_subsidiary_table"),
+        "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
         # specify an io_manager_key?
     },
     outs={
-        "out_sec_10k__parents_and_subsidiaries": AssetOut(
+        "core_sec_10k__parents_and_subsidiaries": AssetOut(
             io_manager_key="pandas_parquet_io_manager",
             # specify a dagster_type?
         ),
     },
     partitions_def=year_quarter_partitions,
 )
-def sec_output_table(
+def sec_rl_input_table(
     basic_10k_df: pd.DataFrame,
     clean_ex21_df: pd.DataFrame,
     sec10k_filing_metadata: pd.DataFrame,
@@ -329,19 +345,7 @@ def sec_output_table(
     filing companies. Create an sec_company_id for subsidiaries that aren't linked
     to a CIK.
     """
-    basic_10k_df = basic_10k_df.reset_index().pivot_table(
-        values="value", index="filename", columns="key", aggfunc="first"
-    )
-    basic_10k_df.columns.name = None
-    basic_10k_df = basic_10k_df.reset_index()
-    basic_10k_df = _remove_weird_sec_cols(basic_10k_df)
-    basic_10k_df = _add_report_year_to_sec(basic_10k_df, sec10k_filing_metadata)
-    # add a location of incorporation to better match it to Ex. 21 subsidiaries
-    basic_10k_df = clean_location_of_inc(basic_10k_df)
-    basic_10k_df = basic_10k_df.rename(
-        columns={"company_conformed_name": "company_name"}
-    )
-    basic_10k_df = clean_company_name(basic_10k_df)
+    basic_10k_df = transform_basic10k_table(basic_10k_df, sec10k_filing_metadata)
     ex21_df_with_cik = match_ex21_subsidiaries_to_filer_company(
         basic10k_df=basic_10k_df, ex21_df=clean_ex21_df
     )
@@ -350,18 +354,18 @@ def sec_output_table(
         how="left",
         on="central_index_key",
     )
-    basic_10k_df.loc[:, "files_10k"] = True
-    basic_10k_df.loc[:, "sec_company_id"] = basic_10k_df["central_index_key"]
     # get the subsidiary companies that weren't matched to a 10K filing company
     ex21_non_filing_subs_df = ex21_df_with_cik[
         ex21_df_with_cik["central_index_key"].isnull()
     ]
     ex21_non_filing_subs_df.loc[:, "files_10k"] = False
     out_df = pd.concat([basic_10k_df, ex21_non_filing_subs_df])
+    out_df = out_df.fillna(np.nan)
     # this drops records for earlier company names and addresses
     # that have since changed, so we lose some information
     out_df = _flatten_sec_companies_across_time(out_df)
+
     return out_df
 
 
-production_assets = [sec_output_table, sec10k_filing_metadata]
+production_assets = [sec_rl_input_table, sec10k_filing_metadata]
