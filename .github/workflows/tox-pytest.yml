@@ -11,7 +11,7 @@ jobs:
       id-token: write
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
       fail-fast: false
     defaults:
       run:
@@ -70,7 +70,7 @@ jobs:
 
       - name: Run PyTest with Tox
         run: |
-          tox
+          conda run -n mozilla-sec-eia tox
 
       - name: Upload test coverage report to CodeCov
         uses: codecov/codecov-action@v5
