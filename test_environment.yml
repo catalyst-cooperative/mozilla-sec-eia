@@ -29,6 +29,10 @@ dependencies:
   - pytorch>=2.2,<3
   - torchvision
 
+  # GDAL is a transitive dependency whose binaries must match those installed by the
+  # pudl-dev conda environment, so we also install it with conda here.
+  - gdal==3.9.3 # pinned to ensure it matches pudl-dev environment exactly.
+
   # Use pip to install the package defined by this repo for development:
   - pip:
       - --editable ./[dev,docs,tests,types]
