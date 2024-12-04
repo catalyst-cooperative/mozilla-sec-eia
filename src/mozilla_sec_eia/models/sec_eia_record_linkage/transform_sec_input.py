@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from dagster import AssetIn, AssetOut, multi_asset
+from dagster import AllPartitionMapping, AssetIn, AssetOut, multi_asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
     fill_street_address_nulls,
@@ -17,11 +17,6 @@ from mozilla_sec_eia.models.sec10k.utils.cloud import (
     convert_ex21_id_to_filename,
 )
 from mozilla_sec_eia.models.sec_eia_record_linkage.sec_eia_splink_config import STR_COLS
-
-from ..sec10k.extract import (
-    sec10k_filing_metadata,
-    year_quarter_partitions,
-)
 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
@@ -264,13 +259,14 @@ def create_sec_company_id_for_ex21_subs(ex21_df: pd.DataFrame) -> pd.DataFrame:
 @multi_asset(
     ins={
         "ex21_df": AssetIn("ex21_company_ownership_info"),
+        "sec10k_filing_metadata": AssetIn("sec10k_filing_metadata"),
     },
     outs={
         "transformed_ex21_subsidiary_table": AssetOut(
             io_manager_key="pandas_parquet_io_manager",
         )
     },
-    partitions_def=year_quarter_partitions,
+    partitions_def=AllPartitionMapping(),
 )
 def transform_ex21_table(
     ex21_df: pd.DataFrame, sec10k_filing_metadata: pd.DataFrame
@@ -323,6 +319,7 @@ def transform_basic10k_table(
     ins={
         "basic_10k_df": AssetIn("basic_10k_company_info"),
         "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
+        "sec10k_filing_metadata": AssetIn("sec10k_filing_metadata"),
         # specify an io_manager_key?
     },
     outs={
@@ -331,7 +328,6 @@ def transform_basic10k_table(
             # specify a dagster_type?
         ),
     },
-    partitions_def=year_quarter_partitions,
 )
 def sec_rl_input_table(
     basic_10k_df: pd.DataFrame,
@@ -368,4 +364,4 @@ def sec_rl_input_table(
     return out_df
 
 
-production_assets = [sec_rl_input_table, sec10k_filing_metadata]
+production_assets = [sec_rl_input_table, transform_ex21_table]
