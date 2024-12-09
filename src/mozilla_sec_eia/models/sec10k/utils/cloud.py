@@ -29,6 +29,20 @@ def _compute_md5(file_path: Path) -> str:
     return base64.b64encode(hash_md5.digest()).decode()
 
 
+def convert_ex21_id_to_filename(df: pd.DataFrame, id_col_name: str = "id"):
+    """Convert the ID column to GCS archive filenames.
+
+    The extracted Ex. 21 tables have an ID that doesn't match
+    the filenames in the GCS archive. Create a new column "filename"
+    that converts this ID column into the GCS archive filename
+    for that filing.
+    """
+    df.loc[:, "filename"] = (
+        "edgar/data/" + df[id_col_name].str.replace("-", "/", n=1) + ".txt"
+    )
+    return df
+
+
 class Exhibit21(BaseModel):
     """This is a class to wrap Exhibit 21's, which are included in many SEC 10ks."""
 
