@@ -88,11 +88,13 @@ def get_metaphone_col(col: pd.Series) -> pd.Series:
     return col.apply(jellyfish.metaphone)
 
 
-def transform_company_name(df: pd.DataFrame) -> pd.DataFrame:
+def transform_company_name(
+    df: pd.DataFrame, col_name: str = "company_name"
+) -> pd.DataFrame:
     """Apply cleaning, get metaphone col, drop invalid rows."""
-    df = clean_company_name(df)
-    df.loc[:, "company_name_mphone"] = get_metaphone_col(df["company_name_no_legal"])
-    df = drop_invalid_names(df, "company_name_clean")
+    df = clean_company_name(df, col_name=col_name)
+    df.loc[:, f"{col_name}_mphone"] = get_metaphone_col(df[f"{col_name}_no_legal"])
+    df = drop_invalid_names(df, col_name)
     return df
 
 
@@ -102,7 +104,7 @@ def fill_street_address_nulls(
     secondary_address_col: str = "street_address_2",
 ) -> pd.DataFrame:
     """Fill null street address with value from secondary address column."""
-    df[address_col] = pd.where(
+    df[address_col] = df[address_col].where(
         (~df[address_col].isnull()) | (df[secondary_address_col].isnull()),
         df[secondary_address_col],
     )
