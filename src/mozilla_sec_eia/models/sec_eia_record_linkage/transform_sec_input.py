@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from dagster import AllPartitionMapping, AssetIn, AssetOut, multi_asset
+from dagster import AssetIn, asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
     fill_street_address_nulls,
@@ -256,22 +256,20 @@ def create_sec_company_id_for_ex21_subs(ex21_df: pd.DataFrame) -> pd.DataFrame:
     return ex21_df
 
 
-@multi_asset(
+@asset(
     ins={
-        "ex21_df": AssetIn("ex21_company_ownership_info"),
-        "sec10k_filing_metadata": AssetIn("sec10k_filing_metadata"),
+        "ex21_dfs": AssetIn("ex21_company_ownership_info"),
+        "sec10k_filing_metadata_dfs": AssetIn("sec10k_filing_metadata"),
     },
-    outs={
-        "transformed_ex21_subsidiary_table": AssetOut(
-            io_manager_key="pandas_parquet_io_manager",
-        )
-    },
-    partitions_def=AllPartitionMapping(),
 )
-def transform_ex21_table(
-    ex21_df: pd.DataFrame, sec10k_filing_metadata: pd.DataFrame
+def transformed_ex21_subsidiary_table(
+    ex21_dfs: dict[str, pd.DataFrame],
+    sec10k_filing_metadata_dfs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
     """Transform Ex. 21 table of subsidiaries before combining with basic 10k table."""
+    ex21_df = pd.concat(ex21_dfs.values())
+    sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
+
     ex21_df.loc[:, "filename"] = convert_ex21_id_to_filename(ex21_df)
     ex21_df = ex21_df.drop(columns=["id"])
     ex21_df = _add_report_year_to_sec(ex21_df, sec10k_filing_metadata)
@@ -315,21 +313,15 @@ def transform_basic10k_table(
     return basic_10k_df
 
 
-@multi_asset(
+@asset(
     ins={
         "basic_10k_df": AssetIn("basic_10k_company_info"),
         "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
         "sec10k_filing_metadata": AssetIn("sec10k_filing_metadata"),
         # specify an io_manager_key?
     },
-    outs={
-        "core_sec_10k__parents_and_subsidiaries": AssetOut(
-            io_manager_key="pandas_parquet_io_manager",
-            # specify a dagster_type?
-        ),
-    },
 )
-def sec_rl_input_table(
+def core_sec_10k__parents_and_subsidiaries(
     basic_10k_df: pd.DataFrame,
     clean_ex21_df: pd.DataFrame,
     sec10k_filing_metadata: pd.DataFrame,
@@ -364,4 +356,7 @@ def sec_rl_input_table(
     return out_df
 
 
-production_assets = [sec_rl_input_table, transform_ex21_table]
+production_assets = [
+    core_sec_10k__parents_and_subsidiaries,
+    transformed_ex21_subsidiary_table,
+]
