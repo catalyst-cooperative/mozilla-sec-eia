@@ -1,5 +1,7 @@
 """Utility functions for cleaning strings during modeling preprocessing steps."""
 
+from enum import StrEnum
+
 import jellyfish
 import pandas as pd
 
@@ -75,11 +77,18 @@ def clean_company_name(
     return df
 
 
-def drop_invalid_names(
-    df: pd.DataFrame, col_name: str = "company_name"
+def handle_invalid_names(
+    df: pd.DataFrame, col_name: str = "company_name", drop_invalid: bool = True
 ) -> pd.DataFrame:
-    """Drop rows that have invalid company names, like just 'llc', or 'partnership'."""
-    return df[(~df[col_name].isin(INVALID_NAMES))]
+    """Drop rows that have invalid company names, like just 'llc', or 'partnership'.
+
+    Either drop invalid company name values or fill with the empty string. Invalid
+    values are contained in `INVALID_NAMES`.
+    """
+    if drop_invalid:
+        return df[(~df[col_name].isin(INVALID_NAMES))]
+    df[col_name] = df[col_name].where(~df[col_name].isin(INVALID_NAMES), "")
+    return df
 
 
 # TODO: this is in PUDL, deduplicate
@@ -88,13 +97,28 @@ def get_metaphone_col(col: pd.Series) -> pd.Series:
     return col.apply(jellyfish.metaphone)
 
 
+class HandleNulls(StrEnum):
+    """Enum for handling null values in company name transform."""
+
+    DROP = "drop"
+    FILL_EMPTY_STR = "fill_empty_str"
+
+
 def transform_company_name(
-    df: pd.DataFrame, col_name: str = "company_name"
+    df: pd.DataFrame,
+    col_name: str = "company_name",
+    handle_nulls: HandleNulls = HandleNulls.DROP,
 ) -> pd.DataFrame:
     """Apply cleaning, get metaphone col, drop invalid rows."""
     df = clean_company_name(df, col_name=col_name)
+    if handle_nulls == HandleNulls.DROP:
+        df = handle_invalid_names(df, col_name, drop_invalid=True)
+        df = df[~df[col_name].isnull()]
+    elif handle_nulls == HandleNulls.FILL_EMPTY_STR:
+        df = handle_invalid_names(df, col_name, drop_invalid=False)
+        df = df.fillna({col_name: ""})
     df.loc[:, f"{col_name}_mphone"] = get_metaphone_col(df[f"{col_name}_no_legal"])
-    df = drop_invalid_names(df, col_name)
+
     return df
 
 

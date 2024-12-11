@@ -21,7 +21,7 @@ from mozilla_sec_eia.models.sec_eia_record_linkage.sec_eia_splink_config import 
 logger = logging.getLogger(f"catalystcoop.{__name__}")
 
 
-EX21_COL_MAP = {"subsidiary": "company_name", "loc": "loc_of_incorporation"}
+EX21_COL_MAP = {"subsidiary": "company_name", "loc": "location_of_inc"}
 SEC_COL_MAP = {
     "company_conformed_name": "company_name",
     "street_1": "street_address",
@@ -315,16 +315,16 @@ def transform_basic10k_table(
 
 @asset(
     ins={
-        "basic_10k_df": AssetIn("basic_10k_company_info"),
+        "basic_10k_dfs": AssetIn("basic_10k_company_info"),
         "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
-        "sec10k_filing_metadata": AssetIn("sec10k_filing_metadata"),
+        "sec10k_filing_metadata_dfs": AssetIn("sec10k_filing_metadata"),
         # specify an io_manager_key?
     },
 )
 def core_sec_10k__parents_and_subsidiaries(
-    basic_10k_df: pd.DataFrame,
+    basic_10k_dfs: dict[str, pd.DataFrame],
     clean_ex21_df: pd.DataFrame,
-    sec10k_filing_metadata: pd.DataFrame,
+    sec10k_filing_metadata_dfs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
     """Asset for creating an SEC 10K output table.
 
@@ -333,6 +333,8 @@ def core_sec_10k__parents_and_subsidiaries(
     filing companies. Create an sec_company_id for subsidiaries that aren't linked
     to a CIK.
     """
+    basic_10k_df = pd.concat(basic_10k_dfs.values())
+    sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
     basic_10k_df = transform_basic10k_table(basic_10k_df, sec10k_filing_metadata)
     ex21_df_with_cik = match_ex21_subsidiaries_to_filer_company(
         basic10k_df=basic_10k_df, ex21_df=clean_ex21_df
