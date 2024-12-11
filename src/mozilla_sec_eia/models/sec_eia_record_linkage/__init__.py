@@ -37,10 +37,6 @@ sec_input_table_production_job = model_jobs.create_production_model_job(
     "sec_input_table_creation", transform_sec_input.production_assets
 )
 
-basic_10k_company_info = AssetSpec(
-    key=AssetKey("basic_10k_company_info")
-).with_io_manager_key("pandas_parquet_io_manager")
-
 # Create year_quarter partitions
 completed_partitions = StaticPartitionsDefinition(
     [
@@ -50,6 +46,10 @@ completed_partitions = StaticPartitionsDefinition(
         not in ["2018q1", "2018q2", "2019q1", "2020q1", "2021q1", "2022q1"]
     ]
 )
+
+basic_10k_company_info = AssetSpec(
+    key=AssetKey("basic_10k_company_info"), partitions_def=completed_partitions
+).with_io_manager_key("pandas_parquet_io_manager")
 
 ex21_company_ownership_info = AssetSpec(
     key=AssetKey("ex21_company_ownership_info"), partitions_def=completed_partitions
