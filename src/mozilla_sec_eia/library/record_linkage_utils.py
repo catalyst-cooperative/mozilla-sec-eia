@@ -1,6 +1,8 @@
 """Utility functions for cleaning strings during modeling preprocessing steps."""
 
+import json
 from enum import StrEnum
+from importlib import resources
 
 import jellyfish
 import pandas as pd
@@ -91,6 +93,19 @@ def handle_invalid_names(
     return df
 
 
+def flatten_companies_across_time(
+    df: pd.DataFrame, key_cols: list[str], date_col: str = "report_date"
+) -> pd.DataFrame:
+    """Keep only the most recent record for each group of `key_cols`.
+
+    Dataframe must have all of `key_cols` and `date_col`.
+    """
+    df = (
+        df.sort_values(by=date_col, ascending=False).groupby(key_cols).first()
+    ).reset_index()
+    return df
+
+
 # TODO: this is in PUDL, deduplicate
 def get_metaphone_col(col: pd.Series) -> pd.Series:
     """Get the metaphones of the strings in a column."""
@@ -133,3 +148,23 @@ def fill_street_address_nulls(
         df[secondary_address_col],
     )
     return df
+
+
+def expand_street_name_abbreviations(col: pd.Series) -> pd.Series:
+    """Standardize street address suffixes, like street to st.
+
+    Expects lower case strings in column.
+    """
+    # remove punctuation from column first
+    col = col.str.replace(r"[^\w\s]", "", regex=True)
+
+    json_source = (
+        resources.files("mozilla_sec_eia.package_data")
+        / "street_suffix_abbreviations.json"
+    )
+    with json_source.open() as f:
+        address_expansions = json.load(f)
+    for standard_abbr, suffix_list in address_expansions.items():
+        pattern = r"\b(" + "|".join(suffix_list) + r")\b"
+        col = col.str.replace(pattern, standard_abbr, regex=True)
+    return col

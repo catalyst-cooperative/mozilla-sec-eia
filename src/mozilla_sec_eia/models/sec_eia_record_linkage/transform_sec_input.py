@@ -10,7 +10,9 @@ import pandas as pd
 from dagster import AssetIn, asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
+    expand_street_name_abbreviations,
     fill_street_address_nulls,
+    flatten_companies_across_time,
     transform_company_name,
 )
 from mozilla_sec_eia.models.sec10k.utils.cloud import (
@@ -70,24 +72,6 @@ def _add_report_year_to_sec(sec_df: pd.DataFrame, md: pd.DataFrame) -> pd.DataFr
     sec_df.loc[:, "report_year"] = (
         sec_df["report_date"].astype("datetime64[ns]").dt.year
     )
-    return sec_df
-
-
-def _flatten_sec_companies_across_time(sec_df: pd.DataFrame) -> pd.DataFrame:
-    """Keep only the most recent record for each unique SEC company.
-
-    Note that this drops old records for companies that have changed
-    names or addresses across time. Also, we group by sec_company_id not
-    CIK, so filer companies and subsidiary companies are unique in the
-    output dataframe.
-    TODO: create an asset that tracks name and address chnages across
-    time.
-    """
-    sec_df = (
-        sec_df.sort_values(by="report_year", ascending=False)
-        .groupby("sec_company_id")
-        .first()
-    ).reset_index()
     return sec_df
 
 
@@ -236,6 +220,8 @@ def match_ex21_subsidiaries_to_filer_company(
     ex21_with_cik_df = ex21_with_cik_df.rename(
         columns={"subsidiary_cik": "central_index_key"}
     )
+    ex21_with_cik_df = ex21_with_cik_df.drop_duplicates()
+
     return ex21_with_cik_df
 
 
@@ -281,7 +267,9 @@ def transformed_ex21_subsidiary_table(
     # add an sec_company_id, ultimately this ID become the subsidiary's CIK
     # if the subsidiary is matched to an SEC filer
     ex21_df = create_sec_company_id_for_ex21_subs(ex21_df=ex21_df)
-    ex21_df = _flatten_sec_companies_across_time(ex21_df)
+    ex21_df = flatten_companies_across_time(
+        df=ex21_df, key_cols=["sec_company_id"], date_col="report_year"
+    )
     ex21_df = ex21_df.fillna(np.nan)
 
     return ex21_df
@@ -295,35 +283,45 @@ def transform_basic10k_table(
         values="value", index="filename", columns="key", aggfunc="first"
     )
     basic_10k_df.columns.name = None
-    # TODO: chain these function calls together
-    basic_10k_df = basic_10k_df.reset_index()
-    basic_10k_df = _remove_weird_sec_cols(basic_10k_df)
-    basic_10k_df = _add_report_year_to_sec(basic_10k_df, sec10k_filing_metadata)
-    basic_10k_df = basic_10k_df.rename(columns=SEC_COL_MAP)
-    # add a location of incorporation to better match it to Ex. 21 subsidiaries
-    basic_10k_df = clean_location_of_inc(basic_10k_df)
-    basic_10k_df = transform_company_name(basic_10k_df)
-    basic_10k_df.loc[:, "zip_code"] = basic_10k_df["zip_code"].str[:5]
-    basic_10k_df = fill_street_address_nulls(basic_10k_df)
-    basic_10k_df.loc[:, "files_10k"] = True
-    basic_10k_df.loc[:, "sec_company_id"] = basic_10k_df["central_index_key"]
+    basic_10k_df = (
+        basic_10k_df.reset_index()
+        .pipe(_remove_weird_sec_cols)
+        .pipe(_add_report_year_to_sec, sec10k_filing_metadata)
+        .rename(columns=SEC_COL_MAP)
+        .pipe(clean_location_of_inc)
+        .pipe(transform_company_name)
+        .assign(
+            zip_code=lambda df: df["zip_code"].str[:5],
+            files_10k=True,
+            sec_company_id=lambda df: df["central_index_key"],
+        )
+        .pipe(fill_street_address_nulls)
+    )
     basic_10k_df[STR_COLS] = basic_10k_df[STR_COLS].apply(
         lambda x: x.str.strip().str.lower()
     )
+    basic_10k_df["street_address"] = expand_street_name_abbreviations(
+        basic_10k_df["street_address"]
+    )
+    # flatten across time on unique company name and address pair
+    basic_10k_df = flatten_companies_across_time(
+        df=basic_10k_df, key_cols=["company_name", "street_address"]
+    )
+
     return basic_10k_df
 
 
 @asset(
     ins={
         "basic_10k_dfs": AssetIn("basic_10k_company_info"),
-        "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
+        # "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
         "sec10k_filing_metadata_dfs": AssetIn("sec10k_filing_metadata"),
         # specify an io_manager_key?
     },
 )
-def core_sec_10k__parents_and_subsidiaries(
+def core_sec_10k__filers(
     basic_10k_dfs: dict[str, pd.DataFrame],
-    clean_ex21_df: pd.DataFrame,
+    # clean_ex21_df: pd.DataFrame,
     sec10k_filing_metadata_dfs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
     """Asset for creating an SEC 10K output table.
@@ -336,10 +334,34 @@ def core_sec_10k__parents_and_subsidiaries(
     basic_10k_df = pd.concat(basic_10k_dfs.values())
     sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
     basic_10k_df = transform_basic10k_table(basic_10k_df, sec10k_filing_metadata)
+    # exclude Ex. 21 subs and just match to filers
+    # once the match has been conducted, add back in the Ex. 21 subs
+    out_df = basic_10k_df.fillna(np.nan).reset_index(names="record_id")
+    # TODO: Here we conduct the match to EIA and add on a column with utility_id_eia
+    return out_df
+
+
+@asset(
+    ins={
+        "sec10k_filers_matched_df": AssetIn("core_sec_10k__filers"),
+        "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
+    },
+)
+def out_sec_10k__parents_and_subsidiaries(
+    sec10k_filers_matched_df: pd.DataFrame,
+    clean_ex21_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Asset for creating an SEC 10K output table.
+
+    Flatten the table across time to only keep the most recent record
+    for each CIK. Add in Ex. 21 subsidiaries and link them to already present
+    filing companies. Create an sec_company_id for subsidiaries that aren't linked
+    to a CIK.
+    """
     ex21_df_with_cik = match_ex21_subsidiaries_to_filer_company(
-        basic10k_df=basic_10k_df, ex21_df=clean_ex21_df
+        basic10k_df=sec10k_filers_matched_df, ex21_df=clean_ex21_df
     )
-    basic_10k_df = basic_10k_df.merge(
+    sec10k_filers_matched_df = sec10k_filers_matched_df.merge(
         ex21_df_with_cik[["central_index_key", "parent_company_cik", "own_per"]],
         how="left",
         on="central_index_key",
@@ -349,16 +371,13 @@ def core_sec_10k__parents_and_subsidiaries(
         ex21_df_with_cik["central_index_key"].isnull()
     ]
     ex21_non_filing_subs_df.loc[:, "files_10k"] = False
-    out_df = pd.concat([basic_10k_df, ex21_non_filing_subs_df])
-    out_df = out_df.fillna(np.nan)
-    # this drops records for earlier company names and addresses
-    # that have since changed, so we lose some information
-    out_df = _flatten_sec_companies_across_time(out_df)
-
+    out_df = pd.concat([sec10k_filers_matched_df, ex21_non_filing_subs_df])
+    # TODO: match the EIA utilities to the Ex. 21 subs?
     return out_df
 
 
 production_assets = [
-    core_sec_10k__parents_and_subsidiaries,
+    core_sec_10k__filers,
     transformed_ex21_subsidiary_table,
+    out_sec_10k__parents_and_subsidiaries,
 ]

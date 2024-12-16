@@ -32,8 +32,8 @@ MATCH_COLS = ["company_name", "state", "city", "street_address"]
 BLOCKING_RULES = [
     "substr(l.company_name_mphone,1,4) = substr(r.company_name_mphone,1,4)",
     "l.street_address = r.street_address",
-    "substr(l.company_name_mphone,1,3) = substr(r.company_name_mphone,1,3) and l.city = r.city",
-    "substr(l.company_name_mphone,1,2) = substr(r.company_name_mphone,1,2) and array_length(list_intersect(l.street_address_list, r.street_address_list)) >= 2",
+    "substr(l.company_name_mphone,1,2) = substr(r.company_name_mphone,1,2) and l.city = r.city",
+    # "substr(l.company_name_mphone,1,2) = substr(r.company_name_mphone,1,2) and array_length(list_intersect(l.street_address_list, r.street_address_list)) >= 2",
 ]
 
 company_name_comparison = cl.NameComparison(
@@ -44,7 +44,6 @@ company_name_comparison = cl.NameComparison(
 address_comparison = cl.LevenshteinAtThresholds(
     "street_address", distance_threshold_or_thresholds=[1]
 ).configure(term_frequency_adjustments=True)
-print(address_comparison.get_comparison("duckdb").human_readable_description)
 
 state_comparison = cl.ExactMatch("state").configure(term_frequency_adjustments=True)
 city_comparison = cl.NameComparison("city", jaro_winkler_thresholds=[0.9])

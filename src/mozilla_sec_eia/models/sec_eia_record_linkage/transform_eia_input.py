@@ -5,7 +5,9 @@ import pandas as pd
 from dagster import AssetOut, multi_asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
+    expand_street_name_abbreviations,
     fill_street_address_nulls,
+    flatten_companies_across_time,
     transform_company_name,
 )
 from mozilla_sec_eia.models.sec_eia_record_linkage.sec_eia_splink_config import STR_COLS
@@ -87,19 +89,27 @@ def eia_rl_input_table():
         "s3://pudl.catalyst.coop/stable/out_eia__yearly_utilities.parquet"
     )
     eia861_df = harvest_eia861_utilities()
-    eia_df = pd.concat([raw_eia_df, eia861_df])
-    eia_df = eia_df.drop_duplicates(
-        subset=["utility_id_eia", "report_date"], keep="first"
-    ).dropna(subset="utility_name_eia")
-    eia_df = eia_df.rename(columns=EIA_COL_MAP)
-    eia_df["report_date"] = eia_df["report_date"].astype("datetime64[ns]")
-    eia_df.loc[:, "report_year"] = eia_df["report_date"].dt.year
-    eia_df = transform_company_name(eia_df)
-    eia_df.loc[:, "zip_code"] = eia_df["zip_code"].str[:5]
-    eia_df = fill_street_address_nulls(eia_df)
+    eia_df = (
+        pd.concat([raw_eia_df, eia861_df])
+        .dropna(subset=["utility_name_eia"])
+        .rename(columns=EIA_COL_MAP)
+        .assign(
+            report_date=lambda df: df["report_date"].astype("datetime64[ns]"),
+            report_year=lambda df: df["report_date"].dt.year,
+            zip_code=lambda df: df["zip_code"].str[:5],
+        )
+        .pipe(transform_company_name)
+        .pipe(fill_street_address_nulls)
+        .pipe(lambda df: df.fillna(np.nan))
+        .reset_index(drop=True)
+    )
     eia_df[STR_COLS] = eia_df[STR_COLS].apply(lambda x: x.str.strip().str.lower())
-    eia_df = eia_df.fillna(np.nan)
-    eia_df = eia_df.reset_index(drop=True).reset_index(names="record_id")
+    eia_df["street_address"] = expand_street_name_abbreviations(
+        eia_df["street_address"]
+    )
+    eia_df = flatten_companies_across_time(
+        df=eia_df, key_cols=["company_name", "street_address"]
+    ).reset_index(names="record_id")
 
     return eia_df
 
