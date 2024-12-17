@@ -261,7 +261,6 @@ def transformed_ex21_subsidiary_table(
     ex21_df = _add_report_year_to_sec(ex21_df, sec10k_filing_metadata)
     ex21_df = ex21_df.rename(columns=EX21_COL_MAP)
     ex21_df = clean_location_of_inc(ex21_df)
-    # TODO: what to do with the clean company name?
     ex21_df = transform_company_name(ex21_df)
     ex21_df = _add_parent_company_cik(ex21_df, sec10k_filing_metadata)
     # add an sec_company_id, ultimately this ID become the subsidiary's CIK
@@ -314,54 +313,48 @@ def transform_basic10k_table(
 @asset(
     ins={
         "basic_10k_dfs": AssetIn("basic_10k_company_info"),
-        # "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
         "sec10k_filing_metadata_dfs": AssetIn("sec10k_filing_metadata"),
-        # specify an io_manager_key?
     },
 )
 def core_sec_10k__filers(
     basic_10k_dfs: dict[str, pd.DataFrame],
-    # clean_ex21_df: pd.DataFrame,
     sec10k_filing_metadata_dfs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
-    """Asset for creating an SEC 10K output table.
+    """Asset for creating a cleaned basic 10k table with EIA utility matched.
 
     Flatten the table across time to only keep the most recent record
-    for each CIK. Add in Ex. 21 subsidiaries and link them to already present
-    filing companies. Create an sec_company_id for subsidiaries that aren't linked
-    to a CIK.
+    for each unique company name and address pair. Clean table and link filers
+    to EIA utilities.
     """
     basic_10k_df = pd.concat(basic_10k_dfs.values())
     sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
     basic_10k_df = transform_basic10k_table(basic_10k_df, sec10k_filing_metadata)
-    # exclude Ex. 21 subs and just match to filers
-    # once the match has been conducted, add back in the Ex. 21 subs
     out_df = basic_10k_df.fillna(np.nan).reset_index(names="record_id")
+    # match EIA utilities to filers
     # TODO: Here we conduct the match to EIA and add on a column with utility_id_eia
     return out_df
 
 
 @asset(
     ins={
-        "sec10k_filers_matched_df": AssetIn("core_sec_10k__filers"),
+        "sec_10k_filers_matched_df": AssetIn("core_sec_10k__filers"),
         "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
     },
 )
 def out_sec_10k__parents_and_subsidiaries(
-    sec10k_filers_matched_df: pd.DataFrame,
+    sec_10k_filers_matched_df: pd.DataFrame,
     clean_ex21_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Asset for creating an SEC 10K output table.
 
-    Flatten the table across time to only keep the most recent record
-    for each CIK. Add in Ex. 21 subsidiaries and link them to already present
-    filing companies. Create an sec_company_id for subsidiaries that aren't linked
-    to a CIK.
+    Add in Ex. 21 subsidiaries and link them to already present
+    filing companies. Create an sec_company_id for subsidiaries
+    that aren't linked to a CIK.
     """
     ex21_df_with_cik = match_ex21_subsidiaries_to_filer_company(
-        basic10k_df=sec10k_filers_matched_df, ex21_df=clean_ex21_df
+        basic10k_df=sec_10k_filers_matched_df, ex21_df=clean_ex21_df
     )
-    sec10k_filers_matched_df = sec10k_filers_matched_df.merge(
+    sec_10k_filers_matched_df = sec_10k_filers_matched_df.merge(
         ex21_df_with_cik[["central_index_key", "parent_company_cik", "own_per"]],
         how="left",
         on="central_index_key",
@@ -371,8 +364,7 @@ def out_sec_10k__parents_and_subsidiaries(
         ex21_df_with_cik["central_index_key"].isnull()
     ]
     ex21_non_filing_subs_df.loc[:, "files_10k"] = False
-    out_df = pd.concat([sec10k_filers_matched_df, ex21_non_filing_subs_df])
-    # TODO: match the EIA utilities to the Ex. 21 subs?
+    out_df = pd.concat([sec_10k_filers_matched_df, ex21_non_filing_subs_df])
     return out_df
 
 
