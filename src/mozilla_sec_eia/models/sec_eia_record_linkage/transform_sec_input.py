@@ -377,7 +377,7 @@ def out_sec_10k__parents_and_subsidiaries(
         unmatched_eia_df[["utility_id_eia", "company_name"]],
         how="left",
         on="company_name",
-    )
+    ).drop_duplicates(subset="sec_company_id")
     logger.info(
         f"Ex. 21 subsidiary names matched to an EIA utility name: {len(ex21_non_filing_subs_df["utility_id_eia"].unique())}"
     )
