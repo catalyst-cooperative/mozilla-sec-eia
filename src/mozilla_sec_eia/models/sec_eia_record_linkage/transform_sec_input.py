@@ -339,11 +339,13 @@ def core_sec_10k__filers(
     ins={
         "sec_10k_filers_matched_df": AssetIn("core_sec_10k__filers"),
         "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
+        "clean_eia_df": AssetIn("core_eia__parents_and_subsidiaries"),
     },
 )
 def out_sec_10k__parents_and_subsidiaries(
     sec_10k_filers_matched_df: pd.DataFrame,
     clean_ex21_df: pd.DataFrame,
+    clean_eia_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Asset for creating an SEC 10K output table.
 
@@ -364,6 +366,21 @@ def out_sec_10k__parents_and_subsidiaries(
         ex21_df_with_cik["central_index_key"].isnull()
     ]
     ex21_non_filing_subs_df.loc[:, "files_10k"] = False
+    # the last step is to take the EIA utilities that haven't been matched
+    # to a filer company, and merge them by company name onto the Ex. 21 subs
+    unmatched_eia_df = clean_eia_df[
+        ~clean_eia_df["utility_id_eia"].isin(
+            sec_10k_filers_matched_df.utility_id_eia.unique()
+        )
+    ].drop_duplicates(subset="company_name")
+    ex21_non_filing_subs_df = ex21_non_filing_subs_df.merge(
+        unmatched_eia_df[["utility_id_eia", "company_name"]],
+        how="left",
+        on="company_name",
+    )
+    logger.info(
+        f"Ex. 21 subsidiary names matched to an EIA utility name: {len(ex21_non_filing_subs_df["utility_id_eia"].unique())}"
+    )
     out_df = pd.concat([sec_10k_filers_matched_df, ex21_non_filing_subs_df])
     return out_df
 
