@@ -6,7 +6,7 @@ channels:
 dependencies:
   # Packages required for setting up the environment
   - pip>=21,<24
-  - python>=3.10,<3.12
+  - python>=3.10,<=3.12
   - setuptools>=66,<69
 
   # Packages specified in setup.py that need or benefit from binary conda packages
@@ -28,6 +28,10 @@ dependencies:
   - cpuonly
   - pytorch>=2.2,<3
   - torchvision
+
+  # GDAL is a transitive dependency whose binaries must match those installed by the
+  # pudl-dev conda environment, so we also install it with conda here.
+  - gdal==3.9.3 # pinned to ensure it matches pudl-dev environment exactly.
 
   # Use pip to install the package defined by this repo for development:
   - pip:
