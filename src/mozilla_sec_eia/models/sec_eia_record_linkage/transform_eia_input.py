@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-from dagster import AssetOut, multi_asset
+from dagster import AssetOut, asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
     expand_street_name_abbreviations,
@@ -74,7 +74,7 @@ def harvest_eia861_utilities():
     return eia861_df
 
 
-@multi_asset(
+@asset(
     outs={
         "core_eia__parents_and_subsidiaries": AssetOut(
             io_manager_key="pandas_parquet_io_manager"
