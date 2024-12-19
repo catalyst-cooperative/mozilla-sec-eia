@@ -36,7 +36,6 @@ ex21_assets = load_assets_from_package_module(ex_21)
 ex21_data_assets = load_assets_from_modules([ex_21.data])
 shared_assets = load_assets_from_modules([extract])
 
-
 basic_10k_production_job = model_jobs.create_production_model_job(
     "basic_10k_extraction",
     basic_10k.production_assets,
