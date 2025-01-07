@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-from dagster import AssetOut, asset
+from dagster import asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
     expand_street_name_abbreviations,
@@ -75,12 +75,8 @@ def harvest_eia861_utilities():
 
 
 @asset(
-    outs={
-        "core_eia__parents_and_subsidiaries": AssetOut(
-            io_manager_key="pandas_parquet_io_manager"
-        )
-        # TODO: allow year partitions?
-    }
+    name="core_eia__parents_and_subsidiaries",
+    io_manager_key="pandas_parquet_io_manager",
 )
 # TODO: add Dagster asset inputs for PUDL inputs instead of reading from AWS?
 def eia_rl_input_table():
