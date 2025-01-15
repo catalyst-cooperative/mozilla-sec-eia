@@ -354,13 +354,13 @@ core_sec_10k__filers = define_dagstermill_asset(
 
 @asset(
     ins={
-        "sec_10k_filers_matched_df": AssetIn("core_sec_10k__filers"),
         "clean_ex21_df": AssetIn("transformed_ex21_subsidiary_table"),
         "clean_eia_df": AssetIn("core_eia__parents_and_subsidiaries"),
     },
+    deps=["core_sec_10k__filers"],
+    io_manager_key="pandas_parquet_io_manager",
 )
 def out_sec_10k__parents_and_subsidiaries(
-    sec_10k_filers_matched_df: pd.DataFrame,
     clean_ex21_df: pd.DataFrame,
     clean_eia_df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -370,6 +370,9 @@ def out_sec_10k__parents_and_subsidiaries(
     filing companies. Create an sec_company_id for subsidiaries
     that aren't linked to a CIK.
     """
+    sec_10k_filers_matched_df = pd.read_parquet(
+        "gs://sec10k-outputs/v2/core_sec_10k__filers.parquet"
+    )
     ex21_df_with_cik = match_ex21_subsidiaries_to_filer_company(
         basic10k_df=sec_10k_filers_matched_df, ex21_df=clean_ex21_df
     )
