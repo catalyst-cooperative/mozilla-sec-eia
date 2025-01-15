@@ -7,7 +7,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from dagster import AssetIn, asset
+from dagster import AssetIn, asset, file_relative_path
+from dagstermill import define_dagstermill_asset
 
 from mozilla_sec_eia.library.record_linkage_utils import (
     expand_street_name_abbreviations,
@@ -172,6 +173,12 @@ def match_ex21_subsidiaries_to_filer_company(
         lambda row: len(set(row["loc_tokens_sec"]) & set(row["loc_tokens_ex21"])),
         axis=1,
     )
+    merged_df = merged_df.fillna(
+        {
+            "report_year_sec": 0,
+            "report_year_ex21": 0,
+        }
+    )
     # get the difference in report years
     merged_df["report_year_diff"] = merged_df.apply(
         lambda row: abs(int(row["report_year_sec"]) - int(row["report_year_ex21"])),
@@ -316,7 +323,7 @@ def transform_basic10k_table(
         "sec10k_filing_metadata_dfs": AssetIn("sec10k_filing_metadata"),
     },
 )
-def core_sec_10k__filers(
+def transformed_basic_10k(
     basic_10k_dfs: dict[str, pd.DataFrame],
     sec10k_filing_metadata_dfs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
@@ -330,9 +337,19 @@ def core_sec_10k__filers(
     sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
     basic_10k_df = transform_basic10k_table(basic_10k_df, sec10k_filing_metadata)
     out_df = basic_10k_df.fillna(np.nan).reset_index(names="record_id")
-    # match EIA utilities to filers
-    # TODO: Here we conduct the match to EIA and add on a column with utility_id_eia
+
     return out_df
+
+
+core_sec_10k__filers = define_dagstermill_asset(
+    "core_sec_10k__filers",
+    notebook_path=file_relative_path(__file__, "./notebooks/splink-sec-eia.ipynb"),
+    ins={
+        "clean_eia_df": AssetIn("core_eia__parents_and_subsidiaries"),
+        "clean_basic_10k_df": AssetIn("transformed_basic_10k"),
+    },
+    save_notebook_on_failure=True,
+)
 
 
 @asset(
@@ -386,7 +403,8 @@ def out_sec_10k__parents_and_subsidiaries(
 
 
 production_assets = [
-    core_sec_10k__filers,
+    transformed_basic_10k,
     transformed_ex21_subsidiary_table,
+    core_sec_10k__filers,
     out_sec_10k__parents_and_subsidiaries,
 ]
