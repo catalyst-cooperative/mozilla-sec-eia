@@ -25,11 +25,11 @@ class Basic10kCompanyInfo(pa.DataFrameModel):
     """Define table structure for extracted basic 10k data."""
 
     filename: Index[str] = pa.Field(description="Name of extracted filing.")
-    filer_count: Index[str] = pa.Field(
+    filer_count: Index[int] = pa.Field(
         description="Some filings have multiple blocks of company data."
     )
     block: Index[str] = pa.Field(description="Block of company data.")
-    block_count: Index[str] = pa.Field(description="Some blocks occur multiple times.")
+    block_count: Index[int] = pa.Field(description="Some blocks occur multiple times.")
     key: Index[str] = pa.Field(description="Key within block.")
     value: Series[str] = pa.Field(description="Company info fact.")
 
