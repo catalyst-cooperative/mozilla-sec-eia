@@ -1,2 +1,3 @@
 load_from:
   - python_module: mozilla_sec_eia.models.sec10k
+  - python_module: mozilla_sec_eia.models.sec_eia_record_linkage

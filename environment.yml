@@ -5,7 +5,7 @@ channels:
 dependencies:
   # Packages required for setting up the environment
   - pip>=21,<24
-  - python>=3.10,<3.12
+  - python>=3.10,<=3.12
   - setuptools>=66,<69
 
   # Packages specified in setup.py that need or benefit from binary conda packages
@@ -19,10 +19,13 @@ dependencies:
 
   # Jupyter packages:
   - jupyterlab>=3.2,<4
-  - nbconvert>=6,<7 # Used to clear notebook outputs in pre-commit hooks
+  - nbconvert>=7 # Used to clear notebook outputs in pre-commit hooks
 
   # These are not normal Python packages available on PyPI
   - nodejs # Useful for Jupyter and prettier pre-commit hook
+
+  - dask>=2024
+  - gdal
 
   # Use pip to install the package defined by this repo for development:
   - pip:
