@@ -16,6 +16,9 @@ from mozilla_sec_eia.library.record_linkage_utils import (
     flatten_companies_across_time,
     transform_company_name,
 )
+from mozilla_sec_eia.models.sec10k.entities import (
+    sec10k_output_layout_type,
+)
 from mozilla_sec_eia.models.sec10k.utils.cloud import (
     convert_ex21_id_to_filename,
 )
@@ -359,6 +362,7 @@ core_sec_10k__filers = define_dagstermill_asset(
     },
     deps=["core_sec_10k__filers"],
     io_manager_key="pandas_parquet_io_manager",
+    dagster_type=sec10k_output_layout_type,
 )
 def out_sec_10k__parents_and_subsidiaries(
     clean_ex21_df: pd.DataFrame,
@@ -373,6 +377,7 @@ def out_sec_10k__parents_and_subsidiaries(
     sec_10k_filers_matched_df = pd.read_parquet(
         "gs://sec10k-outputs/v2/core_sec_10k__filers.parquet"
     )
+    sec_10k_filers_matched_df = sec_10k_filers_matched_df.drop(columns="record_id")
     ex21_df_with_cik = match_ex21_subsidiaries_to_filer_company(
         basic10k_df=sec_10k_filers_matched_df, ex21_df=clean_ex21_df
     )
