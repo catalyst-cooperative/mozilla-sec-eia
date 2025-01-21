@@ -107,6 +107,10 @@ def clean_extracted_df(extracted_df):
             r"[^a-zA-Z&,\s]", "", regex=True
         )
     if "own_per" in extracted_df.columns:
+        # enforce single decimal points
+        extracted_df["own_per"] = extracted_df["own_per"].str.replace(
+            r"\.+", ".", regex=True
+        )
         # remove special chars and letters
         extracted_df["own_per"] = extracted_df["own_per"].str.replace(
             r"[^\d.]", "", regex=True

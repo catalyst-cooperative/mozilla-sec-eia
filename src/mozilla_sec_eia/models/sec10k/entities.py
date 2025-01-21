@@ -35,9 +35,11 @@ company_name_raw = pa.Field(description="The raw company name.", nullable=True)
 date_of_name_change = pa.Field(
     description="Date of last name change of the company.", nullable=True
 )
-former_conformed_name = pa.Field(description="Former name of the company.")
+former_conformed_name = pa.Field(
+    description="Former name of the company.", nullable=True
+)
 standard_industrial_classification = pa.Field(
-    description="The company's type of business."
+    description="The company's type of business.", nullable=True
 )
 location_of_inc = pa.Field(
     description="Cleaned location of incorporation of the company.", nullable=True
@@ -48,8 +50,14 @@ company_name_no_legal = pa.Field(
 company_name_mphone = pa.Field(
     description="Metaphone of the company name, could be used for record linkage."
 )
-irs_number = pa.Field(description="ID of the company with the IRS.")
+irs_number = pa.Field(description="ID of the company with the IRS.", nullable=True)
 files_10k = pa.Field(description="Indicates whether the company files a 10-K.")
+#: Use str to avoid conversion errors
+own_per = pa.Field(
+    description="Parent company's percent ownership of the company. String extracted from SEC 10-K Ex. 21 attachment.",
+    nullable=True,
+    coerce=True,
+)
 
 
 class Ex21CompanyOwnership(pa.DataFrameModel):
@@ -61,11 +69,7 @@ class Ex21CompanyOwnership(pa.DataFrameModel):
         description="Location of subsidiary company.", nullable=True
     )
     #: Use str to avoid conversion errors
-    own_per: Series[str] = pa.Field(
-        description="Percent ownership of subsidiary company.",
-        nullable=True,
-        coerce=True,
-    )
+    own_per: Series[str] = own_per
 
 
 class Basic10kCompanyInfo(pa.DataFrameModel):
@@ -144,8 +148,10 @@ class Sec10kOutputTable(pa.DataFrameModel):
     company_name: Series[str] = company_name
     filename: Series[str] = filename
     report_date: Series[pa.DateTime] = report_date
-    central_index_key: Series[str] = central_index_key
-    utility_id_eia: Series[int] = utility_id_eia
+    central_index_key: Series[str] = pa.Field(
+        description="Identifier of the company in SEC database.", nullable=True
+    )
+    utility_id_eia: Series[float] = utility_id_eia
     street_address: Series[str] = street_address
     street_address_2: Series[str] = street_address_2
     city: Series[str] = city
@@ -161,10 +167,7 @@ class Sec10kOutputTable(pa.DataFrameModel):
     parent_company_cik: Series[str] = pa.Field(
         description="CIK of the company's parent company.", nullable=True
     )
-    own_per: Series[float] = pa.Field(
-        description="Parent company's ownership percentage of the company.",
-        nullable=True,
-    )
+    own_per: Series[str] = own_per
 
 
 class EiaCompanies(pa.DataFrameModel):

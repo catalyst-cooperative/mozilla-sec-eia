@@ -406,7 +406,17 @@ def out_sec_10k__parents_and_subsidiaries(
     logger.info(
         f"Ex. 21 subsidiary names matched to an EIA utility name: {len(ex21_non_filing_subs_df["utility_id_eia"].unique())}"
     )
-    out_df = pd.concat([sec_10k_filers_matched_df, ex21_non_filing_subs_df])
+    out_df = pd.concat(
+        [sec_10k_filers_matched_df, ex21_non_filing_subs_df]
+    ).reset_index(drop=True)
+    out_df = out_df.astype(
+        {
+            "report_date": "datetime64[ns]",
+            "utility_id_eia": "int64",
+            "date_of_name_change": "datetime64[ns]",
+        },
+        errors="ignore",
+    )
     return out_df
 
 
