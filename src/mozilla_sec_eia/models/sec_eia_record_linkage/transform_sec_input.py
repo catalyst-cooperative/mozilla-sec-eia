@@ -73,9 +73,8 @@ def _add_report_year_to_sec(sec_df: pd.DataFrame, md: pd.DataFrame) -> pd.DataFr
     """
     sec_df = sec_df.merge(md[["filename", "date_filed"]], how="left", on=["filename"])
     sec_df = sec_df.rename(columns={"date_filed": "report_date"})
-    sec_df.loc[:, "report_year"] = (
-        sec_df["report_date"].astype("datetime64[ns]").dt.year
-    )
+    sec_df = sec_df.astype({"report_date": "datetime64[ns]"})
+    sec_df.loc[:, "report_year"] = sec_df["report_date"].dt.year
     return sec_df
 
 
@@ -264,7 +263,9 @@ def transformed_ex21_subsidiary_table(
 ) -> pd.DataFrame:
     """Transform Ex. 21 table of subsidiaries before combining with basic 10k table."""
     ex21_df = pd.concat(ex21_dfs.values())
-    sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
+    sec10k_filing_metadata = pd.concat(
+        [df.reset_index() for df in sec10k_filing_metadata_dfs.values()]
+    )
 
     ex21_df.loc[:, "filename"] = convert_ex21_id_to_filename(ex21_df)
     ex21_df = ex21_df.drop(columns=["id"])
@@ -337,7 +338,9 @@ def transformed_basic_10k(
     to EIA utilities.
     """
     basic_10k_df = pd.concat(basic_10k_dfs.values())
-    sec10k_filing_metadata = pd.concat(sec10k_filing_metadata_dfs.values())
+    sec10k_filing_metadata = pd.concat(
+        [df.reset_index() for df in sec10k_filing_metadata_dfs.values()]
+    )
     basic_10k_df = transform_basic10k_table(basic_10k_df, sec10k_filing_metadata)
     out_df = basic_10k_df.fillna(np.nan).reset_index(names="record_id")
 
