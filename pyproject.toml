@@ -84,7 +84,7 @@ mozilla_dev = "mozilla_sec_eia.cli:main"
 [project.optional-dependencies]
 dev = [
     "build>=1,<2",  # The setuptools package builder
-    "black>=22,<25",  # A deterministic code formatter
+    "black>=22,<26",  # A deterministic code formatter
     # "label-studio>=1.12,<2.0", # Tool for labeling training data, exclude until pydantic upgrade
     "tox>=4,<5",  # Python test environment manager
     "twine>=4,<7",  # Used to make releases to PyPI
