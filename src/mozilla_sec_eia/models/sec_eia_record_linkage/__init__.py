@@ -30,11 +30,9 @@ from . import transform_eia_input, transform_sec_input
 eia_assets = load_assets_from_modules([transform_eia_input])
 sec_assets = load_assets_from_modules([transform_sec_input])
 
-eia_input_table_production_job = model_jobs.create_production_model_job(
-    "eia_input_table_creation", transform_eia_input.production_assets
-)
-sec_input_table_production_job = model_jobs.create_production_model_job(
-    "sec_input_table_creation", transform_sec_input.production_assets
+record_linkage_job = model_jobs.create_production_model_job(
+    "sec_eia_record_linkage",
+    transform_eia_input.production_assets + transform_sec_input.production_assets,
 )
 
 # Create year_quarter partitions
@@ -63,7 +61,7 @@ defs = Definitions(
     sec_assets
     + eia_assets
     + [basic_10k_company_info, ex21_company_ownership_info, sec10k_filing_metadata],
-    jobs=[eia_input_table_production_job, sec_input_table_production_job],
+    jobs=[record_linkage_job],
     resources={
         "cloud_interface": cloud_interface_resource,
         "mlflow_interface": mlflow_interface_resource,

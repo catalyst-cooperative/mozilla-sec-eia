@@ -10,6 +10,7 @@ from mozilla_sec_eia.library.record_linkage_utils import (
     flatten_companies_across_time,
     transform_company_name,
 )
+from mozilla_sec_eia.models.sec10k.entities import eia_layout_type
 from mozilla_sec_eia.models.sec_eia_record_linkage.sec_eia_splink_config import STR_COLS
 
 EIA_COL_MAP = {
@@ -77,6 +78,7 @@ def harvest_eia861_utilities():
 @asset(
     name="core_eia__parents_and_subsidiaries",
     io_manager_key="pandas_parquet_io_manager",
+    dagster_type=eia_layout_type,
 )
 # TODO: add Dagster asset inputs for PUDL inputs instead of reading from AWS?
 def eia_rl_input_table():
